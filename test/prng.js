@@ -12,14 +12,28 @@ const deployPRNG = async () => {
 describe("PRNG", function () {
   it("should rotate", async function () {
     let prng = await deployPRNG();
-    console.log(prng);
 
-    const value = await prng.rotate();
-    expect(value).to.be.bignumber.not.equal(0);
-    expect(await prng.seed()).to.equals(1);
-    expect(await prng.rotate()).to.be.bignumber.not.equal(value);
-    expect(await prng.seed()).to.equals(2);
-    expect(await prng.rotate()).to.be.bignumber.not.equal(value);
-    expect(await prng.seed()).to.equals(3);
+    let tx = await prng.rotate();
+    await tx.wait();
+    let seed = await prng.seed();
+
+    const first_value = tx.value;
+    
+    expect(tx.value).to.be.bignumber.not.equal(0);
+    expect(seed).to.equals(1);
+
+    tx = await prng.rotate();
+    await tx.wait();
+    seed = await prng.seed();
+
+    expect(tx.value).to.be.bignumber.not.equal(first_value);
+    expect(seed).to.equals(2);
+
+    tx = await prng.rotate();
+    await tx.wait();
+    seed = await prng.seed();
+    
+    expect(tx.value).to.be.bignumber.not.equal(first_value);
+    expect(seed).to.equals(3);
   });
 });
