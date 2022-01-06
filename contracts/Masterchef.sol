@@ -22,18 +22,15 @@ contract Masterchef {
     PandaIdentification[] public pandas;
 
     event StackingPandaMinted(uint256 id);
-    event StackingPandaForSale(uint256 id, uint256 meld2meldBonus, uint256 toMeldBonus);
+    event StackingPandaForSale(
+        uint256 id,
+        uint256 meld2meldBonus,
+        uint256 toMeldBonus
+    );
 
     constructor() {
         _deployPRNG();
         _deployStackingPandas();
-
-        pandas = [
-            PandaIdentification({
-                name: "",
-                url: ""
-            })
-        ];
     }
 
     /**
@@ -41,7 +38,13 @@ contract Masterchef {
         Masterchef itself mint new NFTs
      */
     function _deployStackingPandas() private {
-        stackingPanda = new StackingPanda();
+        stackingPanda = StackingPanda(
+            Create2.deploy(
+                0,
+                keccak256("Masterchef/StackingPanda"),
+                type(StackingPanda).creationCode
+            )
+        );
         prng.rotate();
     }
 
@@ -84,7 +87,7 @@ contract Masterchef {
         // retrieve the random number and set the bonus percentage using 18 decimals.
         // NOTE: the maximum percentage here is 3.999999999999999999%
         uint256 toMeldBonus = prng.rotate() % 4 ether;
-        
+
         // mint the panda using its name-url from the stored pair and randomly compute the bonuses
         uint256 pandaId = stackingPanda.mint(
             "test",
@@ -96,14 +99,12 @@ contract Masterchef {
             })
         );
 
-        lastPandaId = pandaId +1;
+        lastPandaId = pandaId + 1;
 
         emit StackingPandaMinted(pandaId);
 
         _listForSale(pandaId);
     }
 
-    function _listForSale(uint256 _pandaId) private {
-        
-    }
+    function _listForSale(uint256 _pandaId) private {}
 }
