@@ -19,12 +19,21 @@ contract Masterchef {
         string url;
     }
 
+    PandaIdentification[] public pandas;
+
     event StackingPandaMinted(uint256 id);
     event StackingPandaForSale(uint256 id, uint256 meld2meldBonus, uint256 toMeldBonus);
 
     constructor() {
         _deployPRNG();
         _deployStackingPandas();
+
+        pandas = [
+            PandaIdentification({
+                name: "",
+                url: ""
+            })
+        ];
     }
 
     /**
@@ -69,12 +78,12 @@ contract Masterchef {
         lastMintingEvent = block.timestamp;
 
         // retrieve the random number and set the bonus percentage using 18 decimals.
-        // NOTE: the maximum percentage here is 9.999999999999999999%
-        uint256 meld2meldBonus = prng.rotate() % 10 ether;
+        // NOTE: the maximum percentage here is 7.499999999999999999%
+        uint256 meld2meldBonus = prng.rotate() % 7.5 ether;
 
         // retrieve the random number and set the bonus percentage using 18 decimals.
-        // NOTE: the maximum percentage here is 4.999999999999999999%
-        uint256 toMeldBonus = prng.rotate() % 5 ether;
+        // NOTE: the maximum percentage here is 3.999999999999999999%
+        uint256 toMeldBonus = prng.rotate() % 4 ether;
         
         // mint the panda using its name-url from the stored pair and randomly compute the bonuses
         uint256 pandaId = stackingPanda.mint(
