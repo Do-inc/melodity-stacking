@@ -4,8 +4,9 @@ pragma solidity 0.8.11;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./IPRNG.sol";
 
-contract StackingPanda is ERC721, Ownable {
+contract StackingPanda is ERC721, Ownable, IPRNG {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -23,9 +24,15 @@ contract StackingPanda is ERC721, Ownable {
 
     Metadata[] private metadata;
 
+    address public masterchef;
+    PRNG private prng;
+
     // Init the NFT contract with the ownable abstact in order to let only the owner
     // mint new NFTs
-    constructor() ERC721("Melodity Stacking Panda", "STACKP") Ownable() {}
+    constructor() ERC721("Melodity Stacking Panda", "STACKP") Ownable() {
+        masterchef = msg.sender;
+        prng = PRNG(computePRNGAddress(masterchef));
+    }
 
     /**
         Mint new NFTs, the maximum number of mintable NFT is 100.
@@ -41,6 +48,8 @@ contract StackingPanda is ERC721, Ownable {
      */
     function mint(string memory _name, string memory _picUrl, StackingBonus memory _stackingBonus) public onlyOwner returns (uint256)
     {
+        prng.rotate();
+
         // Only 100 NFTs will be mintable
         require(_tokenIds.current() < 100, "All pandas minted");
 

@@ -1,4 +1,6 @@
-const { expect } = require("chai");
+const chai = require('chai');
+chai.use(require('chai-bignumber')());
+const { expect } = chai;
 const { ethers } = require("hardhat");
 
 const deployMasterchef = async () => {
@@ -25,7 +27,7 @@ describe("Masterchef", function () {
     expect(await masterchef.stackingPanda()).to.not.equal(null_address);
   });
   it("should trigger nft minting", async function () {
-    await masterchef.triggerMinting();
+    await masterchef.mintStackingPanda();
 
     let stacking_panda = await loadStackingPanda(
       await masterchef.stackingPanda()
@@ -38,7 +40,9 @@ describe("Masterchef", function () {
     expect(metadata.name).to.equals("test");
     expect(metadata.picUrl).to.equals("url");
     expect(metadata.bonus.decimals).to.equals(18);
-    expect(metadata.bonus.meldToMeld).to.equals(ethers.utils.parseEther("1.5"));
-    expect(metadata.bonus.toMeld).to.equals(ethers.utils.parseEther("0.5"));
+
+    // need to cast everything to string as chain does not support ethers bignumber
+    expect(metadata.bonus.meldToMeld.toString()).to.be.bignumber.at.most(ethers.utils.parseEther("10").toString());
+    expect(metadata.bonus.toMeld.toString()).to.be.bignumber.at.most(ethers.utils.parseEther("5").toString());
   });
 });
