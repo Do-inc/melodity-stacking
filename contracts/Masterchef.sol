@@ -2,15 +2,16 @@
 pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/utils/Create2.sol";
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "./StackingPanda.sol";
 import "./PRNG.sol";
 import "./Marketplace.sol";
 import "hardhat/console.sol";
 
-contract Masterchef {
+contract Masterchef is ERC721Holder {
     StackingPanda public stackingPanda;
     PRNG public prng;
-    Marketplace marketplace;
+    Marketplace public marketplace;
 
     uint256 public mintingEpoch = 84 hours;
     uint256 public lastMintingEvent;
