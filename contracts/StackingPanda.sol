@@ -27,6 +27,11 @@ contract StackingPanda is ERC721, Ownable, IPRNG {
     address public masterchef;
     PRNG private prng;
 
+    event NewPandaMinted(uint256 pandaId, string pandaName);
+
+    /// All pandas minted
+    error AllPandasMinted();
+
     // Init the NFT contract with the ownable abstact in order to let only the owner
     // mint new NFTs
     constructor() ERC721("Melodity Stacking Panda", "STACKP") Ownable() {
@@ -45,27 +50,41 @@ contract StackingPanda is ERC721, Ownable, IPRNG {
         @param _picUrl The url where the picture is stored
         @param _stackingBonus As these NFTs are designed to give stacking bonuses this 
                 value defines the reward bonuses
+        @return uint256 Just minted nft id
      */
-    function mint(string memory _name, string memory _picUrl, StackingBonus memory _stackingBonus) public onlyOwner returns (uint256)
-    {
+    function mint(
+        string memory _name,
+        string memory _picUrl,
+        StackingBonus memory _stackingBonus
+    ) public onlyOwner returns (uint256) {
         prng.rotate();
 
         // Only 100 NFTs will be mintable
-        require(_tokenIds.current() < 100, "All pandas minted");
+        if (_tokenIds.current() >= 100) {
+            revert AllPandasMinted();
+        }
 
         uint256 newItemId = _tokenIds.current();
         _tokenIds.increment();
 
-        metadata.push(Metadata({
-            name: _name,
-            picUrl: _picUrl,
-            bonus: _stackingBonus
-        }));
+        // incrementing the counter after taking its value makes possible the aligning
+        // between the metadata array and the panda id, this let us simply push the metadata
+        // to the end of the array instead of calculating where to place the data
+        metadata.push(
+            Metadata({name: _name, picUrl: _picUrl, bonus: _stackingBonus})
+        );
         _mint(owner(), newItemId);
+
+        emit NewPandaMinted(newItemId, _name);
 
         return newItemId;
     }
 
+    /**
+        Retrieve and return the metadata for the provided _nftId
+        @param _nftId Identifier of the NFT whose data should be returned
+        @return Metadata
+     */
     function getMetadata(uint256 _nftId) public view returns (Metadata memory) {
         return metadata[_nftId];
     }

@@ -4,15 +4,16 @@ pragma solidity 0.8.11;
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "./StackingPanda.sol";
 import "./PRNG.sol";
+import "./Marketplace.sol";
 import "hardhat/console.sol";
 
 contract Masterchef {
     StackingPanda public stackingPanda;
     PRNG public prng;
+    Marketplace marketplace;
 
     uint256 public mintingEpoch = 84 hours;
     uint256 public lastMintingEvent;
-    uint256 public lastPandaId;
 
     struct PandaIdentification {
         string name;
@@ -22,15 +23,15 @@ contract Masterchef {
     PandaIdentification[] public pandas;
 
     event StackingPandaMinted(uint256 id);
-    event StackingPandaForSale(
-        uint256 id,
-        uint256 meld2meldBonus,
-        uint256 toMeldBonus
-    );
+    event StackingPandaForSale(address auction, uint256 id);
+
+    /// New pandas can be minted only once every 84h
+    error PandaRestingTime();
 
     constructor() {
         _deployPRNG();
         _deployStackingPandas();
+        _deployMarketplace();
     }
 
     /**
@@ -65,17 +66,33 @@ contract Masterchef {
     }
 
     /**
+        Deploy the Marketplace using the create2 method,
+        this gives the possibility for other generated smart contract to compute the
+        PRNG address and call it
+     */
+    function _deployMarketplace() private {
+        marketplace = Marketplace(
+            Create2.deploy(
+                0,
+                keccak256("Masterchef/Marketplace"),
+                type(Marketplace).creationCode
+            )
+        );
+        prng.rotate();
+    }
+
+    /**
         Trigger the minting of a new stacking panda, this function is publicly callable
         as the minted NFT will be given to the Masterchef contract.
         // TODO: trigger listing once minted
      */
-    function mintStackingPanda() public {
+    function mintStackingPanda() public returns (address) {
         prng.rotate();
 
-        require(
-            block.timestamp > lastMintingEvent + mintingEpoch,
-            "New pandas can be minted only once every 84h"
-        );
+        // check that a new panda can be minted
+        if (block.timestamp < lastMintingEvent + mintingEpoch) {
+            revert PandaRestingTime();
+        }
 
         // immediately update the last minting event in order to avoid reetracy
         lastMintingEvent = block.timestamp;
@@ -99,12 +116,25 @@ contract Masterchef {
             })
         );
 
-        lastPandaId = pandaId + 1;
-
         emit StackingPandaMinted(pandaId);
 
-        _listForSale(pandaId);
+        return _listForSale(pandaId);
     }
 
-    function _listForSale(uint256 _pandaId) private {}
+    function _listForSale(uint256 _pandaId) private returns(address) {
+        // approve the marketplace to create and start the auction
+        stackingPanda.approve(address(marketplace), _pandaId);
+
+        address auction = marketplace.createAuction(
+            _pandaId,
+            address(stackingPanda),
+            // Melodity's multisig wallet address
+            0x01Af10f1343C05855955418bb99302A6CF71aCB8,
+            7 days,
+            0.1 ether
+        );
+
+        emit StackingPandaForSale(auction, _pandaId);
+        return auction;
+    }
 }

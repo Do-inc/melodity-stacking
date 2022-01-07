@@ -1,53 +1,59 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.11;
 
-contract Auction {
-    // Parameters of the auction. Times are either
-    // absolute unix timestamps (seconds since 1970-01-01)
-    // or time periods in seconds.
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+
+contract Auction is ERC721Holder {
     address payable public beneficiary;
-    uint public auctionEndTime;
+    uint256 public auctionEndTime;
 
     // Current state of the auction.
     address public highestBidder;
-    uint public highestBid;
+    uint256 public highestBid;
 
     // Allowed withdrawals of previous bids
-    mapping(address => uint) pendingReturns;
+    mapping(address => uint256) public pendingReturns;
 
     // Set to true at the end, disallows any change.
     // By default initialized to `false`.
-    bool ended;
+    bool public ended;
 
-    // Events that will be emitted on changes.
-    event HighestBidIncreased(address bidder, uint amount);
-    event AuctionEnded(address winner, uint amount);
+    address public nftContract;
+    uint256 public nftId;
+    uint256 public minimumBid;
 
-    // Errors that describe failures.
+    event HighestBidIncreased(address bidder, uint256 amount);
+    event AuctionEnded(address winner, uint256 amount);
+    event AuctionNotFullfilled(uint256 nftId, address nftContract, uint256 minimumBid);
 
-    // The triple-slash comments are so-called natspec
-    // comments. They will be shown when the user
-    // is asked to confirm a transaction or
-    // when an error is displayed.
-
-    /// The auction has already ended.
+    /// Auction already ended.
     error AuctionAlreadyEnded();
-    /// There is already a higher or equal bid.
-    error BidNotHighEnough(uint highestBid);
-    /// The auction has not ended yet.
+    /// Higher or equal bid already present.
+    error BidNotHighEnough(uint256 highestBid);
+    /// Auction not ended yet.
     error AuctionNotYetEnded();
-    /// The function auctionEnd has already been called.
+    /// Auction end already called.
     error AuctionEndAlreadyCalled();
+    /// Bid not high enough to participate in this auction
+    error BidTooLow(uint256 minimumBid);
 
     /// Create a simple auction with `biddingTime`
     /// seconds bidding time on behalf of the
     /// beneficiary address `beneficiaryAddress`.
     constructor(
-        uint biddingTime,
-        address payable beneficiaryAddress
+        uint256 _biddingTime,
+        address payable _beneficiaryAddress,
+        uint256 _nftId,
+        address _nftContract,
+        uint256 _minimumBid
     ) {
-        beneficiary = beneficiaryAddress;
-        auctionEndTime = block.timestamp + biddingTime;
+        beneficiary = _beneficiaryAddress;
+        auctionEndTime = block.timestamp + _biddingTime;
+        nftContract = _nftContract;
+        nftId = _nftId;
+        minimumBid = _minimumBid;
     }
 
     /// Bid on the auction with the value sent
@@ -55,83 +61,70 @@ contract Auction {
     /// The value will only be refunded if the
     /// auction is not won.
     function bid() external payable {
-        // No arguments are necessary, all
-        // information is already part of
-        // the transaction. The keyword payable
-        // is required for the function to
-        // be able to receive Ether.
-
-        // Revert the call if the bidding
-        // period is over.
-        if (block.timestamp > auctionEndTime)
+        // check that the auction is still in its bidding period
+        if (block.timestamp > auctionEndTime) {
             revert AuctionAlreadyEnded();
+        }
+        
+        // check that the bid is higher or equal to the minimum bid to participate
+        // in this auction
+        if (msg.value < minimumBid) {
+            revert BidTooLow(minimumBid);
+        }
 
-        // If the bid is not higher, send the
-        // money back (the revert statement
-        // will revert all changes in this
-        // function execution including
-        // it having received the money).
-        if (msg.value <= highestBid)
+        // check that the current bid is higher than the previous
+        if (msg.value <= highestBid) {
             revert BidNotHighEnough(highestBid);
+        }
 
         if (highestBid != 0) {
-            // Sending back the money by simply using
-            // highestBidder.send(highestBid) is a security risk
-            // because it could execute an untrusted contract.
-            // It is always safer to let the recipients
-            // withdraw their money themselves.
+            // save the previously highest bid in the pending return pot
             pendingReturns[highestBidder] += highestBid;
         }
+
         highestBidder = msg.sender;
         highestBid = msg.value;
+
         emit HighestBidIncreased(msg.sender, msg.value);
     }
 
     /// Withdraw a bid that was overbid.
-    function withdraw() external returns (bool) {
-        uint amount = pendingReturns[msg.sender];
+    function withdraw() public {
+        uint256 amount = pendingReturns[msg.sender];
         if (amount > 0) {
-            // It is important to set this to zero because the recipient
-            // can call this function again as part of the receiving call
-            // before `send` returns.
             pendingReturns[msg.sender] = 0;
 
-            if (!payable(msg.sender).send(amount)) {
-                // No need to call throw here, just reset the amount owing
-                pendingReturns[msg.sender] = amount;
-                return false;
-            }
+            // send the preivous bid back to the sender
+            Address.sendValue(payable(msg.sender), amount);
         }
-        return true;
     }
 
-    /// End the auction and send the highest bid
-    /// to the beneficiary.
-    function auctionEnd() external {
-        // It is a good guideline to structure functions that interact
-        // with other contracts (i.e. they call functions or send Ether)
-        // into three phases:
-        // 1. checking conditions
-        // 2. performing actions (potentially changing conditions)
-        // 3. interacting with other contracts
-        // If these phases are mixed up, the other contract could call
-        // back into the current contract and modify the state or cause
-        // effects (ether payout) to be performed multiple times.
-        // If functions called internally include interaction with external
-        // contracts, they also have to be considered interaction with
-        // external contracts.
-
-        // 1. Conditions
-        if (block.timestamp < auctionEndTime)
+    /** 
+        End the auction and send the highest bid to the beneficiary.
+    */
+    function endAuction() public {
+        // check that the auction is ended
+        if (block.timestamp < auctionEndTime) {
             revert AuctionNotYetEnded();
-        if (ended)
+        }
+        // check that the auction end call have not already been called
+        if (ended) {
             revert AuctionEndAlreadyCalled();
+        }
 
-        // 2. Effects
+        // mark the auction as ended
         ended = true;
-        emit AuctionEnded(highestBidder, highestBid);
 
-        // 3. Interaction
-        beneficiary.transfer(highestBid);
+        if (highestBid == 0) {
+            // send the NFT to the beneficiary if no bid has been accepted
+            ERC721(nftContract).transferFrom(address(this), beneficiary, nftId);
+            emit AuctionNotFullfilled(nftId, nftContract, minimumBid);
+        }
+        else {
+            // send the highest bid to the beneficiary
+            Address.sendValue(beneficiary, highestBid);
+
+            emit AuctionEnded(highestBidder, highestBid);
+        }
     }
 }
