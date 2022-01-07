@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.11;
 
 import "./IStackingPanda.sol";
@@ -9,6 +9,9 @@ import "./StackingPanda.sol";
 contract Marketplace is IPRNG, IStackingPanda {
     PRNG public prng;
     StackingPanda public stackingPanda;
+    uint256 private _auctionId;
+    uint256 private _blindAuctionId;
+    uint256 private _saleId;
 
     constructor() {
         prng = PRNG(computePRNGAddress(msg.sender));
@@ -26,7 +29,16 @@ contract Marketplace is IPRNG, IStackingPanda {
         to allow the transfer of the nft.
      */
     function createAuction(uint256 _nft_id, address _nft_contract, uint256 _auction_creator) public {
-        //if()
+        if(_nft_contract == address(stackingPanda)) {
+            require(stackingPanda.getApproved(_nft_id) == address(this), "Trasfer not allowed for Marketplace operator");
+
+            // todo: compute and deploy auction address
+
+            stackingPanda.safeTransferFrom(msg.sender, auction, _nft_id);
+        }
+        else {
+
+        }
     }
 
     function createBlindAuction() public {
