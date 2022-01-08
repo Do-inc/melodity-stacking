@@ -15,6 +15,31 @@ contract Marketplace is IPRNG {
     address[] public blindAuctions;
     address[] public sales;
 
+    struct Royalty {
+        // number of decimal position to include in the royalty percent
+        uint8 decimals;
+        // royalty percent from 0 to 100% with `decimals` decimal position
+        uint256 royaltyPercent;
+        // address that will receive the royalties for future sales via this
+        // smart contract. Other smart contracts functionalities cannot be
+        // controlled in any way
+        address royaltyReceiver;
+        // address of the one who can edit all this royalty settings
+        address royaltyInitializer;
+    }
+
+    /**
+        This mapping is a workaround for a double map with 2 indexes.
+        index: keccak256(
+            abi.encode(
+                nft smart contract address,
+                nft identifier
+            )
+        )
+        map: Royalty
+     */
+    mapping(bytes32 => Royalty) public royalties;
+
     /*
      *     bytes4(keccak256('balanceOf(address)')) == 0x70a08231
      *     bytes4(keccak256('ownerOf(uint256)')) == 0x6352211e
@@ -46,6 +71,10 @@ contract Marketplace is IPRNG {
     error MarketplaceOperatorNotAllowed();
     /// The provided address does not seem to implement the ERC721 NFT standard
     error IncompatibleContractAddress();
+    /// Not owning the provided NFT
+    error NotOwningNFT(address caller, uint256 nftId, address nftContract);
+    /// Royalty percentage too high, max value is 50%
+    error RoyaltyPercentageTooHigh(uint256 percentage);
 
     constructor() {
         prng = PRNG(computePRNGAddress(msg.sender));
@@ -66,6 +95,41 @@ contract Marketplace is IPRNG {
         address _payee,
         uint256 _auctionDuration,
         uint256 _minimumPrice
+    ) private returns (address) {
+        // do not run any check on the contract as the checks are already performed by the
+        // parent call
+
+        // create a new auction for the user
+        Auction auction = new Auction(
+            _auctionDuration,
+            payable(_payee),
+            _nftId,
+            _nftContract,
+            _minimumPrice
+        );
+        auctions.push(auction);
+        address _auctionAddress = address(auction);
+
+        // move the stacking panda from the owner to the auction contract
+        nftContractInstance.safeTransferFrom(
+            msg.sender,
+            _auctionAddress,
+            _nftId
+        );
+
+        emit AuctionCreated(_auctionAddress, _nftId, _nftContract);
+        return _auctionAddress;
+    }
+
+    function createAuctionWithRoyalties(
+        uint256 _nftId,
+        address _nftContract,
+        address _payee,
+        uint256 _auctionDuration,
+        uint256 _minimumPrice,
+        uint256 _royaltyPercent,
+        address _royaltyReceiver,
+        address _royaltyInitializer
     ) public returns (address) {
         // smart contract agnostic auction creator
         if (
@@ -86,26 +150,53 @@ contract Marketplace is IPRNG {
 
             // check that the marketplace is allowed to transfer the provided nft
             // for the user
+            // ALERT: checking the approval does not check that the user actually owns the nft
+            // as parameters can per forged to pass this check without the caller to actually
+            // own the it. This won't be a problem in a standard context but as we're setting
+            // up the royalty base here a check must be done in order to check if it is should be
+            // set by the caller or not
             if (nftContractInstance.getApproved(_nftId) != address(this)) {
                 revert MarketplaceOperatorNotAllowed();
             }
 
-            // create a new auction for the user
-            Auction auction = new Auction(
-                _auctionDuration,
-                payable(_payee),
-                _nftId,
-                _nftContract,
-                _minimumPrice
-            );
-            auctions.push(auction);
-            address _auctionAddress = address(auction);
+            // check if the caller is the owner of the nft in case it is then proceed with further setup
+            if (nftContractInstance.ownerOf(_nftId) == msg.sender) {
+                bytes32 royaltyIdentifier = keccak256(
+                    abi.encode(_nftContract, _nftId)
+                );
 
-            // move the stacking panda from the owner to the auction contract
-            nftContractInstance.safeTransferFrom(msg.sender, _auctionAddress, _nftId);
+                // check if the royalty is already defined, in case it is this is not
+                // the call to edit it, the user *must* use the correct call to edit it
+                Royalty royalty = royalties[royaltyIdentifier];
 
-            emit AuctionCreated(_auctionAddress, _nftId, _nftContract);
-            return _auctionAddress;
+                // if the royalty initializer is the null address then the royalty is not
+                // yet initialized and can be initialized now
+                if (royalty.royaltyInitializer == address(0)) {
+                    // Check that _royaltyPercent is less or equal to 50% of the sold amount
+                    if (_royaltyPercent > 50 ether) {
+                        revert RoyaltyPercentageTooHigh(_royaltyPercent);
+                    }
+
+                    royalties[royaltyIdentifier] = Royalty({
+                        decimals: 18,
+                        royaltyPercent: _royaltyPercent, // the provided value *MUST* be padded to 18 decimal positions
+                        royaltyReceiver: _royaltyReceiver,
+                        royaltyInitializer: _royaltyInitializer == address(0)
+                            ? msg.sender
+                            : _royaltyInitializer
+                    });
+                }
+
+                return
+                    createAuction(
+                        _nftId,
+                        _nftContract,
+                        _payee,
+                        _auctionDuration,
+                        _minimumPrice
+                    );
+            }
+            revert NotOwningNFT(msg.sender, _nftId, _nftContract);
         }
         revert IncompatibleContractAddress();
     }

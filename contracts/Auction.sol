@@ -121,6 +121,9 @@ contract Auction is ERC721Holder {
             emit AuctionNotFullfilled(nftId, nftContract, minimumBid);
         }
         else {
+            // send the NFT to the bidder
+            ERC721(nftContract).transferFrom(address(this), highestBidder, nftId);
+
             // send the highest bid to the beneficiary
             Address.sendValue(beneficiary, highestBid);
 

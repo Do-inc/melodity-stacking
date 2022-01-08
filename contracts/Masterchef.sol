@@ -85,7 +85,6 @@ contract Masterchef is ERC721Holder {
     /**
         Trigger the minting of a new stacking panda, this function is publicly callable
         as the minted NFT will be given to the Masterchef contract.
-        // TODO: trigger listing once minted
      */
     function mintStackingPanda() public returns (address) {
         prng.rotate();
