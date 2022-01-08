@@ -66,6 +66,13 @@ contract Marketplace is IPRNG {
     bytes4 private constant _INTERFACE_ID_ERC721_METADATA = 0x5b5e139f;
 
     event AuctionCreated(address auction, uint256 nftId, address nftContract);
+    event RoyaltyUpdated(
+        uint256 nftId,
+        address nftContract,
+        uint256 royaltyPercent,
+        address royaltyReceiver,
+        address royaltyInitializer
+    );
 
     /// Trasfer not allowed for Marketplace operator
     error MarketplaceOperatorNotAllowed();
@@ -75,6 +82,8 @@ contract Marketplace is IPRNG {
     error NotOwningNFT(address caller, uint256 nftId, address nftContract);
     /// Royalty percentage too high, max value is 50%
     error RoyaltyPercentageTooHigh(uint256 percentage);
+    /// You're not the owner of the royalty
+    error RoyaltyNotOwned(address caller, uint256 nftId, address nftContract);
 
     constructor() {
         prng = PRNG(computePRNGAddress(msg.sender));
@@ -98,6 +107,10 @@ contract Marketplace is IPRNG {
     ) private returns (address) {
         // do not run any check on the contract as the checks are already performed by the
         // parent call
+
+        // load the instance of the nft contract into the ERC721 interface in order
+        // to expose all its methods
+        ERC721 nftContractInstance = ERC721(_nftContract);
 
         // create a new auction for the user
         Auction auction = new Auction(
@@ -167,7 +180,7 @@ contract Marketplace is IPRNG {
 
                 // check if the royalty is already defined, in case it is this is not
                 // the call to edit it, the user *must* use the correct call to edit it
-                Royalty royalty = royalties[royaltyIdentifier];
+                Royalty memory royalty = royalties[royaltyIdentifier];
 
                 // if the royalty initializer is the null address then the royalty is not
                 // yet initialized and can be initialized now
@@ -177,14 +190,26 @@ contract Marketplace is IPRNG {
                         revert RoyaltyPercentageTooHigh(_royaltyPercent);
                     }
 
+                    // if the royalty initializer is set to the null address automatically
+                    // use the caller address
+                    if (_royaltyInitializer == address(0)) {
+                        _royaltyInitializer = msg.sender;
+                    }
+
                     royalties[royaltyIdentifier] = Royalty({
                         decimals: 18,
                         royaltyPercent: _royaltyPercent, // the provided value *MUST* be padded to 18 decimal positions
                         royaltyReceiver: _royaltyReceiver,
-                        royaltyInitializer: _royaltyInitializer == address(0)
-                            ? msg.sender
-                            : _royaltyInitializer
+                        royaltyInitializer: _royaltyInitializer
                     });
+
+                    emit RoyaltyUpdated(
+                        _nftId,
+                        _nftContract,
+                        _royaltyPercent,
+                        _royaltyReceiver,
+                        _royaltyInitializer
+                    );
                 }
 
                 return
@@ -193,11 +218,80 @@ contract Marketplace is IPRNG {
                         _nftContract,
                         _payee,
                         _auctionDuration,
-                        _minimumPrice
+                        _minimumPrice,
+                        royalty.royaltyReceiver,
+                        royalty.royaltyPercent
                     );
             }
+
+            // implicit else, fallback to error
             revert NotOwningNFT(msg.sender, _nftId, _nftContract);
         }
+
+        // implicit else, fallback to error
+        revert IncompatibleContractAddress();
+    }
+
+    function updateRoyalty(
+        uint256 _nftId,
+        address _nftContract,
+        uint256 _royaltyPercent,
+        address _royaltyReceiver,
+        address _royaltyInitializer
+    ) public returns (Royalty memory) {
+        // smart contract agnostic auction creator
+        if (
+            // check the SC supports the ERC721 openzeppelin interface
+            ERC165Checker.supportsInterface(
+                _nftContract,
+                _INTERFACE_ID_ERC721
+            ) &&
+            // check the SC supports the ERC721-Metadata openzeppelin interface
+            ERC165Checker.supportsInterface(
+                _nftContract,
+                _INTERFACE_ID_ERC721_METADATA
+            )
+        ) {
+            bytes32 royaltyIdentifier = keccak256(
+                abi.encode(_nftContract, _nftId)
+            );
+
+            Royalty memory royalty = royalties[royaltyIdentifier];
+
+            if (msg.sender == royalty.royaltyInitializer) {
+                // Check that _royaltyPercent is less or equal to 50% of the sold amount
+                if (_royaltyPercent > 50 ether) {
+                    revert RoyaltyPercentageTooHigh(_royaltyPercent);
+                }
+
+                // if the royalty initializer is set to the null address automatically
+                // use the caller address
+                if (_royaltyInitializer == address(0)) {
+                    _royaltyInitializer = msg.sender;
+                }
+
+                royalties[royaltyIdentifier] = Royalty({
+                    decimals: 18,
+                    royaltyPercent: _royaltyPercent, // the provided value *MUST* be padded to 18 decimal positions
+                    royaltyReceiver: _royaltyReceiver,
+                    royaltyInitializer: _royaltyInitializer
+                });
+
+                emit RoyaltyUpdated(
+                    _nftId,
+                    _nftContract,
+                    _royaltyPercent,
+                    _royaltyReceiver,
+                    _royaltyInitializer
+                );
+
+                return royalties[royaltyIdentifier];
+            }
+
+            revert RoyaltyNotOwned(msg.sender, _nftId, _nftContract);
+        }
+
+        // implicit else, fallback to error
         revert IncompatibleContractAddress();
     }
 
