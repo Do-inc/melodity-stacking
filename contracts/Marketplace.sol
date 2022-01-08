@@ -87,24 +87,42 @@ contract Marketplace is IPRNG {
 
     constructor() {
         prng = PRNG(computePRNGAddress(msg.sender));
+        prng.rotate();
     }
 
     /**
         Create a public auction. The auctioner *must* own the NFT to sell.
         Once the auction ends anyone can trigger the release of the funds raised.
-        All the participant can also release their bids.
+        All the participant can also release their bids at anytime if they are not the
+        higher bidder.
         This contract is not responsible for handling the real auction but only for its creation.
 
         NOTE: Before actually starting the creation of the auction the user needs
         to allow the transfer of the nft.
+
+        @param _nftId The unique identifier of the NFT that is being sold
+        @param _nftContract The address of the contract of the NFT
+        @param _payee The address where the highest big will be credited
+        @param _auctionDuration Number of seconds the auction will be valid
+        @param _minimumPrice The minimum bid that must be placed in order for the auction to start.
+                Bid lower than this amount are refused.
+                If no bid is higher than this amount at the end of the auction the NFT will be sent
+                to the beneficiary
+        @param _royaltyReceiver The address of the royalty receiver for a given auction
+        @param _royaltyPercentage The 18 decimals percentage of the highest bid that will be sent to 
+                the royalty receiver
      */
     function createAuction(
         uint256 _nftId,
         address _nftContract,
         address _payee,
         uint256 _auctionDuration,
-        uint256 _minimumPrice
+        uint256 _minimumPrice,
+        address _royaltyReceiver,
+        uint256 _royaltyPercentage
     ) private returns (address) {
+        prng.rotate();
+
         // do not run any check on the contract as the checks are already performed by the
         // parent call
 
@@ -118,7 +136,9 @@ contract Marketplace is IPRNG {
             payable(_payee),
             _nftId,
             _nftContract,
-            _minimumPrice
+            _minimumPrice,
+            _royaltyReceiver,
+            _royaltyPercentage
         );
         auctions.push(auction);
         address _auctionAddress = address(auction);
@@ -134,6 +154,27 @@ contract Marketplace is IPRNG {
         return _auctionAddress;
     }
 
+    /**
+        Create a public auction and if not initialized yet, init the royalty for the
+        (smart contract address, nft identifier) pair
+
+        NOTE: This method cannot be used to edit royalties values
+        WARNING: Only ERC721 compliant NFTs can be sold, other standards are not supported
+
+        @param _nftId The unique identifier of the NFT that is being sold
+        @param _nftContract The address of the contract of the NFT
+        @param _payee The address where the highest big will be credited
+        @param _auctionDuration Number of seconds the auction will be valid
+        @param _minimumPrice The minimum bid that must be placed in order for the auction to start.
+                Bid lower than this amount are refused.
+                If no bid is higher than this amount at the end of the auction the NFT will be sent
+                to the beneficiary
+        @param _royaltyPercent The 18 decimals percentage of the highest bid that will be sent to 
+                the royalty receiver
+        @param _royaltyReceiver The address of the royalty receiver for a given auction
+        @param _royaltyInitializer The address that will be allowed to edit the royalties, if the
+                null address is provided sender address will be used
+     */
     function createAuctionWithRoyalties(
         uint256 _nftId,
         address _nftContract,
@@ -144,6 +185,8 @@ contract Marketplace is IPRNG {
         address _royaltyReceiver,
         address _royaltyInitializer
     ) public returns (address) {
+        prng.rotate();
+
         // smart contract agnostic auction creator
         if (
             // check the SC supports the ERC721 openzeppelin interface
@@ -232,6 +275,13 @@ contract Marketplace is IPRNG {
         revert IncompatibleContractAddress();
     }
 
+    /**
+        This call let the royalty initializer of a (smart contract, nft) pair
+        edit the royalty settings.
+
+        NOTE: The maximum royalty that can be taken is 50%
+        WARNING: Only ERC721 compliant NFTs can be sold, other standards are not supported
+     */
     function updateRoyalty(
         uint256 _nftId,
         address _nftContract,
@@ -239,6 +289,8 @@ contract Marketplace is IPRNG {
         address _royaltyReceiver,
         address _royaltyInitializer
     ) public returns (Royalty memory) {
+        prng.rotate();
+
         // smart contract agnostic auction creator
         if (
             // check the SC supports the ERC721 openzeppelin interface
@@ -295,7 +347,15 @@ contract Marketplace is IPRNG {
         revert IncompatibleContractAddress();
     }
 
-    function createBlindAuction() public {}
+    function createBlindAuction() public {
+        prng.rotate();
 
-    function createSale() public {}
+
+    }
+
+    function createSale() public {
+        prng.rotate();
+
+
+    }
 }
