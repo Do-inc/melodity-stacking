@@ -13,8 +13,10 @@ contract Masterchef is ERC721Holder {
     PRNG public prng;
     Marketplace public marketplace;
 
-    uint256 public mintingEpoch = 84 hours;
+    uint256 public mintingEpoch = 7 days;
     uint256 public lastMintingEvent;
+
+    address DoIncMultisigWallet = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
 
     struct PandaIdentification {
         string name;
@@ -26,7 +28,7 @@ contract Masterchef is ERC721Holder {
     event StackingPandaMinted(uint256 id);
     event StackingPandaForSale(address auction, uint256 id);
 
-    /// New pandas can be minted only once every 84h
+    /// New pandas can be minted only once every 7 days
     error PandaRestingTime();
 
     constructor() {
@@ -121,17 +123,20 @@ contract Masterchef is ERC721Holder {
         return _listForSale(pandaId);
     }
 
-    function _listForSale(uint256 _pandaId) private returns(address) {
+    function _listForSale(uint256 _pandaId) private returns (address) {
         // approve the marketplace to create and start the auction
         stackingPanda.approve(address(marketplace), _pandaId);
 
-        address auction = marketplace.createAuction(
+        address auction = marketplace.createAuctionWithRoyalties(
             _pandaId,
             address(stackingPanda),
             // Melodity's multisig wallet address
-            0x01Af10f1343C05855955418bb99302A6CF71aCB8,
+            DoIncMultisigWallet,
             7 days,
-            0.1 ether
+            0.1 ether,
+            1 ether,
+            DoIncMultisigWallet,
+            DoIncMultisigWallet
         );
 
         emit StackingPandaForSale(auction, _pandaId);

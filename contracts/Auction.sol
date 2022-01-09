@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "./IPRNG.sol";
 import "./PRNG.sol";
 
-
 contract Auction is ERC721Holder, IPRNG {
     PRNG public prng;
 

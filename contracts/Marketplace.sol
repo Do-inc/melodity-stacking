@@ -85,6 +85,22 @@ contract Marketplace is IPRNG {
     /// You're not the owner of the royalty
     error RoyaltyNotOwned(address caller, uint256 nftId, address nftContract);
 
+    modifier onlyERC721(address _contract) {
+        if (
+            // check the SC supports the ERC721 openzeppelin interface
+            ERC165Checker.supportsInterface(_contract, _INTERFACE_ID_ERC721) &&
+            // check the SC supports the ERC721-Metadata openzeppelin interface
+            ERC165Checker.supportsInterface(
+                _contract,
+                _INTERFACE_ID_ERC721_METADATA
+            )
+        ) {
+            _;
+        }
+
+        revert IncompatibleContractAddress();
+    }
+
     constructor() {
         prng = PRNG(computePRNGAddress(msg.sender));
         prng.rotate();
@@ -184,133 +200,37 @@ contract Marketplace is IPRNG {
         uint256 _royaltyPercent,
         address _royaltyReceiver,
         address _royaltyInitializer
-    ) public returns (address) {
+    ) public onlyERC721(_nftContract) returns (address) {
         prng.rotate();
+		
+        // load the instance of the nft contract into the ERC721 interface in order
+        // to expose all its methods
+        ERC721 nftContractInstance = ERC721(_nftContract);
 
-        // smart contract agnostic auction creator
-        if (
-            // check the SC supports the ERC721 openzeppelin interface
-            ERC165Checker.supportsInterface(
-                _nftContract,
-                _INTERFACE_ID_ERC721
-            ) &&
-            // check the SC supports the ERC721-Metadata openzeppelin interface
-            ERC165Checker.supportsInterface(
-                _nftContract,
-                _INTERFACE_ID_ERC721_METADATA
-            )
-        ) {
-            // load the instance of the nft contract into the ERC721 interface in order
-            // to expose all its methods
-            ERC721 nftContractInstance = ERC721(_nftContract);
-
-            // check that the marketplace is allowed to transfer the provided nft
-            // for the user
-            // ALERT: checking the approval does not check that the user actually owns the nft
-            // as parameters can per forged to pass this check without the caller to actually
-            // own the it. This won't be a problem in a standard context but as we're setting
-            // up the royalty base here a check must be done in order to check if it is should be
-            // set by the caller or not
-            if (nftContractInstance.getApproved(_nftId) != address(this)) {
-                revert MarketplaceOperatorNotAllowed();
-            }
-
-            // check if the caller is the owner of the nft in case it is then proceed with further setup
-            if (nftContractInstance.ownerOf(_nftId) == msg.sender) {
-                bytes32 royaltyIdentifier = keccak256(
-                    abi.encode(_nftContract, _nftId)
-                );
-
-                // check if the royalty is already defined, in case it is this is not
-                // the call to edit it, the user *must* use the correct call to edit it
-                Royalty memory royalty = royalties[royaltyIdentifier];
-
-                // if the royalty initializer is the null address then the royalty is not
-                // yet initialized and can be initialized now
-                if (royalty.royaltyInitializer == address(0)) {
-                    // Check that _royaltyPercent is less or equal to 50% of the sold amount
-                    if (_royaltyPercent > 50 ether) {
-                        revert RoyaltyPercentageTooHigh(_royaltyPercent);
-                    }
-
-                    // if the royalty initializer is set to the null address automatically
-                    // use the caller address
-                    if (_royaltyInitializer == address(0)) {
-                        _royaltyInitializer = msg.sender;
-                    }
-
-                    royalties[royaltyIdentifier] = Royalty({
-                        decimals: 18,
-                        royaltyPercent: _royaltyPercent, // the provided value *MUST* be padded to 18 decimal positions
-                        royaltyReceiver: _royaltyReceiver,
-                        royaltyInitializer: _royaltyInitializer
-                    });
-
-                    emit RoyaltyUpdated(
-                        _nftId,
-                        _nftContract,
-                        _royaltyPercent,
-                        _royaltyReceiver,
-                        _royaltyInitializer
-                    );
-                }
-
-                return
-                    createAuction(
-                        _nftId,
-                        _nftContract,
-                        _payee,
-                        _auctionDuration,
-                        _minimumPrice,
-                        royalty.royaltyReceiver,
-                        royalty.royaltyPercent
-                    );
-            }
-
-            // implicit else, fallback to error
-            revert NotOwningNFT(msg.sender, _nftId, _nftContract);
+        // check that the marketplace is allowed to transfer the provided nft
+        // for the user
+        // ALERT: checking the approval does not check that the user actually owns the nft
+        // as parameters can per forged to pass this check without the caller to actually
+        // own the it. This won't be a problem in a standard context but as we're setting
+        // up the royalty base here a check must be done in order to check if it is should be
+        // set by the caller or not
+        if (nftContractInstance.getApproved(_nftId) != address(this)) {
+            revert MarketplaceOperatorNotAllowed();
         }
 
-        // implicit else, fallback to error
-        revert IncompatibleContractAddress();
-    }
-
-    /**
-        This call let the royalty initializer of a (smart contract, nft) pair
-        edit the royalty settings.
-
-        NOTE: The maximum royalty that can be taken is 50%
-        WARNING: Only ERC721 compliant NFTs can be sold, other standards are not supported
-     */
-    function updateRoyalty(
-        uint256 _nftId,
-        address _nftContract,
-        uint256 _royaltyPercent,
-        address _royaltyReceiver,
-        address _royaltyInitializer
-    ) public returns (Royalty memory) {
-        prng.rotate();
-
-        // smart contract agnostic auction creator
-        if (
-            // check the SC supports the ERC721 openzeppelin interface
-            ERC165Checker.supportsInterface(
-                _nftContract,
-                _INTERFACE_ID_ERC721
-            ) &&
-            // check the SC supports the ERC721-Metadata openzeppelin interface
-            ERC165Checker.supportsInterface(
-                _nftContract,
-                _INTERFACE_ID_ERC721_METADATA
-            )
-        ) {
+        // check if the caller is the owner of the nft in case it is then proceed with further setup
+        if (nftContractInstance.ownerOf(_nftId) == msg.sender) {
             bytes32 royaltyIdentifier = keccak256(
                 abi.encode(_nftContract, _nftId)
             );
 
+            // check if the royalty is already defined, in case it is this is not
+            // the call to edit it, the user *must* use the correct call to edit it
             Royalty memory royalty = royalties[royaltyIdentifier];
 
-            if (msg.sender == royalty.royaltyInitializer) {
+            // if the royalty initializer is the null address then the royalty is not
+            // yet initialized and can be initialized now
+            if (royalty.royaltyInitializer == address(0)) {
                 // Check that _royaltyPercent is less or equal to 50% of the sold amount
                 if (_royaltyPercent > 50 ether) {
                     revert RoyaltyPercentageTooHigh(_royaltyPercent);
@@ -336,26 +256,90 @@ contract Marketplace is IPRNG {
                     _royaltyReceiver,
                     _royaltyInitializer
                 );
-
-                return royalties[royaltyIdentifier];
             }
 
-            revert RoyaltyNotOwned(msg.sender, _nftId, _nftContract);
+            return
+                createAuction(
+                    _nftId,
+                    _nftContract,
+                    _payee,
+                    _auctionDuration,
+                    _minimumPrice,
+                    royalty.royaltyReceiver,
+                    royalty.royaltyPercent
+                );
         }
 
         // implicit else, fallback to error
-        revert IncompatibleContractAddress();
+        revert NotOwningNFT(msg.sender, _nftId, _nftContract);
+    }
+
+    /**
+        This call let the royalty initializer of a (smart contract, nft) pair
+        edit the royalty settings.
+
+        NOTE: The maximum royalty that can be taken is 50%
+        WARNING: Only ERC721 compliant NFTs can be sold, other standards are not supported
+
+		@param _nftId The unique identifier of the NFT that is being sold
+		@param _nftContract The address of the contract of the NFT
+		@param _royaltyPercent The 18 decimals percentage of the highest bid that will be sent to 
+                the royalty receiver
+		@param _royaltyReceiver The address of the royalty receiver for a given auction
+		@param _royaltyInitializer The address that will be allowed to edit the royalties, if the
+                null address is provided sender address will be used
+     */
+    function updateRoyalty(
+        uint256 _nftId,
+        address _nftContract,
+        uint256 _royaltyPercent,
+        address _royaltyReceiver,
+        address _royaltyInitializer
+    ) public onlyERC721(_nftContract) returns (Royalty memory) {
+        prng.rotate();
+
+        bytes32 royaltyIdentifier = keccak256(abi.encode(_nftContract, _nftId));
+
+        Royalty memory royalty = royalties[royaltyIdentifier];
+
+        if (msg.sender == royalty.royaltyInitializer) {
+            // Check that _royaltyPercent is less or equal to 50% of the sold amount
+            if (_royaltyPercent > 50 ether) {
+                revert RoyaltyPercentageTooHigh(_royaltyPercent);
+            }
+
+            // if the royalty initializer is set to the null address automatically
+            // use the caller address
+            if (_royaltyInitializer == address(0)) {
+                _royaltyInitializer = msg.sender;
+            }
+
+            royalties[royaltyIdentifier] = Royalty({
+                decimals: 18,
+                royaltyPercent: _royaltyPercent, // the provided value *MUST* be padded to 18 decimal positions
+                royaltyReceiver: _royaltyReceiver,
+                royaltyInitializer: _royaltyInitializer
+            });
+
+            emit RoyaltyUpdated(
+                _nftId,
+                _nftContract,
+                _royaltyPercent,
+                _royaltyReceiver,
+                _royaltyInitializer
+            );
+
+            return royalties[royaltyIdentifier];
+        }
+
+        revert RoyaltyNotOwned(msg.sender, _nftId, _nftContract);
     }
 
     function createBlindAuction() public {
         prng.rotate();
-
-
     }
 
     function createSale() public {
         prng.rotate();
-
-
     }
 }
