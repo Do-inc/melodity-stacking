@@ -28,22 +28,20 @@ contract Auction is ERC721Holder, IPRNG {
     uint256 public nftId;
     uint256 public minimumBid;
 
-    address royaltyReceiver;
-    uint256 royaltyPercent;
+    address public royaltyReceiver;
+    uint256 public royaltyPercent;
 
     event HighestBidIncreased(address bidder, uint256 amount);
     event AuctionEnded(address winner, uint256 amount);
     event AuctionNotFullfilled(uint256 nftId, address nftContract, uint256 minimumBid);
     event RoyaltyPaid(address receiver, uint256 amount, uint256 royaltyPercentage);
 
-    /// Auction already ended.
+    /// Auction already ended
     error AuctionAlreadyEnded();
-    /// Higher or equal bid already present.
+    /// Higher or equal bid already present
     error BidNotHighEnough(uint256 highestBid);
-    /// Auction not ended yet.
+    /// Auction not ended yet
     error AuctionNotYetEnded();
-    /// Auction end already called.
-    error AuctionEndAlreadyCalled();
     /// Bid not high enough to participate in this auction
     error BidTooLow(uint256 minimumBid);
 
@@ -62,6 +60,7 @@ contract Auction is ERC721Holder, IPRNG {
         @param _royaltyReceiver The address of the royalty receiver for a given auction
         @param _royaltyPercentage The 18 decimals percentage of the highest bid that will be sent to 
                 the royalty receiver
+		@param _masterchef The address of the masterchef who deployed the prng
     */
     constructor(
         uint256 _biddingTime,
@@ -70,9 +69,10 @@ contract Auction is ERC721Holder, IPRNG {
         address _nftContract,
         uint256 _minimumBid,
         address _royaltyReceiver,
-        uint256 _royaltyPercentage
+        uint256 _royaltyPercentage,
+		address _masterchef
     ) {
-        prng = PRNG(computePRNGAddress(msg.sender));
+        prng = PRNG(computePRNGAddress(_masterchef));
         prng.rotate();
 
         beneficiary = _beneficiaryAddress;

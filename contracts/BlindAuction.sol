@@ -8,6 +8,8 @@ import "./IPRNG.sol";
 import "./PRNG.sol";
 
 contract BlindAuction is ERC721Holder, IPRNG {
+    PRNG public prng;
+
     struct Bid {
         bytes32 blindedBid;
         uint256 deposit;
@@ -18,26 +20,32 @@ contract BlindAuction is ERC721Holder, IPRNG {
     uint256 public revealEnd;
     bool public ended;
 
+    address public nftContract;
+    uint256 public nftId;
+    uint256 public minimumBid;
+
+    address public royaltyReceiver;
+    uint256 public royaltyPercent;
+
     mapping(address => Bid[]) public bids;
 
     address public highestBidder;
     uint256 public highestBid;
 
-    // Allowed withdrawals of previous bids
+    // Allowed withdrawals of previous bids that were overbid
     mapping(address => uint256) private pendingReturns;
 
+    event BidPlaced(address bidder);
     event AuctionEnded(address winner, uint256 highestBid);
 
-    // Errors that describe failures.
-
-    /// The function has been called too early.
-    /// Try again at `time`.
+    /// Method called too early
     error TooEarly(uint256 time);
-    /// The function has been called too late.
-    /// It cannot be called after `time`.
+    /// Method called too late
     error TooLate(uint256 time);
-    /// The function auctionEnd has already been called.
-    error AuctionEndAlreadyCalled();
+    /// Auction already ended
+    error AuctionAlreadyEnded();
+    /// Bid not high enough to participate in this auction
+    error BidTooLow(uint256 minimumBid);
 
     // Modifiers are a convenient way to validate inputs to
     // functions. `onlyBefore` is applied to `bid` below:
@@ -57,28 +65,49 @@ contract BlindAuction is ERC721Holder, IPRNG {
     }
 
     constructor(
-        uint256 biddingTime,
-        uint256 revealTime,
-        address payable beneficiaryAddress
+        uint256 _biddingTime,
+        uint256 _revealTime,
+        address payable _beneficiaryAddress,
+        uint256 _nftId,
+        address _nftContract,
+        uint256 _minimumBid,
+        address _royaltyReceiver,
+        uint256 _royaltyPercentage,
+        address _masterchef
     ) {
-        beneficiary = beneficiaryAddress;
-        biddingEnd = block.timestamp + biddingTime;
-        revealEnd = biddingEnd + revealTime;
+        prng = PRNG(computePRNGAddress(_masterchef));
+        prng.rotate();
+
+        beneficiary = _beneficiaryAddress;
+        biddingEnd = block.timestamp + _biddingTime;
+        revealEnd = biddingEnd + _revealTime;
+        nftContract = _nftContract;
+        nftId = _nftId;
+        minimumBid = _minimumBid;
+        royaltyReceiver = _royaltyReceiver;
+        royaltyPercent = _royaltyPercentage;
     }
 
-    /// Place a blinded bid with `blindedBid` =
-    /// keccak256(abi.encode(value, fake, secret)).
-    /// The sent ether is only refunded if the bid is correctly
-    /// revealed in the revealing phase. The bid is valid if the
-    /// ether sent together with the bid is at least "value" and
-    /// "fake" is not true. Setting "fake" to true and sending
-    /// not the exact amount are ways to hide the real bid but
-    /// still make the required deposit. The same address can
-    /// place multiple bids.
+    /** 
+		Place a blinded bid with 
+		`blindedBid` = keccak256(abi.encode(value, fake, secret)).
+    	The sent ether is only refunded if the bid is correctly
+     	revealed in the revealing phase. 
+		The bid is valid if the ether sent together with the bid 
+		is at least "value" and "fake" is not true. 
+		Setting "fake" to true and sending not the exact amount 
+		are ways to hide the real bid but still make the required 
+		deposit. 
+		The same address can place multiple bids.
+	*/
     function bid(bytes32 blindedBid) external payable onlyBefore(biddingEnd) {
+        prng.rotate();
+
         bids[msg.sender].push(
             Bid({blindedBid: blindedBid, deposit: msg.value})
         );
+
+        emit BidPlaced(msg.sender);
     }
 
     /// Reveal your blinded bids. You will get a refund for all
@@ -89,6 +118,8 @@ contract BlindAuction is ERC721Holder, IPRNG {
         bool[] calldata fakes,
         bytes32[] calldata secrets
     ) external onlyAfter(biddingEnd) onlyBefore(revealEnd) {
+        prng.rotate();
+
         uint256 length = bids[msg.sender].length;
         require(values.length == length);
         require(fakes.length == length);
@@ -97,11 +128,13 @@ contract BlindAuction is ERC721Holder, IPRNG {
         uint256 refund;
         for (uint256 i = 0; i < length; i++) {
             Bid storage bidToCheck = bids[msg.sender][i];
+
             (uint256 value, bool fake, bytes32 secret) = (
                 values[i],
                 fakes[i],
                 secrets[i]
             );
+
             if (
                 bidToCheck.blindedBid !=
                 keccak256(abi.encode(value, fake, secret))
@@ -110,19 +143,23 @@ contract BlindAuction is ERC721Holder, IPRNG {
                 // Do not refund deposit.
                 continue;
             }
+
             refund += bidToCheck.deposit;
             if (!fake && bidToCheck.deposit >= value) {
-                if (placeBid(msg.sender, value)) refund -= value;
+                if (placeBid(msg.sender, value)) {
+                    refund -= value;
+                }
             }
+
             // Make it impossible for the sender to re-claim
             // the same deposit.
             bidToCheck.blindedBid = bytes32(0);
         }
-        payable(msg.sender).transfer(refund);
+        Address.sendValue(payable(msg.sender), refund);
     }
 
     /// Withdraw a bid that was overbid.
-    function withdraw() external {
+    function withdraw() public {
         uint256 amount = pendingReturns[msg.sender];
         if (amount > 0) {
             // It is important to set this to zero because the recipient
@@ -131,17 +168,20 @@ contract BlindAuction is ERC721Holder, IPRNG {
             // conditions -> effects -> interaction).
             pendingReturns[msg.sender] = 0;
 
-            payable(msg.sender).transfer(amount);
+            Address.sendValue(payable(msg.sender), amount);
         }
     }
 
     /// End the auction and send the highest bid
     /// to the beneficiary.
-    function auctionEnd() external onlyAfter(revealEnd) {
-        if (ended) revert AuctionEndAlreadyCalled();
+    function auctionEnd() public onlyAfter(revealEnd) {
+        if (ended) {
+            revert AuctionAlreadyEnded();
+        }
+
         emit AuctionEnded(highestBidder, highestBid);
         ended = true;
-        beneficiary.transfer(highestBid);
+        Address.sendValue(beneficiary, highestBid);
     }
 
     // This is an "internal" function which means that it
@@ -151,13 +191,17 @@ contract BlindAuction is ERC721Holder, IPRNG {
         internal
         returns (bool success)
     {
-        if (value <= highestBid) {
+		// refuse revealed bids that are lower than the current
+		// highest bid or that are lower than the minimum bid
+        if (value <= highestBid || value < minimumBid) {
             return false;
         }
+
         if (highestBidder != address(0)) {
             // Refund the previously highest bidder.
             pendingReturns[highestBidder] += highestBid;
         }
+
         highestBid = value;
         highestBidder = bidder;
         return true;

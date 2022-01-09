@@ -10,6 +10,7 @@ import "./Auction.sol";
 
 contract Marketplace is IPRNG {
     PRNG public prng;
+	address private _masterchef;
 
     Auction[] public auctions;
     address[] public blindAuctions;
@@ -102,6 +103,7 @@ contract Marketplace is IPRNG {
     }
 
     constructor() {
+		_masterchef = msg.sender;
         prng = PRNG(computePRNGAddress(msg.sender));
         prng.rotate();
     }
@@ -154,7 +156,8 @@ contract Marketplace is IPRNG {
             _nftContract,
             _minimumPrice,
             _royaltyReceiver,
-            _royaltyPercentage
+            _royaltyPercentage,
+			
         );
         auctions.push(auction);
         address _auctionAddress = address(auction);
@@ -202,7 +205,7 @@ contract Marketplace is IPRNG {
         address _royaltyInitializer
     ) public onlyERC721(_nftContract) returns (address) {
         prng.rotate();
-		
+
         // load the instance of the nft contract into the ERC721 interface in order
         // to expose all its methods
         ERC721 nftContractInstance = ERC721(_nftContract);
