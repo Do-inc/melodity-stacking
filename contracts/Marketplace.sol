@@ -93,6 +93,8 @@ contract Marketplace is IPRNG {
     error RoyaltyNotOwned(address caller, uint256 nftId, address nftContract);
 
     modifier onlyERC721(address _contract) {
+		prng.rotate();
+
         if (
             // check the SC supports the ERC721 openzeppelin interface
             ERC165Checker.supportsInterface(_contract, _INTERFACE_ID_ERC721) &&
@@ -135,6 +137,7 @@ contract Marketplace is IPRNG {
         @param _royaltyReceiver The address of the royalty receiver for a given auction
         @param _royaltyPercentage The 18 decimals percentage of the highest bid that will be sent to 
                 the royalty receiver
+		@param _blind Whether the auction to be created is a blind auction or a simple one
      */
     function createAuction(
         uint256 _nftId,
@@ -143,7 +146,8 @@ contract Marketplace is IPRNG {
         uint256 _auctionDuration,
         uint256 _minimumPrice,
         address _royaltyReceiver,
-        uint256 _royaltyPercentage
+        uint256 _royaltyPercentage,
+		bool _blind
     ) private returns (address) {
         prng.rotate();
 
@@ -154,94 +158,51 @@ contract Marketplace is IPRNG {
         // to expose all its methods
         ERC721 nftContractInstance = ERC721(_nftContract);
 
-        // create a new auction for the user
-        Auction auction = new Auction(
-            _auctionDuration,
-            payable(_payee),
-            _nftId,
-            _nftContract,
-            _minimumPrice,
-            _royaltyReceiver,
-            _royaltyPercentage,
-            _masterchef
-        );
-        auctions.push(auction);
-        address _auctionAddress = address(auction);
+		address _auctionAddress;
 
-        // move the stacking panda from the owner to the auction contract
-        nftContractInstance.safeTransferFrom(
-            msg.sender,
-            _auctionAddress,
-            _nftId
-        );
+		if (!_blind) {
+			// create a new auction for the user
+			Auction auction = new Auction(
+				_auctionDuration,
+				payable(_payee),
+				_nftId,
+				_nftContract,
+				_minimumPrice,
+				_royaltyReceiver,
+				_royaltyPercentage,
+				_masterchef
+			);
+			auctions.push(auction);
+			_auctionAddress = address(auction);
 
-        emit AuctionCreated(_auctionAddress, _nftId, _nftContract);
-        return _auctionAddress;
-    }
+			emit AuctionCreated(_auctionAddress, _nftId, _nftContract);
+		}
+		else {
+			// create a new blind auction for the user
+			BlindAuction blindAuction = new BlindAuction(
+				_auctionDuration,
+				1 days,
+				payable(_payee),
+				_nftId,
+				_nftContract,
+				_minimumPrice,
+				_royaltyReceiver,
+				_royaltyPercentage,
+				_masterchef
+			);
+			blindAuctions.push(blindAuction);
+			_auctionAddress = address(blindAuction);
 
-    /**
-        Create a blind auction. The auctioner *must* own the NFT to sell.
-        Once the auction ends anyone can trigger the release of the funds raised.
-        All the participant can also release their bids at anytime if they are not the
-        higher bidder.
-        This contract is not responsible for handling the real auction but only for its creation.
+			emit BlindAuctionCreated(_auctionAddress, _nftId, _nftContract);
+		}
 
-        NOTE: Before actually starting the creation of the auction the user needs
-        	to allow the transfer of the nft.
-
-        @param _nftId The unique identifier of the NFT that is being sold
-        @param _nftContract The address of the contract of the NFT
-        @param _payee The address where the highest big will be credited
-        @param _auctionDuration Number of seconds the auction will be valid
-        @param _minimumPrice The minimum bid that must be placed in order for the auction to start.
-                Bid lower than this amount are refused.
-                If no bid is higher than this amount at the end of the auction the NFT will be sent
-                to the beneficiary
-        @param _royaltyReceiver The address of the royalty receiver for a given auction
-        @param _royaltyPercentage The 18 decimals percentage of the highest bid that will be sent to 
-                the royalty receiver
-     */
-    function createBlindAuction(
-        uint256 _nftId,
-        address _nftContract,
-        address _payee,
-        uint256 _auctionDuration,
-        uint256 _minimumPrice,
-        address _royaltyReceiver,
-        uint256 _royaltyPercentage
-    ) private returns (address) {
-        prng.rotate();
-
-        // do not run any check on the contract as the checks are already performed by the
-        // parent call
-
-        // load the instance of the nft contract into the ERC721 interface in order
-        // to expose all its methods
-        ERC721 nftContractInstance = ERC721(_nftContract);
-
-        // create a new blind auction for the user
-        BlindAuction blindAuction = new BlindAuction(
-            _auctionDuration,
-            1 days,
-            payable(_payee),
-            _nftId,
-            _nftContract,
-            _minimumPrice,
-            _royaltyReceiver,
-            _royaltyPercentage,
-            _masterchef
-        );
-        blindAuctions.push(blindAuction);
-        address _auctionAddress = address(blindAuction);
-
-        // move the stacking panda from the owner to the auction contract
-        nftContractInstance.safeTransferFrom(
-            msg.sender,
-            _auctionAddress,
-            _nftId
-        );
-
-        emit BlindAuctionCreated(_auctionAddress, _nftId, _nftContract);
+		// move the NFT from the owner to the auction contract
+		nftContractInstance.safeTransferFrom(
+			msg.sender,
+			_auctionAddress,
+			_nftId
+		);
+        
         return _auctionAddress;
     }
 
@@ -264,6 +225,8 @@ contract Marketplace is IPRNG {
         address _royaltyReceiver,
         address _royaltyInitializer
     ) private returns (Royalty memory) {
+		prng.rotate();
+
         bytes32 royaltyIdentifier = keccak256(abi.encode(_nftContract, _nftId));
 
         // check if the royalty is already defined, in case it is this is not
@@ -336,8 +299,6 @@ contract Marketplace is IPRNG {
         address _royaltyReceiver,
         address _royaltyInitializer
     ) public onlyERC721(_nftContract) returns (address) {
-        prng.rotate();
-
         // load the instance of the nft contract into the ERC721 interface in order
         // to expose all its methods
         ERC721 nftContractInstance = ERC721(_nftContract);
@@ -371,7 +332,8 @@ contract Marketplace is IPRNG {
                     _auctionDuration,
                     _minimumPrice,
                     royalty.royaltyReceiver,
-                    royalty.royaltyPercent
+                    royalty.royaltyPercent,
+					false
                 );
         }
 
@@ -401,8 +363,6 @@ contract Marketplace is IPRNG {
         address _royaltyReceiver,
         address _royaltyInitializer
     ) public onlyERC721(_nftContract) returns (Royalty memory) {
-        prng.rotate();
-
         bytes32 royaltyIdentifier = keccak256(abi.encode(_nftContract, _nftId));
 
         Royalty memory royalty = royalties[royaltyIdentifier];
@@ -450,8 +410,6 @@ contract Marketplace is IPRNG {
         address _royaltyReceiver,
         address _royaltyInitializer
     ) public onlyERC721(_nftContract) returns (address) {
-        prng.rotate();
-
         // load the instance of the nft contract into the ERC721 interface in order
         // to expose all its methods
         ERC721 nftContractInstance = ERC721(_nftContract);
@@ -478,14 +436,15 @@ contract Marketplace is IPRNG {
             );
 
             return
-                createBlindAuction(
+                createAuction(
                     _nftId,
                     _nftContract,
                     _payee,
                     _auctionDuration,
                     _minimumPrice,
                     royalty.royaltyReceiver,
-                    royalty.royaltyPercent
+                    royalty.royaltyPercent,
+					true
                 );
         }
 
