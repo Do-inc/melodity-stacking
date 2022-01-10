@@ -37,6 +37,8 @@ contract BlindAuction is ERC721Holder, IPRNG {
 
     event BidPlaced(address bidder);
     event AuctionEnded(address winner, uint256 highestBid);
+    event AuctionNotFullfilled(uint256 nftId, address nftContract, uint256 minimumBid);
+    event RoyaltyPaid(address receiver, uint256 amount, uint256 royaltyPercentage);
 
     /// Method called too early
     error TooEarly(uint256 time);
@@ -46,6 +48,10 @@ contract BlindAuction is ERC721Holder, IPRNG {
     error AuctionAlreadyEnded();
     /// Bid not high enough to participate in this auction
     error BidTooLow(uint256 minimumBid);
+	/// You're not revealing all your bids
+	error MissingBids(uint256 revealed, uint256 missing);
+	/// Auction not ended yet
+    error AuctionNotYetEnded();
 
     // Modifiers are a convenient way to validate inputs to
     // functions. `onlyBefore` is applied to `bid` below:
@@ -110,9 +116,11 @@ contract BlindAuction is ERC721Holder, IPRNG {
         emit BidPlaced(msg.sender);
     }
 
-    /// Reveal your blinded bids. You will get a refund for all
-    /// correctly blinded invalid bids and for all bids except for
-    /// the totally highest.
+    /** 
+		Reveal blinded bids. The user will get a refund for all
+    	correctly blinded invalid bids and for all bids except for
+    	the totally highest.
+	*/
     function reveal(
         uint256[] calldata values,
         bool[] calldata fakes,
@@ -120,12 +128,21 @@ contract BlindAuction is ERC721Holder, IPRNG {
     ) external onlyAfter(biddingEnd) onlyBefore(revealEnd) {
         prng.rotate();
 
+		// check that the list of provided bids has the same length of
+		// the list saved in the contract
         uint256 length = bids[msg.sender].length;
-        require(values.length == length);
-        require(fakes.length == length);
-        require(secrets.length == length);
+		if(values.length == length) {
+			revert MissingBids(values.length, length);
+		}
+		if(fakes.length == length) {
+			revert MissingBids(fakes.length, length);
+		}
+		if(secrets.length == length) {
+			revert MissingBids(secrets.length, length);
+		}
 
         uint256 refund;
+		// loop through each bid
         for (uint256 i = 0; i < length; i++) {
             Bid storage bidToCheck = bids[msg.sender][i];
 
@@ -135,17 +152,19 @@ contract BlindAuction is ERC721Holder, IPRNG {
                 secrets[i]
             );
 
+			// if the bid do not match the original value it is skipped
             if (
                 bidToCheck.blindedBid !=
                 keccak256(abi.encode(value, fake, secret))
             ) {
-                // Bid was not actually revealed.
-                // Do not refund deposit.
                 continue;
             }
 
             refund += bidToCheck.deposit;
+			// check that a bid is not fake, if it is not than check that
+			// the deposit is >= to the value reported in the bid
             if (!fake && bidToCheck.deposit >= value) {
+				// try to place a public bid
                 if (placeBid(msg.sender, value)) {
                     refund -= value;
                 }
@@ -155,40 +174,81 @@ contract BlindAuction is ERC721Holder, IPRNG {
             // the same deposit.
             bidToCheck.blindedBid = bytes32(0);
         }
+
+		// refund fake or invalid bids
         Address.sendValue(payable(msg.sender), refund);
     }
 
-    /// Withdraw a bid that was overbid.
+    /** 
+		Withdraw a bid that was overbid.
+	*/
     function withdraw() public {
+        prng.rotate();
+
         uint256 amount = pendingReturns[msg.sender];
         if (amount > 0) {
-            // It is important to set this to zero because the recipient
-            // can call this function again as part of the receiving call
-            // before `transfer` returns (see the remark above about
-            // conditions -> effects -> interaction).
             pendingReturns[msg.sender] = 0;
 
+            // send the previous bid back to the sender
             Address.sendValue(payable(msg.sender), amount);
         }
     }
 
     /// End the auction and send the highest bid
     /// to the beneficiary.
-    function auctionEnd() public onlyAfter(revealEnd) {
+    function endAuction() public onlyAfter(revealEnd) {
+        prng.rotate();
+
+        // check that the auction end call have not already been called
         if (ended) {
             revert AuctionAlreadyEnded();
         }
 
-        emit AuctionEnded(highestBidder, highestBid);
+        // mark the auction as ended
         ended = true;
-        Address.sendValue(beneficiary, highestBid);
+
+        if (highestBid == 0) {
+            // send the NFT to the beneficiary if no bid has been accepted
+            ERC721(nftContract).transferFrom(address(this), beneficiary, nftId);
+            emit AuctionNotFullfilled(nftId, nftContract, minimumBid);
+        }
+        else {
+            // send the NFT to the bidder
+            ERC721(nftContract).safeTransferFrom(address(this), highestBidder, nftId);
+
+            // check if the royalty receiver and the payee are the same address
+            // if they are make a transfer only, otherwhise split the bid based on
+            // the royalty percentage and send the values
+            if (beneficiary == royaltyReceiver) {
+                // send the highest bid to the beneficiary
+                Address.sendValue(beneficiary, highestBid);
+            }
+            else {
+                // the royalty percentage has 18 decimals
+                uint256 royalty = highestBid * royaltyPercent / 1 ether;
+                uint256 beneficiaryEarning = highestBid - royalty;
+
+                // send the royalty funds
+                Address.sendValue(payable(royaltyReceiver), royalty);
+                emit RoyaltyPaid(royaltyReceiver, royalty, royaltyPercent);
+
+                // send the beneficiary earnings
+                Address.sendValue(beneficiary, beneficiaryEarning);
+            }
+
+            emit AuctionEnded(highestBidder, highestBid);
+        }
     }
 
-    // This is an "internal" function which means that it
-    // can only be called from the contract itself (or from
-    // derived contracts).
+    /**
+		Place a public bid.
+		This method is called internally by the reveal method.
+
+		@return success True if the bid is higher than the current highest
+			if true is returned the highet bidder is updated
+	 */
     function placeBid(address bidder, uint256 value)
-        internal
+        private
         returns (bool success)
     {
 		// refuse revealed bids that are lower than the current

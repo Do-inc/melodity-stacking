@@ -128,7 +128,7 @@ contract Auction is ERC721Holder, IPRNG {
         if (amount > 0) {
             pendingReturns[msg.sender] = 0;
 
-            // send the preivous bid back to the sender
+            // send the previous bid back to the sender
             Address.sendValue(payable(msg.sender), amount);
         }
     }
@@ -146,7 +146,7 @@ contract Auction is ERC721Holder, IPRNG {
         }
         // check that the auction end call have not already been called
         if (ended) {
-            revert AuctionEndAlreadyCalled();
+            revert AuctionAlreadyEnded();
         }
 
         // mark the auction as ended
@@ -154,12 +154,12 @@ contract Auction is ERC721Holder, IPRNG {
 
         if (highestBid == 0) {
             // send the NFT to the beneficiary if no bid has been accepted
-            ERC721(nftContract).transferFrom(address(this), beneficiary, nftId);
+            ERC721(nftContract).safeTransferFrom(address(this), beneficiary, nftId);
             emit AuctionNotFullfilled(nftId, nftContract, minimumBid);
         }
         else {
             // send the NFT to the bidder
-            ERC721(nftContract).transferFrom(address(this), highestBidder, nftId);
+            ERC721(nftContract).safeTransferFrom(address(this), highestBidder, nftId);
 
             // check if the royalty receiver and the payee are the same address
             // if they are make a transfer only, otherwhise split the bid based on
