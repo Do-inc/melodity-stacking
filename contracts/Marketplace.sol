@@ -8,6 +8,7 @@ import "./IPRNG.sol";
 import "./PRNG.sol";
 import "./Auction.sol";
 import "./BlindAuction.sol";
+import "hardhat/console.sol";
 
 contract Marketplace is IPRNG {
     PRNG public prng;
@@ -43,25 +44,25 @@ contract Marketplace is IPRNG {
     mapping(bytes32 => Royalty) public royalties;
 
     /*
-     *     bytes4(keccak256('balanceOf(address)')) == 0x70a08231
-     *     bytes4(keccak256('ownerOf(uint256)')) == 0x6352211e
-     *     bytes4(keccak256('approve(address,uint256)')) == 0x095ea7b3
-     *     bytes4(keccak256('getApproved(uint256)')) == 0x081812fc
-     *     bytes4(keccak256('setApprovalForAll(address,bool)')) == 0xa22cb465
-     *     bytes4(keccak256('isApprovedForAll(address,address)')) == 0xe985e9c5
-     *     bytes4(keccak256('transferFrom(address,address,uint256)')) == 0x23b872dd
-     *     bytes4(keccak256('safeTransferFrom(address,address,uint256)')) == 0x42842e0e
-     *     bytes4(keccak256('safeTransferFrom(address,address,uint256,bytes)')) == 0xb88d4fde
+     *     bytes4(keccak256("balanceOf(address)")) == 0x70a08231
+     *     bytes4(keccak256("ownerOf(uint256)")) == 0x6352211e
+     *     bytes4(keccak256("approve(address,uint256)")) == 0x095ea7b3
+     *     bytes4(keccak256("getApproved(uint256)")) == 0x081812fc
+     *     bytes4(keccak256("setApprovalForAll(address,bool)")) == 0xa22cb465
+     *     bytes4(keccak256("isApprovedForAll(address,address)")) == 0xe985e9c5
+     *     bytes4(keccak256("transferFrom(address,address,uint256)")) == 0x23b872dd
+     *     bytes4(keccak256("safeTransferFrom(address,address,uint256)")) == 0x42842e0e
+     *     bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)")) == 0xb88d4fde
      *
      *     => 0x70a08231 ^ 0x6352211e ^ 0x095ea7b3 ^ 0x081812fc ^
-     *        0xa22cb465 ^ 0xe985e9c ^ 0x23b872dd ^ 0x42842e0e ^ 0xb88d4fde == 0x80ac58cd
+     *        0xa22cb465 ^ 0xe985e9c5 ^ 0x23b872dd ^ 0x42842e0e ^ 0xb88d4fde == 0x80ac58cd
      */
     bytes4 private constant _INTERFACE_ID_ERC721 = 0x80ac58cd;
 
     /*
-     *     bytes4(keccak256('name()')) == 0x06fdde03
-     *     bytes4(keccak256('symbol()')) == 0x95d89b41
-     *     bytes4(keccak256('tokenURI(uint256)')) == 0xc87b56dd
+     *     bytes4(keccak256("name()")) == 0x06fdde03
+     *     bytes4(keccak256("symbol()")) == 0x95d89b41
+     *     bytes4(keccak256("tokenURI(uint256)")) == 0xc87b56dd
      *
      *     => 0x06fdde03 ^ 0x95d89b41 ^ 0xc87b56dd == 0x5b5e139f
      */
@@ -89,25 +90,25 @@ contract Marketplace is IPRNG {
     error NotOwningNFT(address caller, uint256 nftId, address nftContract);
     /// Royalty percentage too high, max value is 50%
     error RoyaltyPercentageTooHigh(uint256 percentage);
-    /// You're not the owner of the royalty
+    /// You"re not the owner of the royalty
     error RoyaltyNotOwned(address caller, uint256 nftId, address nftContract);
 
     modifier onlyERC721(address _contract) {
 		prng.rotate();
 
         if (
-            // check the SC supports the ERC721 openzeppelin interface
-            ERC165Checker.supportsInterface(_contract, _INTERFACE_ID_ERC721) &&
-            // check the SC supports the ERC721-Metadata openzeppelin interface
-            ERC165Checker.supportsInterface(
+            // check the SC doesn't supports the ERC721 openzeppelin interface
+            !ERC165Checker.supportsInterface(_contract, _INTERFACE_ID_ERC721) ||
+            // check the SC doesn't supports the ERC721-Metadata openzeppelin interface
+            !ERC165Checker.supportsInterface(
                 _contract,
                 _INTERFACE_ID_ERC721_METADATA
             )
         ) {
-            _;
+            revert IncompatibleContractAddress();
         }
 
-        revert IncompatibleContractAddress();
+		_;
     }
 
     constructor() {
@@ -307,7 +308,7 @@ contract Marketplace is IPRNG {
         // for the user
         // ALERT: checking the approval does not check that the user actually owns the nft
         // as parameters can per forged to pass this check without the caller to actually
-        // own the it. This won't be a problem in a standard context but as we're setting
+        // own the it. This won"t be a problem in a standard context but as we"re setting
         // up the royalty base here a check must be done in order to check if it is should be
         // set by the caller or not
         if (nftContractInstance.getApproved(_nftId) != address(this)) {
@@ -418,7 +419,7 @@ contract Marketplace is IPRNG {
         // for the user
         // ALERT: checking the approval does not check that the user actually owns the nft
         // as parameters can per forged to pass this check without the caller to actually
-        // own the it. This won't be a problem in a standard context but as we're setting
+        // own the it. This won"t be a problem in a standard context but as we"re setting
         // up the royalty base here a check must be done in order to check if it is should be
         // set by the caller or not
         if (nftContractInstance.getApproved(_nftId) != address(this)) {
