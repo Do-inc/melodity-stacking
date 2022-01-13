@@ -26,10 +26,10 @@ module.exports = {
 		version: "0.8.11",
 		settings: {
 			optimizer: {
-			  enabled: true,
-			  runs: 200,
+				enabled: true,
+				runs: 200,
 			},
-		  },
+		},
 	},
 	networks: {
 		ropsten: {
@@ -43,8 +43,12 @@ module.exports = {
 	gasReporter: {
 		enabled: process.env.REPORT_GAS !== undefined,
 		currency: "USD",
+		gasPriceApi:
+			"https://api.bscscan.com/api?module=proxy&action=eth_gasPrice",
+		coinmarketcap: process.env.CMC,
+		token: "BNB",
 	},
 	etherscan: {
 		apiKey: process.env.ETHERSCAN_API_KEY,
-	},
+	}
 };

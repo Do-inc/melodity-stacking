@@ -44,14 +44,14 @@ contract PRNG {
                     // the value may be partially manipulated by evil actors
                     abi.encode(
                         seed,                                   // can be manipulated calling an arbitrary number of times this method
-                        //keccak256(abi.encode(seed)),          // can be manipulated calling an arbitrary number of times this method
+                        // keccak256(abi.encode(seed)),         // can be manipulated calling an arbitrary number of times this method
                         block.coinbase,                         // can be at least partially manipulated by miners (actual miner address)
                         block.difficulty,                       // defined by the network (cannot be manipulated)
                         block.gaslimit,                         // defined by the network (cannot be manipulated)
                         block.number,                           // can be manipulated by miners
                         block.timestamp,                        // can be at least partially manipulated by miners (+-15s allowed on eth for block acceptance)
-                        //blockhash(block.number - 1),          // defined by the network (cannot be manipulated)
-                        //blockhash(block.number - 2),          // defined by the network (cannot be manipulated)
+                        // blockhash(block.number - 1),         // defined by the network (cannot be manipulated)
+                        // blockhash(block.number - 2),         // defined by the network (cannot be manipulated)
                         block.basefee,                          // can be at least partially manipulated by miners
                         block.chainid,                          // defined by the network (cannot be manipulated)
                         gasleft(),                              // can be at least partially manipulated by users
@@ -60,7 +60,7 @@ contract PRNG {
                         msg.sig,                                // current function identifier (cannot be manipulated)
                         // msg.value,                           // not allowed as strongly controlled by users, this can help forging a partially predictable hash
                         previousSeed                            // can be manipulated calling an arbitrary number of times this method
-                        //keccak256(abi.encode(previousSeed))   // can be manipulated calling an arbitrary number of times this method
+                        // keccak256(abi.encode(previousSeed))  // can be manipulated calling an arbitrary number of times this method
                     )
                 )
             );

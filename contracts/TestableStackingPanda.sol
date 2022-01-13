@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IPRNG.sol";
 
-contract StackingPanda is ERC721, Ownable, IPRNG {
+contract TestableStackingPanda is ERC721, Ownable, IPRNG {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -31,9 +31,12 @@ contract StackingPanda is ERC721, Ownable, IPRNG {
 
     // Init the NFT contract with the ownable abstact in order to let only the owner
     // mint new NFTs
-    constructor() ERC721("Melodity Stacking Panda", "STACKP") Ownable() {
+    constructor(address _prng)
+        ERC721("Melodity Stacking Panda", "STACKP")
+        Ownable()
+    {
         masterchef = msg.sender;
-        prng = PRNG(computePRNGAddress(masterchef));
+        prng = PRNG(_prng);
     }
 
     /**

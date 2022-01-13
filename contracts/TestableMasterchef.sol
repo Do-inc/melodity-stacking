@@ -3,15 +3,15 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import "./StackingPanda.sol";
+import "./TestableStackingPanda.sol";
 import "./PRNG.sol";
-import "./Marketplace.sol";
+import "./TestableMarketplace.sol";
 import "hardhat/console.sol";
 
-contract Masterchef is ERC721Holder {
-    StackingPanda public stackingPanda;
+contract TestableMasterchef is ERC721Holder {
+    TestableStackingPanda public stackingPanda;
     PRNG public prng;
-    Marketplace public marketplace;
+    TestableMarketplace public marketplace;
 
     uint256 public mintingEpoch = 7 days;
     uint256 public lastMintingEvent;
@@ -40,13 +40,7 @@ contract Masterchef is ERC721Holder {
         Masterchef itself mint new NFTs
      */
     function _deployStackingPandas() private {
-        stackingPanda = StackingPanda(
-            Create2.deploy(
-                0,
-                keccak256("Masterchef/StackingPanda"),
-                type(StackingPanda).creationCode
-            )
-        );
+        stackingPanda = new TestableStackingPanda(address(prng));
         prng.rotate();
     }
 
@@ -56,13 +50,7 @@ contract Masterchef is ERC721Holder {
         PRNG address and call it
      */
     function _deployPRNG() private {
-        prng = PRNG(
-            Create2.deploy(
-                0,
-                keccak256("Masterchef/PRNG"),
-                type(PRNG).creationCode
-            )
-        );
+        prng = new PRNG();
         prng.rotate();
     }
 
@@ -72,13 +60,7 @@ contract Masterchef is ERC721Holder {
         PRNG address and call it
      */
     function _deployMarketplace() private {
-        marketplace = Marketplace(
-            Create2.deploy(
-                0,
-                keccak256("Masterchef/Marketplace"),
-                type(Marketplace).creationCode
-            )
-        );
+        marketplace = new TestableMarketplace(address(prng));
         prng.rotate();
     }
 
@@ -110,7 +92,7 @@ contract Masterchef is ERC721Holder {
         uint256 pandaId = stackingPanda.mint(
             "test",
             "url",
-            StackingPanda.StackingBonus({
+            TestableStackingPanda.StackingBonus({
                 decimals: 18,
                 meldToMeld: meld2meldBonus,
                 toMeld: toMeldBonus

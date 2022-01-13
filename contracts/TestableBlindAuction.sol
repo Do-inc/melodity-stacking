@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "./IPRNG.sol";
 import "./PRNG.sol";
 
-contract BlindAuction is ERC721Holder, IPRNG {
+contract TestableBlindAuction is ERC721Holder, IPRNG {
     PRNG public prng;
 
     struct Bid {
@@ -62,9 +62,9 @@ contract BlindAuction is ERC721Holder, IPRNG {
         uint256 _minimumBid,
         address _royaltyReceiver,
         uint256 _royaltyPercentage,
-        address _masterchef
+        address _prng
     ) {
-        prng = PRNG(computePRNGAddress(_masterchef));
+        prng = PRNG(_prng);
         prng.rotate();
 
         beneficiary = _beneficiaryAddress;
