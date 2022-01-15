@@ -4,10 +4,11 @@ pragma solidity 0.8.11;
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./IPRNG.sol";
 import "./PRNG.sol";
 
-contract TestableAuction is ERC721Holder, IPRNG {
+contract TestableAuction is ERC721Holder, IPRNG, ReentrancyGuard {
     PRNG public prng;
 
     address payable public beneficiary;
@@ -79,7 +80,7 @@ contract TestableAuction is ERC721Holder, IPRNG {
         Bid on the auction with the value sent together with this transaction.
         The value will only be refunded if the auction is not won.
     */
-    function bid() external payable {
+    function bid() public nonReentrant payable {
         prng.rotate();
 
         // check that the auction is still in its bidding period
@@ -106,7 +107,7 @@ contract TestableAuction is ERC721Holder, IPRNG {
     /**
         Withdraw bids that were overbid.
     */
-    function withdraw() public {
+    function withdraw() public nonReentrant {
         prng.rotate();
 
         uint256 amount = pendingReturns[msg.sender];
@@ -122,7 +123,7 @@ contract TestableAuction is ERC721Holder, IPRNG {
         End the auction and send the highest bid to the beneficiary.
         If defined split the bid with the royalty receiver
     */
-    function endAuction() public {
+    function endAuction() public nonReentrant {
         prng.rotate();
 
         // check that the auction is ended

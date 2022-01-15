@@ -4,10 +4,11 @@ pragma solidity 0.8.11;
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./IPRNG.sol";
 import "./PRNG.sol";
 
-contract TestableBlindAuction is ERC721Holder, IPRNG {
+contract TestableBlindAuction is ERC721Holder, IPRNG, ReentrancyGuard {
     PRNG public prng;
 
     struct Bid {
@@ -89,7 +90,7 @@ contract TestableBlindAuction is ERC721Holder, IPRNG {
 		deposit. 
 		The same address can place multiple bids.
 	*/
-    function bid(bytes32 blindedBid) external payable onlyBefore(biddingEnd) {
+    function bid(bytes32 blindedBid) public payable nonReentrant onlyBefore(biddingEnd) {
         prng.rotate();
 
         bids[msg.sender].push(
@@ -108,7 +109,7 @@ contract TestableBlindAuction is ERC721Holder, IPRNG {
         uint256[] calldata values,
         bool[] calldata fakes,
         bytes32[] calldata secrets
-    ) external onlyAfter(biddingEnd) onlyBefore(revealEnd) {
+    ) public nonReentrant onlyAfter(biddingEnd) onlyBefore(revealEnd) {
         prng.rotate();
 
 		// check that the list of provided bids has the same length of
@@ -159,7 +160,7 @@ contract TestableBlindAuction is ERC721Holder, IPRNG {
     /** 
 		Withdraw a bid that was overbid.
 	*/
-    function withdraw() public {
+    function withdraw() public nonReentrant {
         prng.rotate();
 
         uint256 amount = pendingReturns[msg.sender];
@@ -175,7 +176,7 @@ contract TestableBlindAuction is ERC721Holder, IPRNG {
 		End the auction and send the highest bid
     	to the beneficiary.
 	*/
-    function endAuction() public onlyAfter(revealEnd) {
+    function endAuction() public nonReentrant onlyAfter(revealEnd) {
         prng.rotate();
 
         // check that the auction end call have not already been called

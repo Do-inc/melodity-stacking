@@ -3,12 +3,13 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./TestableStackingPanda.sol";
 import "./PRNG.sol";
 import "./TestableMarketplace.sol";
 import "hardhat/console.sol";
 
-contract TestableMasterchef is ERC721Holder {
+contract TestableMasterchef is ERC721Holder, ReentrancyGuard {
     TestableStackingPanda public stackingPanda;
     PRNG public prng;
     TestableMarketplace public marketplace;
@@ -68,7 +69,7 @@ contract TestableMasterchef is ERC721Holder {
         Trigger the minting of a new stacking panda, this function is publicly callable
         as the minted NFT will be given to the Masterchef contract.
      */
-    function mintStackingPanda() public returns (address) {
+    function mintStackingPanda() public nonReentrant returns (address) {
         prng.rotate();
 
         // check that a new panda can be minted

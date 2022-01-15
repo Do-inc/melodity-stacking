@@ -4,13 +4,14 @@ pragma solidity 0.8.11;
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./IPRNG.sol";
 import "./PRNG.sol";
 import "./Auction.sol";
 import "./BlindAuction.sol";
 import "hardhat/console.sol";
 
-contract Marketplace is IPRNG {
+contract Marketplace is IPRNG, ReentrancyGuard {
     PRNG public prng;
     address private _masterchef;
 
@@ -287,7 +288,7 @@ contract Marketplace is IPRNG {
         uint256 _royaltyPercent,
         address _royaltyReceiver,
         address _royaltyInitializer
-    ) public onlyERC721(_nftContract) returns (address) {
+    ) public nonReentrant onlyERC721(_nftContract) returns (address) {
         // load the instance of the nft contract into the ERC721 interface in order
         // to expose all its methods
         ERC721 nftContractInstance = ERC721(_nftContract);
@@ -352,7 +353,7 @@ contract Marketplace is IPRNG {
         uint256 _royaltyPercent,
         address _royaltyReceiver,
         address _royaltyInitializer
-    ) public onlyERC721(_nftContract) returns (Royalty memory) {
+    ) public nonReentrant onlyERC721(_nftContract) returns (Royalty memory) {
         bytes32 royaltyIdentifier = keccak256(abi.encode(_nftContract, _nftId));
 
         Royalty memory royalty = royalties[royaltyIdentifier];
@@ -401,7 +402,7 @@ contract Marketplace is IPRNG {
         uint256 _royaltyPercent,
         address _royaltyReceiver,
         address _royaltyInitializer
-    ) public onlyERC721(_nftContract) returns (address) {
+    ) public nonReentrant onlyERC721(_nftContract) returns (address) {
         // load the instance of the nft contract into the ERC721 interface in order
         // to expose all its methods
         ERC721 nftContractInstance = ERC721(_nftContract);
@@ -444,7 +445,7 @@ contract Marketplace is IPRNG {
             );
     }
 
-    function createSale() public {
+    function createSale() public nonReentrant {
         prng.rotate();
     }
 }

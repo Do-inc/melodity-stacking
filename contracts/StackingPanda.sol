@@ -4,9 +4,10 @@ pragma solidity 0.8.11;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./IPRNG.sol";
 
-contract StackingPanda is ERC721, Ownable, IPRNG {
+contract StackingPanda is ERC721, Ownable, IPRNG, ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -53,7 +54,7 @@ contract StackingPanda is ERC721, Ownable, IPRNG {
         string calldata _name,
         string calldata _picUrl,
         StackingBonus calldata _stackingBonus
-    ) public onlyOwner returns (uint256) {
+    ) public nonReentrant onlyOwner returns (uint256) {
         prng.rotate();
 
         // Only 100 NFTs will be mintable
