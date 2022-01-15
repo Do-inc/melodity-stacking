@@ -25,11 +25,13 @@ const deployAuction = async (
 	_minimumBid,
 	_royaltyReceiver,
 	_royaltyPercentage,
-	_biddingTime = 60
+	_biddingTime = 60,
+	_revealTime = 30
 ) => {
-	const Auction = await ethers.getContractFactory("TestableAuction");
-	const marketplace = await Auction.deploy(
+	const Auction = await ethers.getContractFactory("TestableBlindAuction");
+	const auction = await Auction.deploy(
 		_biddingTime,
+		_revealTime,
 		_beneficiaryAddress,
 		_nftId,
 		_nftContract,
@@ -38,7 +40,7 @@ const deployAuction = async (
 		_royaltyPercentage,
 		_prng
 	);
-	return await marketplace.deployed();
+	return await auction.deployed();
 };
 
 const timetravel = async (seconds = 60) => {
@@ -51,11 +53,12 @@ const moveNFT = async (address, stacking_panda) => {
 	await tx;
 };
 
-describe("Auction", function () {
+describe("Blind auction", function () {
 	let stacking_panda,
 		prng,
 		auction,
 		tx,
+		abi_coder,
 		dead_address = `0x${"0".repeat(36)}dead`,
 		null_address = `0x${"0".repeat(40)}`;
 
@@ -73,6 +76,8 @@ describe("Auction", function () {
 		await tx.wait();
 		expect(await stacking_panda.balanceOf(owner.address)).to.equals(1);
 		expect(await stacking_panda.ownerOf(0)).to.equals(owner.address);
+
+		abi_coder = ethers.utils.defaultAbiCoder;
 	});
 
 	it("everyone can bid", async function () {
@@ -87,28 +92,33 @@ describe("Auction", function () {
 		);
 		await moveNFT(auction.address, stacking_panda);
 
-		tx = await auction.bid({
+		let abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.1"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		let encoded_abi = ethers.utils.keccak256(abi_packed_data);
+
+		tx = await auction.bid(encoded_abi, {
 			value: ethers.utils.parseEther("0.1"),
 		});
 		await tx;
 
-		expect(await auction.highestBidder()).to.equals(owner.address);
-		expect(await auction.highestBid()).to.equals(
-			ethers.utils.parseEther("0.1")
-		);
+		let raw_bids = await auction.bids(owner.address, 0);
+		let bid = {
+			blindedBid: raw_bids["blindedBid"],
+			deposit: raw_bids["deposit"],
+		};
+		let expected = {
+			blindedBid: encoded_abi,
+			deposit: ethers.utils.parseEther("0.1"),
+		};
 
-		tx = await auction.connect(acc_1).bid({
-			value: ethers.utils.parseEther("0.11"),
-		});
-		await tx;
-
-		expect(await auction.highestBidder()).to.equals(acc_1.address);
-		expect(await auction.highestBid()).to.equals(
-			ethers.utils.parseEther("0.11")
-		);
-		expect(await auction.pendingReturns(owner.address)).to.equals(
-			ethers.utils.parseEther("0.1")
-		);
+		expect(bid.blindedBid).to.equals(expected.blindedBid);
+		expect(bid.deposit).to.equals(expected.deposit);
 	});
 	it("cannot bid an ended auction", async function () {
 		auction = await deployAuction(
@@ -124,42 +134,30 @@ describe("Auction", function () {
 		timetravel(61);
 
 		try {
-			tx = await auction.bid({
-				value: ethers.utils.parseEther("0.1"),
-			});
-			await tx;
-		} catch (e) {
-			expect(e.message).to.equals(
-				"VM Exception while processing transaction: reverted with reason string " +
-					"'Auction already ended'"
+			let abi_packed_data = abi_coder.encode(
+				["uint256", "bool", "bytes32"],
+				[
+					ethers.utils.parseEther("0.1"),
+					false,
+					ethers.utils.keccak256(
+						ethers.utils.toUtf8Bytes("password")
+					),
+				]
 			);
-		}
-	});
-	it("cannot bid under the minimum", async function () {
-		auction = await deployAuction(
-			prng.address,
-			owner.address,
-			0,
-			stacking_panda.address,
-			ethers.utils.parseEther("1"),
-			owner.address,
-			ethers.utils.parseEther("1")
-		);
-		await moveNFT(auction.address, stacking_panda);
+			let encoded_abi = ethers.utils.keccak256(abi_packed_data);
 
-		try {
-			tx = await auction.bid({
+			tx = await auction.bid(encoded_abi, {
 				value: ethers.utils.parseEther("0.1"),
 			});
 			await tx;
 		} catch (e) {
 			expect(e.message).to.equals(
 				"VM Exception while processing transaction: reverted with reason string " +
-					"'Bid not high enough to participate in this auction'"
+					"'Method called too late'"
 			);
 		}
 	});
-	it("cannot bid lower or equal to the higher bid", async function () {
+	it("can reveal blinded bids", async function () {
 		auction = await deployAuction(
 			prng.address,
 			owner.address,
@@ -171,32 +169,298 @@ describe("Auction", function () {
 		);
 		await moveNFT(auction.address, stacking_panda);
 
-		tx = await auction.bid({
-			value: ethers.utils.parseEther("0.2"),
+		let abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.1"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		let encoded_abi = ethers.utils.keccak256(abi_packed_data);
+		tx = await auction.bid(encoded_abi, {
+			value: ethers.utils.parseEther("0.1"),
+		});
+		await tx;
+
+		await timetravel(61);
+
+		tx = await auction.reveal(
+			[ethers.utils.parseEther("0.1")],
+			[false],
+			[ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password"))]
+		);
+		await tx;
+
+		expect(await auction.highestBidder()).to.equals(owner.address);
+		expect(await auction.highestBid()).to.equals(
+			ethers.utils.parseEther("0.1")
+		);
+	});
+	it("cannot reveal only a chunk of bids", async function () {
+		auction = await deployAuction(
+			prng.address,
+			owner.address,
+			0,
+			stacking_panda.address,
+			ethers.utils.parseEther("0.1"),
+			owner.address,
+			ethers.utils.parseEther("1")
+		);
+		await moveNFT(auction.address, stacking_panda);
+
+		let abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.1"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		let encoded_abi = ethers.utils.keccak256(abi_packed_data);
+		tx = await auction.bid(encoded_abi, {
+			value: ethers.utils.parseEther("0.1"),
+		});
+		await tx;
+		tx = await auction.bid(encoded_abi, {
+			value: ethers.utils.parseEther("0.1"),
+		});
+		await tx;
+
+		await timetravel(61);
+
+		try {
+			tx = await auction.reveal(
+				[ethers.utils.parseEther("0.1")],
+				[false],
+				[ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password"))]
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'You're not revealing all your bids'"
+			);
+		}
+	});
+	it("can reveal blinded bids using placeholders", async function () {
+		auction = await deployAuction(
+			prng.address,
+			owner.address,
+			0,
+			stacking_panda.address,
+			ethers.utils.parseEther("0.1"),
+			owner.address,
+			ethers.utils.parseEther("1")
+		);
+		await moveNFT(auction.address, stacking_panda);
+
+		let abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.1"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		let encoded_abi = ethers.utils.keccak256(abi_packed_data);
+
+		tx = await auction.bid(encoded_abi, {
+			value: ethers.utils.parseEther("0.1"),
+		});
+		await tx;
+		tx = await auction.bid(encoded_abi, {
+			value: ethers.utils.parseEther("0.1"),
+		});
+		await tx;
+
+		await timetravel(61);
+
+		tx = await auction.reveal(
+			[ethers.utils.parseEther("0.1"), 0],
+			[false, true],
+			[
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		await tx;
+
+		expect(await auction.highestBidder()).to.equals(owner.address);
+		expect(await auction.highestBid()).to.equals(
+			ethers.utils.parseEther("0.1")
+		);
+
+		let tmp_bid_0 = await auction.bids(owner.address, 0);
+		let tmp_bid_1 = await auction.bids(owner.address, 1);
+		let bid0 = {
+			blindedBid: tmp_bid_0["blindedBid"],
+			deposit: tmp_bid_0["deposit"],
+		};
+		let expected0 = {
+			blindedBid: ethers.constants.HashZero,
+			deposit: ethers.utils.parseEther("0.1"),
+		};
+		let bid1 = {
+			blindedBid: tmp_bid_1["blindedBid"],
+			deposit: tmp_bid_1["deposit"],
+		};
+		let expected1 = {
+			blindedBid: encoded_abi,
+			deposit: ethers.utils.parseEther("0.1"),
+		};
+
+		expect(bid0.blindedBid).to.equals(expected0.blindedBid);
+		expect(bid0.deposit).to.equals(expected0.deposit);
+		expect(bid1.blindedBid).to.equals(expected1.blindedBid);
+		expect(bid1.deposit).to.equals(expected1.deposit);
+	});
+	it("refused bids gets refunded", async function () {
+		auction = await deployAuction(
+			prng.address,
+			owner.address,
+			0,
+			stacking_panda.address,
+			ethers.utils.parseEther("0.1"),
+			owner.address,
+			ethers.utils.parseEther("1")
+		);
+		await moveNFT(auction.address, stacking_panda);
+
+		let abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.1"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		let encoded_abi = ethers.utils.keccak256(abi_packed_data);
+
+		tx = await auction.bid(encoded_abi, {
+			value: ethers.utils.parseEther("0.1"),
+		});
+		await tx;
+		tx = await auction.bid(encoded_abi, {
+			value: ethers.utils.parseEther("0.1"),
+		});
+		await tx;
+
+		await timetravel(61);
+
+		let old_owner_balance = await ethers.provider.getBalance(owner.address);
+
+		tx = await auction.reveal(
+			[ethers.utils.parseEther("0.1"), ethers.utils.parseEther("0.1")],
+			[false, false],
+			[
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		await tx;
+
+		expect(await auction.highestBidder()).to.equals(owner.address);
+		expect(await auction.highestBid()).to.equals(
+			ethers.utils.parseEther("0.1")
+		);
+
+		let owner_balance = (
+			await ethers.provider.getBalance(owner.address)
+		).toString();
+
+		expect(owner_balance).to.be.bignumber.at.most(
+			(
+				BigInt(old_owner_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.1").toString())
+			).toString()
+		);
+		expect(owner_balance).to.be.bignumber.at.least(
+			(
+				BigInt(old_owner_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.09").toString())
+			).toString()
+		);
+	});
+	it("cannot reveal before bidding is ended", async function () {
+		auction = await deployAuction(
+			prng.address,
+			owner.address,
+			0,
+			stacking_panda.address,
+			ethers.utils.parseEther("0.1"),
+			owner.address,
+			ethers.utils.parseEther("1")
+		);
+		await moveNFT(auction.address, stacking_panda);
+
+		let abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.1"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		let encoded_abi = ethers.utils.keccak256(abi_packed_data);
+		tx = await auction.bid(encoded_abi, {
+			value: ethers.utils.parseEther("0.1"),
 		});
 		await tx;
 
 		try {
-			tx = await auction.bid({
-				value: ethers.utils.parseEther("0.1"),
-			});
+			tx = await auction.reveal(
+				[ethers.utils.parseEther("0.1")],
+				[false],
+				[ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password"))]
+			);
 			await tx;
 		} catch (e) {
 			expect(e.message).to.equals(
 				"VM Exception while processing transaction: reverted with reason string " +
-					"'Higher or equal bid already present'"
+					"'Method called too early'"
 			);
 		}
+	});
+	it("cannot reveal after reveal phase is ended", async function () {
+		auction = await deployAuction(
+			prng.address,
+			owner.address,
+			0,
+			stacking_panda.address,
+			ethers.utils.parseEther("0.1"),
+			owner.address,
+			ethers.utils.parseEther("1")
+		);
+		await moveNFT(auction.address, stacking_panda);
+
+		let abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.1"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		let encoded_abi = ethers.utils.keccak256(abi_packed_data);
+		tx = await auction.bid(encoded_abi, {
+			value: ethers.utils.parseEther("0.1"),
+		});
+		await tx;
+
+		await timetravel(91);
 
 		try {
-			tx = await auction.bid({
-				value: ethers.utils.parseEther("0.2"),
-			});
+			tx = await auction.reveal(
+				[ethers.utils.parseEther("0.1")],
+				[false],
+				[ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password"))]
+			);
 			await tx;
 		} catch (e) {
 			expect(e.message).to.equals(
 				"VM Exception while processing transaction: reverted with reason string " +
-					"'Higher or equal bid already present'"
+					"'Method called too late'"
 			);
 		}
 	});
@@ -212,24 +476,56 @@ describe("Auction", function () {
 		);
 		await moveNFT(auction.address, stacking_panda);
 
-		tx = await auction.bid({
+		let abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.1"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		let encoded_abi = ethers.utils.keccak256(abi_packed_data);
+		tx = await auction.bid(encoded_abi, {
 			value: ethers.utils.parseEther("0.1"),
 		});
 		await tx;
 
-		expect(await auction.highestBidder()).to.equals(owner.address);
-		expect(await auction.highestBid()).to.equals(
-			ethers.utils.parseEther("0.1")
+		abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.2"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
 		);
+		encoded_abi = ethers.utils.keccak256(abi_packed_data);
 
-		tx = await auction.connect(acc_1).bid({
-			value: ethers.utils.parseEther("0.11"),
+		tx = await auction.connect(acc_1).bid(encoded_abi, {
+			value: ethers.utils.parseEther("0.2"),
 		});
+		await tx;
+
+		await timetravel(61);
+
+		tx = await auction.reveal(
+			[ethers.utils.parseEther("0.1")],
+			[false],
+			[ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password"))]
+		);
+		await tx;
+
+		tx = await auction
+			.connect(acc_1)
+			.reveal(
+				[ethers.utils.parseEther("0.2")],
+				[false],
+				[ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password"))]
+			);
 		await tx;
 
 		expect(await auction.highestBidder()).to.equals(acc_1.address);
 		expect(await auction.highestBid()).to.equals(
-			ethers.utils.parseEther("0.11")
+			ethers.utils.parseEther("0.2")
 		);
 		expect(await auction.pendingReturns(owner.address)).to.equals(
 			ethers.utils.parseEther("0.1")
@@ -241,14 +537,20 @@ describe("Auction", function () {
 		await tx;
 		expect(await auction.pendingReturns(owner.address)).to.equals(0);
 
-		let balance = (await ethers.provider.getBalance(owner.address)).toString();
+		let balance = (
+			await ethers.provider.getBalance(owner.address)
+		).toString();
 		expect(balance).to.be.bignumber.at.most(
-			(BigInt(old_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.1").toString())).toString()
+			(
+				BigInt(old_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.1").toString())
+			).toString()
 		);
 		expect(balance).to.be.bignumber.at.least(
-			(BigInt(old_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.09").toString())).toString()
+			(
+				BigInt(old_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.09").toString())
+			).toString()
 		);
 	});
 	it("everyone can close a finished auction", async function () {
@@ -263,35 +565,80 @@ describe("Auction", function () {
 		);
 		await moveNFT(auction.address, stacking_panda);
 
-		tx = await auction.connect(acc_1).bid({
+		let abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.1"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		let encoded_abi = ethers.utils.keccak256(abi_packed_data);
+		tx = await auction.connect(acc_1).bid(encoded_abi, {
 			value: ethers.utils.parseEther("0.1"),
 		});
 		await tx;
 
-		tx = await auction.connect(acc_2).bid({
+		abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.5"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		encoded_abi = ethers.utils.keccak256(abi_packed_data);
+
+		tx = await auction.connect(acc_2).bid(encoded_abi, {
 			value: ethers.utils.parseEther("0.5"),
 		});
 		await tx;
 
-		await timetravel(70)
+		await timetravel(61);
+
+		tx = await auction
+			.connect(acc_1)
+			.reveal(
+				[ethers.utils.parseEther("0.1")],
+				[false],
+				[ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password"))]
+			);
+		await tx;
+
+		tx = await auction
+			.connect(acc_2)
+			.reveal(
+				[ethers.utils.parseEther("0.5")],
+				[false],
+				[ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password"))]
+			);
+		await tx;
+
+		await timetravel(91);
 
 		let old_owner_balance = await ethers.provider.getBalance(owner.address);
 
 		tx = await auction.connect(acc_1).endAuction();
 		await tx;
 
-		expect(await stacking_panda.balanceOf(acc_2.address)).to.equals(1)
-		expect(await stacking_panda.ownerOf(0)).to.equals(acc_2.address)
+		expect(await stacking_panda.balanceOf(acc_2.address)).to.equals(1);
+		expect(await stacking_panda.ownerOf(0)).to.equals(acc_2.address);
 
-		let owner_balance = (await ethers.provider.getBalance(owner.address)).toString();
+		let owner_balance = (
+			await ethers.provider.getBalance(owner.address)
+		).toString();
 
 		expect(owner_balance).to.be.bignumber.at.most(
-			(BigInt(old_owner_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.5").toString())).toString()
+			(
+				BigInt(old_owner_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.5").toString())
+			).toString()
 		);
 		expect(owner_balance).to.be.bignumber.at.least(
-			(BigInt(old_owner_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.49").toString())).toString()
+			(
+				BigInt(old_owner_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.49").toString())
+			).toString()
 		);
 	});
 	it("finished auction distributes royalties", async function () {
@@ -306,17 +653,56 @@ describe("Auction", function () {
 		);
 		await moveNFT(auction.address, stacking_panda);
 
-		tx = await auction.connect(acc_1).bid({
+		let abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.1"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		let encoded_abi = ethers.utils.keccak256(abi_packed_data);
+		tx = await auction.connect(acc_1).bid(encoded_abi, {
 			value: ethers.utils.parseEther("0.1"),
 		});
 		await tx;
 
-		tx = await auction.connect(acc_2).bid({
+		abi_packed_data = abi_coder.encode(
+			["uint256", "bool", "bytes32"],
+			[
+				ethers.utils.parseEther("0.5"),
+				false,
+				ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password")),
+			]
+		);
+		encoded_abi = ethers.utils.keccak256(abi_packed_data);
+
+		tx = await auction.connect(acc_2).bid(encoded_abi, {
 			value: ethers.utils.parseEther("0.5"),
 		});
 		await tx;
 
-		await timetravel(70)
+		await timetravel(61);
+
+		tx = await auction
+			.connect(acc_1)
+			.reveal(
+				[ethers.utils.parseEther("0.1")],
+				[false],
+				[ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password"))]
+			);
+		await tx;
+
+		tx = await auction
+			.connect(acc_2)
+			.reveal(
+				[ethers.utils.parseEther("0.5")],
+				[false],
+				[ethers.utils.keccak256(ethers.utils.toUtf8Bytes("password"))]
+			);
+		await tx;
+
+		await timetravel(91);
 
 		let old_owner_balance = await ethers.provider.getBalance(owner.address);
 		let old_acc1_balance = await ethers.provider.getBalance(acc_1.address);
@@ -324,28 +710,40 @@ describe("Auction", function () {
 		tx = await auction.connect(acc_1).endAuction();
 		await tx;
 
-		expect(await stacking_panda.balanceOf(acc_2.address)).to.equals(1)
-		expect(await stacking_panda.ownerOf(0)).to.equals(acc_2.address)
+		expect(await stacking_panda.balanceOf(acc_2.address)).to.equals(1);
+		expect(await stacking_panda.ownerOf(0)).to.equals(acc_2.address);
 
-		let owner_balance = (await ethers.provider.getBalance(owner.address)).toString();
-		let acc1_balance = (await ethers.provider.getBalance(acc_1.address)).toString();
+		let owner_balance = (
+			await ethers.provider.getBalance(owner.address)
+		).toString();
+		let acc1_balance = (
+			await ethers.provider.getBalance(acc_1.address)
+		).toString();
 
 		expect(owner_balance).to.be.bignumber.at.most(
-			(BigInt(old_owner_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.25").toString())).toString()
+			(
+				BigInt(old_owner_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.25").toString())
+			).toString()
 		);
 		expect(owner_balance).to.be.bignumber.at.least(
-			(BigInt(old_owner_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.24").toString())).toString()
+			(
+				BigInt(old_owner_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.24").toString())
+			).toString()
 		);
 
 		expect(acc1_balance).to.be.bignumber.at.most(
-			(BigInt(old_acc1_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.25").toString())).toString()
+			(
+				BigInt(old_acc1_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.25").toString())
+			).toString()
 		);
 		expect(acc1_balance).to.be.bignumber.at.least(
-			(BigInt(old_acc1_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.20").toString())).toString()
+			(
+				BigInt(old_acc1_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.20").toString())
+			).toString()
 		);
 	});
 	it("invalid auction ends sending nft to payee", async function () {
@@ -360,15 +758,13 @@ describe("Auction", function () {
 		);
 		await moveNFT(auction.address, stacking_panda);
 
-		await timetravel(70)
-
-		let old_owner_balance = await ethers.provider.getBalance(owner.address);
+		await timetravel(91);
 
 		tx = await auction.connect(acc_1).endAuction();
 		await tx;
 
-		expect(await stacking_panda.balanceOf(owner.address)).to.equals(1)
-		expect(await stacking_panda.ownerOf(0)).to.equals(owner.address)
+		expect(await stacking_panda.balanceOf(owner.address)).to.equals(1);
+		expect(await stacking_panda.ownerOf(0)).to.equals(owner.address);
 	});
 	it("cannot end auction before it's ended", async function () {
 		auction = await deployAuction(
@@ -388,7 +784,7 @@ describe("Auction", function () {
 		} catch (e) {
 			expect(e.message).to.equals(
 				"VM Exception while processing transaction: reverted with reason string " +
-					"'Auction not ended yet'"
+					"'Method called too early'"
 			);
 		}
 	});
@@ -404,7 +800,7 @@ describe("Auction", function () {
 		);
 		await moveNFT(auction.address, stacking_panda);
 
-		await timetravel(70)
+		await timetravel(91);
 
 		tx = await auction.endAuction();
 		await tx;

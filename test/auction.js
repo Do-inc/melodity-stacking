@@ -28,7 +28,7 @@ const deployAuction = async (
 	_biddingTime = 60
 ) => {
 	const Auction = await ethers.getContractFactory("TestableAuction");
-	const marketplace = await Auction.deploy(
+	const auction = await Auction.deploy(
 		_biddingTime,
 		_beneficiaryAddress,
 		_nftId,
@@ -38,7 +38,7 @@ const deployAuction = async (
 		_royaltyPercentage,
 		_prng
 	);
-	return await marketplace.deployed();
+	return await auction.deployed();
 };
 
 const timetravel = async (seconds = 60) => {
@@ -121,7 +121,7 @@ describe("Auction", function () {
 			ethers.utils.parseEther("1")
 		);
 		await moveNFT(auction.address, stacking_panda);
-		timetravel(61);
+		await timetravel(61);
 
 		try {
 			tx = await auction.bid({
@@ -241,14 +241,20 @@ describe("Auction", function () {
 		await tx;
 		expect(await auction.pendingReturns(owner.address)).to.equals(0);
 
-		let balance = (await ethers.provider.getBalance(owner.address)).toString();
+		let balance = (
+			await ethers.provider.getBalance(owner.address)
+		).toString();
 		expect(balance).to.be.bignumber.at.most(
-			(BigInt(old_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.1").toString())).toString()
+			(
+				BigInt(old_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.1").toString())
+			).toString()
 		);
 		expect(balance).to.be.bignumber.at.least(
-			(BigInt(old_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.09").toString())).toString()
+			(
+				BigInt(old_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.09").toString())
+			).toString()
 		);
 	});
 	it("everyone can close a finished auction", async function () {
@@ -273,25 +279,31 @@ describe("Auction", function () {
 		});
 		await tx;
 
-		await timetravel(70)
+		await timetravel(70);
 
 		let old_owner_balance = await ethers.provider.getBalance(owner.address);
 
 		tx = await auction.connect(acc_1).endAuction();
 		await tx;
 
-		expect(await stacking_panda.balanceOf(acc_2.address)).to.equals(1)
-		expect(await stacking_panda.ownerOf(0)).to.equals(acc_2.address)
+		expect(await stacking_panda.balanceOf(acc_2.address)).to.equals(1);
+		expect(await stacking_panda.ownerOf(0)).to.equals(acc_2.address);
 
-		let owner_balance = (await ethers.provider.getBalance(owner.address)).toString();
+		let owner_balance = (
+			await ethers.provider.getBalance(owner.address)
+		).toString();
 
 		expect(owner_balance).to.be.bignumber.at.most(
-			(BigInt(old_owner_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.5").toString())).toString()
+			(
+				BigInt(old_owner_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.5").toString())
+			).toString()
 		);
 		expect(owner_balance).to.be.bignumber.at.least(
-			(BigInt(old_owner_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.49").toString())).toString()
+			(
+				BigInt(old_owner_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.49").toString())
+			).toString()
 		);
 	});
 	it("finished auction distributes royalties", async function () {
@@ -316,7 +328,7 @@ describe("Auction", function () {
 		});
 		await tx;
 
-		await timetravel(70)
+		await timetravel(70);
 
 		let old_owner_balance = await ethers.provider.getBalance(owner.address);
 		let old_acc1_balance = await ethers.provider.getBalance(acc_1.address);
@@ -324,28 +336,40 @@ describe("Auction", function () {
 		tx = await auction.connect(acc_1).endAuction();
 		await tx;
 
-		expect(await stacking_panda.balanceOf(acc_2.address)).to.equals(1)
-		expect(await stacking_panda.ownerOf(0)).to.equals(acc_2.address)
+		expect(await stacking_panda.balanceOf(acc_2.address)).to.equals(1);
+		expect(await stacking_panda.ownerOf(0)).to.equals(acc_2.address);
 
-		let owner_balance = (await ethers.provider.getBalance(owner.address)).toString();
-		let acc1_balance = (await ethers.provider.getBalance(acc_1.address)).toString();
+		let owner_balance = (
+			await ethers.provider.getBalance(owner.address)
+		).toString();
+		let acc1_balance = (
+			await ethers.provider.getBalance(acc_1.address)
+		).toString();
 
 		expect(owner_balance).to.be.bignumber.at.most(
-			(BigInt(old_owner_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.25").toString())).toString()
+			(
+				BigInt(old_owner_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.25").toString())
+			).toString()
 		);
 		expect(owner_balance).to.be.bignumber.at.least(
-			(BigInt(old_owner_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.24").toString())).toString()
+			(
+				BigInt(old_owner_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.24").toString())
+			).toString()
 		);
 
 		expect(acc1_balance).to.be.bignumber.at.most(
-			(BigInt(old_acc1_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.25").toString())).toString()
+			(
+				BigInt(old_acc1_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.25").toString())
+			).toString()
 		);
 		expect(acc1_balance).to.be.bignumber.at.least(
-			(BigInt(old_acc1_balance.toString()) +
-				BigInt(ethers.utils.parseEther("0.20").toString())).toString()
+			(
+				BigInt(old_acc1_balance.toString()) +
+				BigInt(ethers.utils.parseEther("0.20").toString())
+			).toString()
 		);
 	});
 	it("invalid auction ends sending nft to payee", async function () {
@@ -360,15 +384,15 @@ describe("Auction", function () {
 		);
 		await moveNFT(auction.address, stacking_panda);
 
-		await timetravel(70)
+		await timetravel(70);
 
 		let old_owner_balance = await ethers.provider.getBalance(owner.address);
 
 		tx = await auction.connect(acc_1).endAuction();
 		await tx;
 
-		expect(await stacking_panda.balanceOf(owner.address)).to.equals(1)
-		expect(await stacking_panda.ownerOf(0)).to.equals(owner.address)
+		expect(await stacking_panda.balanceOf(owner.address)).to.equals(1);
+		expect(await stacking_panda.ownerOf(0)).to.equals(owner.address);
 	});
 	it("cannot end auction before it's ended", async function () {
 		auction = await deployAuction(
@@ -404,7 +428,7 @@ describe("Auction", function () {
 		);
 		await moveNFT(auction.address, stacking_panda);
 
-		await timetravel(70)
+		await timetravel(70);
 
 		tx = await auction.endAuction();
 		await tx;
