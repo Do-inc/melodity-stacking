@@ -151,8 +151,8 @@ contract Auction is ERC721Holder, IPRNG {
                 Address.sendValue(beneficiary, highestBid);
             }
             else {
-                // the royalty percentage has 18 decimals
-                uint256 royalty = highestBid * royaltyPercent / 1 ether;
+                // the royalty percentage has 18 decimals + 2 per percentage
+                uint256 royalty = highestBid * royaltyPercent / 10 ** 20;
                 uint256 beneficiaryEarning = highestBid - royalty;
 
                 // send the royalty funds
