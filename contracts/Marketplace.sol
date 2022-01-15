@@ -9,7 +9,6 @@ import "./IPRNG.sol";
 import "./PRNG.sol";
 import "./Auction.sol";
 import "./BlindAuction.sol";
-import "hardhat/console.sol";
 
 contract Marketplace is IPRNG, ReentrancyGuard {
     PRNG public prng;
@@ -17,7 +16,6 @@ contract Marketplace is IPRNG, ReentrancyGuard {
 
     Auction[] public auctions;
     BlindAuction[] public blindAuctions;
-    address[] public sales;
 
     struct Royalty {
         // number of decimal position to include in the royalty percent
@@ -443,9 +441,5 @@ contract Marketplace is IPRNG, ReentrancyGuard {
                 royalty.royaltyPercent,
                 true
             );
-    }
-
-    function createSale() public nonReentrant {
-        prng.rotate();
     }
 }

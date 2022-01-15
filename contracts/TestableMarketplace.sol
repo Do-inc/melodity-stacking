@@ -444,8 +444,4 @@ contract TestableMarketplace is IPRNG, ReentrancyGuard {
                 true
             );
     }
-
-    function createSale() public nonReentrant {
-        prng.rotate();
-    }
 }
