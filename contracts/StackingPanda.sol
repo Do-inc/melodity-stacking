@@ -11,7 +11,7 @@ contract StackingPanda is ERC721, Ownable, IPRNG, ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    struct StackingBonus {
+	struct StackingBonus {
         uint8 decimals;
         uint256 meldToMeld;
         uint256 toMeld;

@@ -5,7 +5,11 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 import "./StackingPanda.sol";
 
 abstract contract IStackingPanda {
-    function computeStackingPandaAddress(address _masterchef) internal pure returns (address) {
+    function computeStackingPandaAddress(address _masterchef)
+        internal
+        pure
+        returns (address)
+    {
         return
             Create2.computeAddress(
                 keccak256("Masterchef/StackingPanda"),
