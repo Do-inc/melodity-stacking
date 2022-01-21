@@ -313,7 +313,7 @@ contract TestableMelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownabl
 		stackersLastDeposit[msg.sender] = block.timestamp;
 
 		// mint the stacking receipt to the depositor
-		uint256 receiptAmount = _amount / poolInfo.receiptValue * 1 ether;
+		uint256 receiptAmount = _amount * 1 ether / poolInfo.receiptValue ;
 		stackingReceipt.mint(msg.sender, receiptAmount);
 
 		emit Deposit(msg.sender, _amount, receiptAmount, block.timestamp);
@@ -344,7 +344,7 @@ contract TestableMelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownabl
 
 		// compute and mint the stacking receipt of the bonus given by the NFT
 		uint256 bonusAmount = _amount * metadata.bonus.meldToMeld / _PERCENTAGE_SCALE;
-		uint256 receiptAmount = bonusAmount / poolInfo.receiptValue;
+		uint256 receiptAmount = bonusAmount * 1 ether / poolInfo.receiptValue ;
 		stackingReceipt.mint(msg.sender, receiptAmount);
 
 		// In order to withdraw the nft the stacked amount for the given NFT *MUST* be zero
@@ -373,7 +373,7 @@ contract TestableMelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownabl
 
 		@param _amount Receipt amount to reconvert to MELD
 	 */
-	function _withdraw(uint256 _amount) public {
+	function _withdraw(uint256 _amount) private {
 		prng.rotate();
 
         require(_amount > 0, "Nothing to withdraw");
@@ -391,7 +391,7 @@ contract TestableMelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownabl
 		// burn the receipt from the sender address
         stackingReceipt.burnFrom(msg.sender, _amount);
 
-		uint256 meldToWithdraw = _amount * poolInfo.receiptValue;
+		uint256 meldToWithdraw = _amount * poolInfo.receiptValue / 1 ether;
 
 		// reduce the reward pool
 		poolInfo.rewardPool -= meldToWithdraw;
