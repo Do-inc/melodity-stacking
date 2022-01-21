@@ -5,10 +5,10 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./IPRNG.sol";
-import "./PRNG.sol";
+import "../IPRNG.sol";
+import "../PRNG.sol";
 
-contract TestableAuction is ERC721Holder, IPRNG, ReentrancyGuard {
+contract Auction is ERC721Holder, IPRNG, ReentrancyGuard {
     PRNG public prng;
 
     address payable public beneficiary;
@@ -52,7 +52,7 @@ contract TestableAuction is ERC721Holder, IPRNG, ReentrancyGuard {
         @param _royaltyReceiver The address of the royalty receiver for a given auction
         @param _royaltyPercentage The 18 decimals percentage of the highest bid that will be sent to 
                 the royalty receiver
-		@param _prng The address of the masterchef who deployed the prng
+		@param _masterchef The address of the masterchef who deployed the prng
     */
     constructor(
         uint256 _biddingTime,
@@ -62,9 +62,9 @@ contract TestableAuction is ERC721Holder, IPRNG, ReentrancyGuard {
         uint256 _minimumBid,
         address _royaltyReceiver,
         uint256 _royaltyPercentage,
-		address _prng
+		address _masterchef
     ) {
-        prng = PRNG(_prng);
+        prng = PRNG(computePRNGAddress(_masterchef));
         prng.rotate();
 
         beneficiary = _beneficiaryAddress;
@@ -105,7 +105,7 @@ contract TestableAuction is ERC721Holder, IPRNG, ReentrancyGuard {
     }
 
     /**
-        Withdraw bids that were overbid.
+        Withdraw a bids that were overbid.
     */
     function withdraw() public nonReentrant {
         prng.rotate();

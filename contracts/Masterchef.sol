@@ -6,8 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./StackingPanda.sol";
 import "./PRNG.sol";
-import "./Marketplace.sol";
-import "hardhat/console.sol";
+import "./Marketplace/Marketplace.sol";
 
 contract Masterchef is ERC721Holder, ReentrancyGuard {
     StackingPanda public stackingPanda;

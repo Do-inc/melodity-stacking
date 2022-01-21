@@ -12,17 +12,17 @@ import "../IStackingPanda.sol";
 import "../StackingPanda.sol";
 import "../PRNG.sol";
 import "./StackingReceipt.sol";
+import "hardhat/console.sol";
 
 /**
 	@author Emanuele (ebalo) Balsamo
 	@custom:security-contact security@melodity.org
  */
-contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausable, ReentrancyGuard {
+contract TestableMelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 	bytes4 constant public _INTERFACE_ID_ERC20_METADATA = 0x942e8b22;
 	address constant public _DO_INC_MULTISIG_WALLET = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
 	uint256 constant public _PERCENTAGE_SCALE = 10 ** 20;
 	uint256 constant public _EPOCH_DURATION = 1 hours;
-	uint256 constant public _MAX_INT = 2 ** 256 -1;
 
 	/**
 		@param startingTime Era starting time
@@ -67,7 +67,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 		@param minFeePercentage Min fee if withdraw occurr before withdrawFeePeriod days
 		@param feePercentage Currently applied fee percentage for early withdraw
 		@param feeReceiver Address where the fees gets sent
-		@param withdrawFeePeriod Number of days or hours that a deposit is considered to 
+		@param withdrawFeePeriod Number of days or hours that a deposit is considered to
 				under the withdraw with fee period
 		@param feeReceiverPercentage Share of the fee that goes to the feeReceiver
 		@param feeMaintainerPercentage Share of the fee that goes to the _DO_INC_MULTISIG_WALLET
@@ -97,7 +97,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	}
 
 	/**
-		+-------------------+ 
+		+-------------------+
 	 	|  Stacking values  |
 	 	+-------------------+
 		@notice funds must be sent to this address in order to actually start rewarding
@@ -143,27 +143,40 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	/**
 		Initialize the values of the stacking contract
 
-		@param _masterchef The masterchef generator contract address,
+		@param _prng The masterchef generator contract address,
 			it deploies other contracts
 		@param _melodity Melodity ERC20 contract address
 	 */
-    constructor(address _masterchef, address _melodity, address _dao, uint8 _erasToGenerate) {
-		prng = PRNG(computePRNGAddress(_masterchef));
-		stackingPanda = StackingPanda(computeStackingPandaAddress(_masterchef));
+    constructor(
+		address _prng,
+		address _stackingPanda,
+		address _melodity,
+		address _dao,
+		uint256 _rewardPool,
+		uint256 _receiptValue,
+		uint256 _genesisEraDuration,
+		uint256 _genesisRewardScaleFactor,
+		uint256 _genesisEraScaleFactor,
+		bool _exhausting,
+		bool _dismissed,
+		uint8 _erasToGenerate
+	) {
+		prng = PRNG(_prng);
+		stackingPanda = StackingPanda(_stackingPanda);
 		melodity = ERC20(_melodity);
 		stackingReceipt = new StackingReceipt("Melodity stacking receipt", "sMELD");
-		
+
 		poolInfo = PoolInfo({
-			rewardPool: 20_000_000 ether,
-			receiptValue: 1 ether,
-			lastReceiptUpdateTime: block.timestamp,
-			genesisEraDuration: 720 * _EPOCH_DURATION,
+			rewardPool: _rewardPool,
+			receiptValue: _receiptValue,
+			lastReceiptUpdateTime: block.timestamp + 1,
+			genesisEraDuration: _genesisEraDuration * _EPOCH_DURATION,
 			genesisTime: block.timestamp,
-			genesisRewardScaleFactor: 79 ether,
-			genesisEraScaleFactor: 107 ether,
+			genesisRewardScaleFactor: _genesisRewardScaleFactor,
+			genesisEraScaleFactor: _genesisEraScaleFactor,
 			genesisRewardFactorPerEpoch: 0.001 ether,
-			exhausting: false,
-			dismissed: false
+			exhausting: _exhausting,
+			dismissed: _dismissed
 		});
 
 		feeInfo = FeeInfo({
@@ -191,7 +204,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 		The regenerated eras will use the latest defined eraScaleFactor and rewardScaleFactor
 		to compute the eras duration and reward.
 		Playing around with the number of eras and the scaling factor caller by this method can
-		(re-)generate an arbitrary number of eras (not already started) increasing or decreasing 
+		(re-)generate an arbitrary number of eras (not already started) increasing or decreasing
 		their rewardScaleFactor and eraScaleFactor
 
 		@notice This method overwrites the next era definition first, then moves adding new eras
@@ -199,12 +212,12 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function _triggerErasInfoRefresh(uint8 _erasToGenerate) private {
 		uint256 existingErasInfos = eraInfos.length;
-		uint8 i;
-		uint8 k;
+		uint256 i;
+		uint256 k;
 
 		while(i < _erasToGenerate) {
 			// check if exists some era infos, if they exists check if the k-th era is already started
-			// if it is already started it cannot be edited and we won't consider it actually increasing 
+			// if it is already started it cannot be edited and we won't consider it actually increasing
 			// k
 			if(existingErasInfos > k && eraInfos[k].startingTime <= block.timestamp) {
 				k++;
@@ -333,7 +346,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 		uint256 bonusAmount = _amount * metadata.bonus.meldToMeld / _PERCENTAGE_SCALE;
 		uint256 receiptAmount = bonusAmount / poolInfo.receiptValue;
 		stackingReceipt.mint(msg.sender, receiptAmount);
-		
+
 		// In order to withdraw the nft the stacked amount for the given NFT *MUST* be zero
 		stackedNFTs[msg.sender].push(StackedNFT({
 			stackedAmount: receipt + receiptAmount,
@@ -426,7 +439,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function withdrawWithNFT(uint256 _amount, uint256 _index) public nonReentrant {
 		prng.rotate();
-		
+
 		require(stackedNFTs[msg.sender].length > _index, "Index out of bound");
 
 		// run the standard withdraw
@@ -595,7 +608,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function updateEraDuration(uint256 _epochsNumber) public onlyOwner nonReentrant {
 		prng.rotate();
-		
+
 		uint256 old = poolInfo.genesisEraDuration;
 		poolInfo.genesisEraDuration = _epochsNumber * _EPOCH_DURATION;
 		_triggerErasInfoRefresh(5);
@@ -609,7 +622,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function refreshErasInfo(uint8 _eraAmount) public onlyOwner nonReentrant {
 		prng.rotate();
-		
+
 		_triggerErasInfoRefresh(_eraAmount);
 	}
 
@@ -624,7 +637,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function updateRewardScaleFactor(uint256 _factor, uint8 _erasToRefresh) public onlyOwner nonReentrant {
 		prng.rotate();
-		
+
 		uint256 old = poolInfo.genesisEraDuration;
 		poolInfo.genesisRewardScaleFactor = _factor;
 		_triggerErasInfoRefresh(_erasToRefresh);
@@ -642,7 +655,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function updateEraScaleFactor(uint256 _factor, uint8 _erasToRefresh) public onlyOwner nonReentrant {
 		prng.rotate();
-		
+
 		uint256 old = poolInfo.genesisEraScaleFactor;
 		poolInfo.genesisEraScaleFactor = _factor;
 		_triggerErasInfoRefresh(_erasToRefresh);
@@ -660,7 +673,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function updateEarlyWithdrawFeePercent(uint256 _percent) public onlyOwner nonReentrant {
 		prng.rotate();
-		
+
 		require(_percent >= feeInfo.minFeePercentage, "Early withdraw fee too low");
 		require(_percent <= feeInfo.maxFeePercentage, "Early withdraw fee too high");
 
@@ -678,7 +691,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function updateFeeReceiverAddress(address _dao) public onlyOwner nonReentrant {
 		prng.rotate();
-		
+
 		require(_dao != address(0), "Provided address is invalid");
 
 		address old = feeInfo.feeReceiver;
@@ -696,7 +709,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function updateWithdrawFeePeriod(uint256 _period, bool _isDay) public onlyOwner nonReentrant {
 		prng.rotate();
-		
+
 		if(_isDay) {
 			// days (max 7 days, min 1 day)
 			require(_period <= 7, "Withdraw period too long");
@@ -722,14 +735,14 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 
 		@notice The update factor is given as a percentage with high precision (18 decimal positions)
 				Consider 100 ether = 100%
-		@notice The percentage must be a value between feeInfo.feeReceiverMinPercent and 
+		@notice The percentage must be a value between feeInfo.feeReceiverMinPercent and
 				100 ether - feeInfo.feeMaintainerMinPercent
 
 		@param _percent Percentage of the fee to send to the dao
 	 */
 	function updateDaoFeePercentage(uint256 _percent) public onlyOwner nonReentrant {
 		prng.rotate();
-		
+
 		require(_percent >= feeInfo.feeReceiverMinPercent, "Dao's fee share too low");
 		require(_percent <= 100 ether - feeInfo.feeMaintainerMinPercent, "Dao's fee share too high");
 
@@ -745,14 +758,14 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 
 		@notice The update factor is given as a percentage with high precision (18 decimal positions)
 				Consider 100 ether = 100%
-		@notice The percentage must be a value between feeInfo.feeMaintainerMinPercent and 
+		@notice The percentage must be a value between feeInfo.feeMaintainerMinPercent and
 				100 ether - feeInfo.feeReceiverMinPercent
 
 		@param _percent Percentage of the fee to send to the maintainers
 	 */
 	function updateMaintainerFeePercentage(uint256 _percent) public onlyOwner nonReentrant {
 		prng.rotate();
-		
+
 		require(_percent >= feeInfo.feeMaintainerMinPercent, "Maintainer's fee share too low");
 		require(_percent <= 100 ether - feeInfo.feeReceiverMinPercent, "Maintainer's fee share too high");
 
@@ -768,7 +781,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function pause() public whenNotPaused nonReentrant onlyOwner {
 		prng.rotate();
-		
+
 		_pause();
 	}
 
@@ -777,7 +790,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function resume() public whenPaused nonReentrant onlyOwner {
 		prng.rotate();
-		
+
 		_unpause();
 	}
 
@@ -786,13 +799,13 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 		The pool must be paused in order to lock the users from depositing but allow them to withdraw their funds.
 		The dismission call can be launched only once all the stacking receipt gets reconverted back to MELD.
 
-		@notice As evil users may want to leave their funds in the stacking pool to exhaust the pool balance 
+		@notice As evil users may want to leave their funds in the stacking pool to exhaust the pool balance
 				(even if practically impossible). The DAO can set the reward scaling factor to 0 actually stopping
 				any reward for newer eras.
 	 */
 	function dismissionWithdraw() public whenPaused nonReentrant onlyOwner {
 		prng.rotate();
-		
+
 		require(!poolInfo.dismissed, "Pool already dismissed");
 		require(poolInfo.exhausting, "Dismission enabled only once the stacking pool is exhausting");
 		require(stackingReceipt.totalSupply() == 0, "Unable to dismit the stacking pool as there are still circulating receipt");

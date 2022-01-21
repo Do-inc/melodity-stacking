@@ -5,19 +5,17 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./IPRNG.sol";
-import "./PRNG.sol";
-import "./TestableAuction.sol";
-import "./TestableBlindAuction.sol";
-import "hardhat/console.sol";
+import "../IPRNG.sol";
+import "../PRNG.sol";
+import "./Auction.sol";
+import "./BlindAuction.sol";
 
-contract TestableMarketplace is IPRNG, ReentrancyGuard {
+contract Marketplace is IPRNG, ReentrancyGuard {
     PRNG public prng;
     address private _masterchef;
 
-    TestableAuction[] public auctions;
-    TestableBlindAuction[] public blindAuctions;
-    address[] public sales;
+    Auction[] public auctions;
+    BlindAuction[] public blindAuctions;
 
     struct Royalty {
         // number of decimal position to include in the royalty percent
@@ -89,20 +87,20 @@ contract TestableMarketplace is IPRNG, ReentrancyGuard {
         require(
             // check the SC doesn't supports the ERC721 openzeppelin interface
             ERC165Checker.supportsInterface(_contract, _INTERFACE_ID_ERC721) &&
-			// check the SC doesn't supports the ERC721-Metadata openzeppelin interface
-			ERC165Checker.supportsInterface(
-				_contract,
-				_INTERFACE_ID_ERC721_METADATA
-			),
+                // check the SC doesn't supports the ERC721-Metadata openzeppelin interface
+                ERC165Checker.supportsInterface(
+                    _contract,
+                    _INTERFACE_ID_ERC721_METADATA
+                ),
             "The provided address does not seem to implement the ERC721 NFT standard"
         );
 
         _;
     }
 
-    constructor(address _prng) {
+    constructor() {
         _masterchef = msg.sender;
-        prng = PRNG(_prng);
+        prng = PRNG(computePRNGAddress(msg.sender));
         prng.rotate();
     }
 
@@ -152,7 +150,7 @@ contract TestableMarketplace is IPRNG, ReentrancyGuard {
 
         if (!_blind) {
             // create a new auction for the user
-            TestableAuction auction = new TestableAuction(
+            Auction auction = new Auction(
                 _auctionDuration,
                 payable(_payee),
                 _nftId,
@@ -160,7 +158,7 @@ contract TestableMarketplace is IPRNG, ReentrancyGuard {
                 _minimumPrice,
                 _royaltyReceiver,
                 _royaltyPercentage,
-                address(prng)
+                _masterchef
             );
             auctions.push(auction);
             _auctionAddress = address(auction);
@@ -168,7 +166,7 @@ contract TestableMarketplace is IPRNG, ReentrancyGuard {
             emit AuctionCreated(_auctionAddress, _nftId, _nftContract);
         } else {
             // create a new blind auction for the user
-            TestableBlindAuction blindAuction = new TestableBlindAuction(
+            BlindAuction blindAuction = new BlindAuction(
                 _auctionDuration,
                 1 days,
                 payable(_payee),
@@ -177,7 +175,7 @@ contract TestableMarketplace is IPRNG, ReentrancyGuard {
                 _minimumPrice,
                 _royaltyReceiver,
                 _royaltyPercentage,
-                address(prng)
+                _masterchef
             );
             blindAuctions.push(blindAuction);
             _auctionAddress = address(blindAuction);
@@ -393,7 +391,7 @@ contract TestableMarketplace is IPRNG, ReentrancyGuard {
         return royalties[royaltyIdentifier];
     }
 
-    function createBlindAuctionwithRoyalties(
+    function createBlindAuction(
         uint256 _nftId,
         address _nftContract,
         address _payee,

@@ -5,10 +5,10 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./IPRNG.sol";
-import "./PRNG.sol";
+import "../IPRNG.sol";
+import "../PRNG.sol";
 
-contract TestableBlindAuction is ERC721Holder, IPRNG, ReentrancyGuard {
+contract BlindAuction is ERC721Holder, IPRNG, ReentrancyGuard {
     PRNG public prng;
 
     struct Bid {
@@ -34,7 +34,7 @@ contract TestableBlindAuction is ERC721Holder, IPRNG, ReentrancyGuard {
     uint256 public highestBid;
 
     // Allowed withdrawals of previous bids that were overbid
-    mapping(address => uint256) public pendingReturns;
+    mapping(address => uint256) private pendingReturns;
 
     event BidPlaced(address bidder);
     event AuctionEnded(address winner, uint256 highestBid);
@@ -63,9 +63,9 @@ contract TestableBlindAuction is ERC721Holder, IPRNG, ReentrancyGuard {
         uint256 _minimumBid,
         address _royaltyReceiver,
         uint256 _royaltyPercentage,
-        address _prng
+        address _masterchef
     ) {
-        prng = PRNG(_prng);
+        prng = PRNG(computePRNGAddress(_masterchef));
         prng.rotate();
 
         beneficiary = _beneficiaryAddress;
@@ -172,10 +172,8 @@ contract TestableBlindAuction is ERC721Holder, IPRNG, ReentrancyGuard {
         }
     }
 
-    /**
-		End the auction and send the highest bid
-    	to the beneficiary.
-	*/
+    /// End the auction and send the highest bid
+    /// to the beneficiary.
     function endAuction() public nonReentrant onlyAfter(revealEnd) {
         prng.rotate();
 
@@ -202,7 +200,7 @@ contract TestableBlindAuction is ERC721Holder, IPRNG, ReentrancyGuard {
                 Address.sendValue(beneficiary, highestBid);
             }
             else {
-                // the royalty percentage has 18 decimals + 2 percentage positions
+                // the royalty percentage has 18 decimals + 2 percetage positions
                 uint256 royalty = highestBid * royaltyPercent / 10 ** 20;
                 uint256 beneficiaryEarning = highestBid - royalty;
 
