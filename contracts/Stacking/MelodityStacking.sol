@@ -53,6 +53,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 		uint256 genesisRewardScaleFactor;
 		uint256 genesisEraScaleFactor;
 		bool exhausting;
+		bool dismissed;
 	}
 
 	/**
@@ -79,6 +80,11 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 		uint256 feeMaintainerMinPercent;
 	}
 
+	/**
+		@param stackedAmount Amount of receipt received during the stacking deposit, in order to withdraw the NFT this
+				value *MUST* be zero
+		@param nftId NFT identifier
+	 */
 	struct StackedNFT {
 		uint256 stackedAmount;
 		uint256 nftId;
@@ -95,12 +101,15 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 		@dev eraInfos: array of EraInfo where startingTime, endingTime, rewardPerEpoch
 				and eraDuration gets defined in a per era basis
 		@dev stackersLastDeposit: stacker last executed deposit, reset at each deposit
+		@dev stackedNFTs: Association between an address and its stacked NFTs
+		@dev depositorNFT: Association between an NFT identifier and the depositor address
 	*/
 	PoolInfo public poolInfo;
 	FeeInfo public feeInfo;
 	EraInfo[] public eraInfos;
 	mapping(address => uint256) private stackersLastDeposit;
 	mapping(address => StackedNFT[]) public stackedNFTs;
+	mapping(uint256 => address) public depositorNFT;
 
     ERC20 public melodity;
 	StackingReceipt public stackingReceipt;
@@ -123,6 +132,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	event WithdrawPeriodUpdate(uint256 oldPeriod, uint256 newPeriod);
 	event DaoFeeSharedUpdate(uint256 oldShare, uint256 newShare);
 	event MaintainerFeeSharedUpdate(uint256 oldShare, uint256 newShare);
+	event PoolDismissed();
 
 	/**
 		Initialize the values of the stacking contract
@@ -145,7 +155,8 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 			genesisTime: block.timestamp,
 			genesisRewardScaleFactor: 79 ether,
 			genesisEraScaleFactor: 107 ether,
-			exhausting: false
+			exhausting: false,
+			dismissed: false
 		});
 
 		feeInfo = FeeInfo({
@@ -168,9 +179,9 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 		one.
 		The regenerated eras will use the latest defined eraScaleFactor and rewardScaleFactor
 		to compute the eras duration and reward.
-		Playing around with the number of eras and the scaling factor caller of this method can
+		Playing around with the number of eras and the scaling factor caller by this method can
 		(re-)generate an arbitrary number of eras (not already started) increasing or decreasing 
-		their rewardPerEpoch and eraDuration
+		their rewardScaleFactor and eraScaleFactor
 
 		@notice This method overwrites the next era definition first, then moves adding new eras
 		@param _eras_to_generate Number of eras to (re-)generate
@@ -246,7 +257,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 
 		@param _amount Amount of MELD that will be stacked
 	 */
-	function deposit(uint256 _amount) public nonReentrant returns(uint256) {
+	function deposit(uint256 _amount) public nonReentrant whenNotPaused returns(uint256) {
 		prng.rotate();
 
 		require(_amount > 0, "Unable to deposit null amount");
@@ -279,7 +290,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 		@param _amount Amount of MELD that will be stacked
 		@param _nftId NFT identifier that will be stacked with the funds
 	 */
-	function depositWithNFT(uint256 _amount, uint256 _nftId) public nonReentrant {
+	function depositWithNFT(uint256 _amount, uint256 _nftId) public nonReentrant whenNotPaused {
 		prng.rotate();
 
 		require(stackingPanda.ownerOf(_nftId) == msg.sender, "You're not the owner of the provided NFT");
@@ -302,6 +313,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 			stackedAmount: receipt + receiptAmount,
 			nftId: _nftId
 		}));
+		depositorNFT[_nftId] = msg.sender;
 
 		emit NFTDeposit(msg.sender, _nftId);
 	}
@@ -309,7 +321,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	/**
 		Withdraw the receipt from the pool 
 
-		@param _amount Receipt amount to reconver to MELD
+		@param _amount Receipt amount to reconvert to MELD
 	 */
 	function withdraw(uint256 _amount) public nonReentrant {
 		prng.rotate();
@@ -364,6 +376,17 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 		}
     }
 
+	/**
+		Withdraw the receipt and the deposited NFT (if possible) from the stacking pool
+
+		@notice Withdrawing an amount higher then the deposited one and having more than
+				one NFT stacked may lead to the permanent lock of the NFT in the contract.
+				The NFT may be retrieved re-providing the funds for stacking and withdrawing
+				the required amount of funds using this method
+
+		@param _amount Receipt amount to reconvert to MELD
+		@param _index Index of the stackedNFTs array whose NFT will be recovered if possible
+	 */
 	function withdrawWithNFT(uint256 _amount, uint256 _index) public nonReentrant {
 		prng.rotate();
 		
@@ -388,6 +411,7 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 			}
 			// remove the element from the array
 			stackedNFTs[msg.sender].pop();
+			depositorNFT[stackedNFT.nftId] = address(0);
 
 			// refund the NFT to the original owner
 			stackingPanda.safeTransferFrom(address(this), msg.sender, stackedNFT.nftId);
@@ -412,6 +436,9 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 
 	/**
 		Update the receipt value if necessary
+
+		@notice This method *MUST* never be marked as nonReentrant as if no valid era was found it
+				calls itself back after the generation of 2 new era infos
 	 */
 	function refreshReceiptValue() public {
 		uint256 _now = block.timestamp;
@@ -421,12 +448,18 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 		poolInfo.lastReceiptUpdateTime = block.timestamp;
 
 		uint256 eraEndingTime;
+		bool validEraFound;
 
 		for(uint256 i; i < eraInfos.length; i++) {
 			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
 
 			// check if the lastUpdateTime is inside the currently checking era
 			if(eraInfos[i].startingTime <= lastUpdateTime && lastUpdateTime <= eraEndingTime) {
+				// As there may be the case no valid era was still created and this branch will never enter
+				// we use a boolean value to indicate if it was ever entered or not. as we're into the branch
+				// we set is to true here
+				validEraFound = true;
+
 				// check if _now is in the same era of the lastUpdateTime, if it is then use _now to recompute the receipt value
 				if(eraInfos[i].startingTime <= _now && _now <= eraEndingTime) {
 					// NOTE: here some epochs may get lost as lastUpdateTime will almost never be equal to the exact epoch
@@ -480,6 +513,17 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 					}
 				}
 			}
+		}
+
+		// No valid era exists this mean that the following era data were not generated yet, simply trigger the generation of the
+		// next 2 eras and recall this method
+		if(!validEraFound) {
+			// in order to avoid the triggering of the error check at the begin of this method here we reduce the last receipt time by 1
+			// this is an easy hack around the error check
+			poolInfo.lastReceiptUpdateTime--;
+
+			_triggerErasInfoRefresh(2);
+			refreshReceiptValue();
 		}
 
 		emit ReceiptValueUpdate(poolInfo.receiptValue);
@@ -660,5 +704,73 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 		feeInfo.feeReceiverPercentage = 100 ether - _percent;
 		emit MaintainerFeeSharedUpdate(old, feeInfo.feeMaintainerPercentage);
 		emit DaoFeeSharedUpdate(100 ether - old, feeInfo.feeReceiverPercentage);
+	}
+
+	/**
+		Pause the stacking pool
+	 */
+	function pause() public whenNotPaused nonReentrant onlyOwner {
+		_pause();
+	}
+
+	/**
+		Resume the stacking pool
+	 */
+	function resume() public whenPaused nonReentrant onlyOwner {
+		_unpause();
+	}
+
+	/**
+		Allow dismission of the stacking pool once it is exhausting.
+		The pool must be paused in order to lock the users from depositing but allow them to withdraw their funds.
+		The dismission call can be launched only once all the stacking receipt gets reconverted back to MELD.
+
+		@notice As evil users may want to leave their funds in the stacking pool to exhaust the pool balance 
+				(even if practically impossible). The DAO can set the reward scaling factor to 0 actually stopping
+				any reward for newer eras.
+	 */
+	function dismissionWithdraw() public whenPaused nonReentrant onlyOwner {
+		require(!poolInfo.dismissed, "Pool already dismissed");
+		require(poolInfo.exhausting, "Dismission enabled only once the stacking pool is exhausting");
+		require(stackingReceipt.totalSupply() == 0, "Unable to dismit the stacking pool as there are still circulating receipt");
+
+		address addr;
+		uint256 index;
+		// refund all stacking pandas to their original owners if still locked in the pool
+		for(uint8 i; i < 100; i++) {
+			// if the depositor address is not the null address then the NFT is deposited into the pool
+			addr = depositorNFT[i];
+			if(addr != address(0)) {
+				// reset index to zero if needed
+				index = 0;
+
+				// if more than one nft was stacked search the array for the one with the given id
+				if(stackedNFTs[addr].length > 1) {
+					for(; index < stackedNFTs[addr].length; index++) {
+						// if the NFT identifier match exit the loop
+						if(stackedNFTs[addr][index].nftId == i) {
+							break;
+						}
+					}
+
+					// swap the nft position with the last one
+					stackedNFTs[addr][index] = stackedNFTs[addr][stackedNFTs[addr].length - 1];
+					index = stackedNFTs[addr].length - 1;
+				}
+
+				// refund the NFT and reduce the size of the array
+				stackingPanda.safeTransferFrom(address(this), addr, stackedNFTs[addr][index].nftId);
+				stackedNFTs[addr].pop();
+			}
+		}
+
+		// send all the remaining funds in the reward pool to the DAO
+		melodity.transfer(feeInfo.feeReceiver, melodity.balanceOf(address(this)));
+
+		// update the value at the end allowing this method to be called again if any error occurrs
+		// the nonReentrant modifier anyway avoids any reentrancy attack
+		poolInfo.dismissed = true;
+
+		emit PoolDismissed();
 	}
 }
