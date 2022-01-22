@@ -24,7 +24,7 @@ async function main() {
 		melodityStacking,
 		melodityStackingReceipt,
 		tx,
-		meld = "0x5EaA8Be0ebe73C0B6AdA8946f136B86b92128c55",
+		meld = "0x13E971De9181eeF7A4aEAEAA67552A6a4cc54f43",
 		proposerRole =
 			"0xb09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc1",
 		adminRole =
