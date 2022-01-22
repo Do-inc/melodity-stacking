@@ -171,8 +171,8 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 			feePercentage: 10 ether,
 			feeReceiver: _dao,
 			withdrawFeePeriod: 7 days,
-			feeReceiverPercentage: 50 ether,
-			feeMaintainerPercentage: 50 ether,
+			feeReceiverPercentage: 5 ether,
+			feeMaintainerPercentage: 95 ether,
 			feeReceiverMinPercent: 5 ether,
 			feeMaintainerMinPercent: 25 ether
 		});

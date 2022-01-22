@@ -39,6 +39,38 @@ module.exports = {
 					? [process.env.PRIVATE_KEY]
 					: [],
 		},
+		"bsc-testnet": {
+			url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
+			accounts:
+				process.env.PRIVATE_KEY !== undefined
+					? [process.env.PRIVATE_KEY]
+					: [],
+			chainId: 97,
+		},
+		bsc: {
+			url: "https://bsc-dataseed.binance.org/",
+			accounts:
+				process.env.PRIVATE_KEY !== undefined
+					? [process.env.PRIVATE_KEY]
+					: [],
+			chainId: 56,
+		},
+		"fantom-testnet": {
+			url: "https://rpc.testnet.fantom.network/",
+			accounts:
+				process.env.PRIVATE_KEY !== undefined
+					? [process.env.PRIVATE_KEY]
+					: [],
+			chainId: 4002,
+		},
+		fantom: {
+			url: "https://rpc.ftm.tools/",
+			accounts:
+				process.env.PRIVATE_KEY !== undefined
+					? [process.env.PRIVATE_KEY]
+					: [],
+			chainId: 250,
+		}
 	},
 	gasReporter: {
 		enabled: process.env.REPORT_GAS !== undefined,

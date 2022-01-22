@@ -7,11 +7,20 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./StackingPanda.sol";
 import "./PRNG.sol";
 import "./Marketplace/Marketplace.sol";
+import "./DAO/MelodityGovernance.sol";
+import "./DAO/MelodityDAOTimelock.sol";
+import "./DAO/MelodityDAO.sol";
+import "./Stacking/MelodityStacking.sol";
 
 contract Masterchef is ERC721Holder, ReentrancyGuard {
     StackingPanda public stackingPanda;
     PRNG public prng;
     Marketplace public marketplace;
+	MelodityGovernance public melodityGovernanceToken;
+	MelodityDAOTimelock public melodityDAOTimelock;
+	MelodityDAO public melodityDAO;
+	MelodityStacking public melodityStacking;
+	StackingReceipt public melodityStackingReceipt;
 
     uint256 public mintingEpoch = 7 days;
     uint256 public lastMintingEvent;
@@ -29,10 +38,23 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
     event StackingPandaMinted(uint256 id);
     event StackingPandaForSale(address auction, uint256 id);
 
+	/**
+     * Network: Binance Smart Chain (BSC)     *
+     * Melodity Bep20: 0x13E971De9181eeF7A4aEAEAA67552A6a4cc54f43
+
+	 * Network: Binance Smart Chain TESTNET (BSC)     *
+     * Melodity Bep20: 0x5EaA8Be0ebe73C0B6AdA8946f136B86b92128c55
+     */
     constructor() {
+		address melodity = 0x13E971De9181eeF7A4aEAEAA67552A6a4cc54f43;
+
         _deployPRNG();
         _deployStackingPandas();
         _deployMarketplace();
+		_deployMelodityGovernance(melodity);
+		_deployMelodityDAOTimelock();
+		_deployMelodityDAO();
+		_deployMelodityStacking(melodity);
     }
 
     /**
@@ -41,11 +63,13 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
      */
     function _deployStackingPandas() private {
         stackingPanda = StackingPanda(
-            Create2.deploy(
-                0,
-                keccak256("Masterchef/StackingPanda"),
-                type(StackingPanda).creationCode
-            )
+            payable(
+				Create2.deploy(
+					0,
+					keccak256("Masterchef/StackingPanda"),
+					type(StackingPanda).creationCode
+				)
+			)
         );
         prng.rotate();
     }
@@ -57,11 +81,13 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
      */
     function _deployPRNG() private {
         prng = PRNG(
-            Create2.deploy(
-                0,
-                keccak256("Masterchef/PRNG"),
-                type(PRNG).creationCode
-            )
+            payable(
+				Create2.deploy(
+					0,
+					keccak256("Masterchef/PRNG"),
+					type(PRNG).creationCode
+				)
+			)
         );
         prng.rotate();
     }
@@ -73,14 +99,41 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
      */
     function _deployMarketplace() private {
         marketplace = Marketplace(
-            Create2.deploy(
-                0,
-                keccak256("Masterchef/Marketplace"),
-                type(Marketplace).creationCode
-            )
+            payable(
+				Create2.deploy(
+					0,
+					keccak256("Masterchef/Marketplace"),
+					type(Marketplace).creationCode
+				)
+			)
         );
         prng.rotate();
     }
+
+	function _deployMelodityGovernance(address _meld) private {
+		melodityGovernanceToken = new MelodityGovernance(IERC20(_meld));
+        prng.rotate();
+	}
+
+	function _deployMelodityDAOTimelock() private {
+		address[] memory proposers = new address[](0);
+		address[] memory executor = new address[](1);
+		executor[0] = address(0);
+		melodityDAOTimelock = new MelodityDAOTimelock(proposers, executor);
+        prng.rotate();
+	}
+
+	function _deployMelodityDAO() private {
+		melodityDAO = new MelodityDAO(melodityGovernanceToken, melodityDAOTimelock);
+        prng.rotate();
+	}
+
+	function _deployMelodityStacking(address _meld) private {
+		melodityStacking = new MelodityStacking(address(this), _meld, address(melodityDAOTimelock), 10);
+        prng.rotate();
+
+		melodityStackingReceipt = melodityStacking.stackingReceipt();
+	}
 
     /**
         Trigger the minting of a new stacking panda, this function is publicly callable
