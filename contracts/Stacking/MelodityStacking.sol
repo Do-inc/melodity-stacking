@@ -22,7 +22,6 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	address constant public _DO_INC_MULTISIG_WALLET = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
 	uint256 constant public _PERCENTAGE_SCALE = 10 ** 20;
 	uint256 constant public _EPOCH_DURATION = 1 hours;
-	uint256 constant public _MAX_INT = 2 ** 256 -1;
 
 	/**
 		@param startingTime Era starting time
@@ -199,8 +198,8 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function _triggerErasInfoRefresh(uint8 _erasToGenerate) private {
 		uint256 existingErasInfos = eraInfos.length;
-		uint8 i;
-		uint8 k;
+		uint256 i;
+		uint256 k;
 
 		while(i < _erasToGenerate) {
 			// check if exists some era infos, if they exists check if the k-th era is already started

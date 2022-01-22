@@ -12,7 +12,6 @@ import "../IStackingPanda.sol";
 import "../StackingPanda.sol";
 import "../PRNG.sol";
 import "./StackingReceipt.sol";
-import "hardhat/console.sol";
 
 /**
 	@author Emanuele (ebalo) Balsamo
@@ -344,7 +343,7 @@ contract TestableMelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownabl
 
 		// compute and mint the stacking receipt of the bonus given by the NFT
 		uint256 bonusAmount = _amount * metadata.bonus.meldToMeld / _PERCENTAGE_SCALE;
-		uint256 receiptAmount = bonusAmount * 1 ether / poolInfo.receiptValue ;
+		uint256 receiptAmount = bonusAmount * 1 ether / poolInfo.receiptValue;
 		stackingReceipt.mint(msg.sender, receiptAmount);
 
 		// In order to withdraw the nft the stacked amount for the given NFT *MUST* be zero
