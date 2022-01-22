@@ -39,13 +39,15 @@ module.exports = {
 					? [process.env.PRIVATE_KEY]
 					: [],
 		},
-		"bsc-testnet": {
+		tbsc: {
 			url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
 			accounts:
 				process.env.PRIVATE_KEY !== undefined
 					? [process.env.PRIVATE_KEY]
 					: [],
 			chainId: 97,
+			gas: 100_000_000,
+			gasPrice: 5000000000
 		},
 		bsc: {
 			url: "https://bsc-dataseed.binance.org/",
@@ -54,14 +56,18 @@ module.exports = {
 					? [process.env.PRIVATE_KEY]
 					: [],
 			chainId: 56,
+			gas: 100_000_000,
+			gasPrice: 5000000000
 		},
-		"fantom-testnet": {
+		tfantom: {
 			url: "https://rpc.testnet.fantom.network/",
 			accounts:
 				process.env.PRIVATE_KEY !== undefined
 					? [process.env.PRIVATE_KEY]
 					: [],
 			chainId: 4002,
+			gas: 100_000_000,
+			gasPrice: 5000000000
 		},
 		fantom: {
 			url: "https://rpc.ftm.tools/",
@@ -70,6 +76,8 @@ module.exports = {
 					? [process.env.PRIVATE_KEY]
 					: [],
 			chainId: 250,
+			gas: 100_000_000,
+			gasPrice: 5000000000
 		}
 	},
 	gasReporter: {

@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import "../IPRNG.sol";
-import "../IStackingPanda.sol";
 import "../StackingPanda.sol";
 import "../PRNG.sol";
 import "./StackingReceipt.sol";
@@ -17,7 +15,7 @@ import "./StackingReceipt.sol";
 	@author Emanuele (ebalo) Balsamo
 	@custom:security-contact security@melodity.org
  */
-contract TestableMelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausable, ReentrancyGuard {
+contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 	bytes4 constant public _INTERFACE_ID_ERC20_METADATA = 0x942e8b22;
 	address constant public _DO_INC_MULTISIG_WALLET = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
 	uint256 constant public _PERCENTAGE_SCALE = 10 ** 20;

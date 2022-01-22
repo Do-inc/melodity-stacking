@@ -5,10 +5,9 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "../IPRNG.sol";
 import "../PRNG.sol";
 
-contract TestableBlindAuction is ERC721Holder, IPRNG, ReentrancyGuard {
+contract TestableBlindAuction is ERC721Holder, ReentrancyGuard {
     PRNG public prng;
 
     struct Bid {

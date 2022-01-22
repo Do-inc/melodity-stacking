@@ -5,10 +5,9 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "../IPRNG.sol";
 import "../PRNG.sol";
 
-contract TestableAuction is ERC721Holder, IPRNG, ReentrancyGuard {
+contract TestableAuction is ERC721Holder, ReentrancyGuard {
     PRNG public prng;
 
     address payable public beneficiary;

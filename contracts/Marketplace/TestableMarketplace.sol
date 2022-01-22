@@ -5,12 +5,11 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "../IPRNG.sol";
 import "../PRNG.sol";
 import "./TestableAuction.sol";
 import "./TestableBlindAuction.sol";
 
-contract TestableMarketplace is IPRNG, ReentrancyGuard {
+contract TestableMarketplace is ReentrancyGuard {
     PRNG public prng;
     address private _masterchef;
 
@@ -100,7 +99,6 @@ contract TestableMarketplace is IPRNG, ReentrancyGuard {
     }
 
     constructor(address _prng) {
-        _masterchef = msg.sender;
         prng = PRNG(_prng);
         prng.rotate();
     }

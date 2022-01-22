@@ -1,26 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./StackingPanda.sol";
 import "./PRNG.sol";
 import "./Marketplace/Marketplace.sol";
-import "./DAO/MelodityGovernance.sol";
-import "./DAO/MelodityDAOTimelock.sol";
-import "./DAO/MelodityDAO.sol";
-import "./Stacking/MelodityStacking.sol";
 
 contract Masterchef is ERC721Holder, ReentrancyGuard {
     StackingPanda public stackingPanda;
     PRNG public prng;
     Marketplace public marketplace;
-	MelodityGovernance public melodityGovernanceToken;
-	MelodityDAOTimelock public melodityDAOTimelock;
-	MelodityDAO public melodityDAO;
-	MelodityStacking public melodityStacking;
-	StackingReceipt public melodityStackingReceipt;
 
     uint256 public mintingEpoch = 7 days;
     uint256 public lastMintingEvent;
@@ -38,40 +28,27 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
     event StackingPandaMinted(uint256 id);
     event StackingPandaForSale(address auction, uint256 id);
 
-	/**
-     * Network: Binance Smart Chain (BSC)     *
+	bool initializedMelodityDao;
+
+    /**
+     * Network: Binance Smart Chain (BSC)     
      * Melodity Bep20: 0x13E971De9181eeF7A4aEAEAA67552A6a4cc54f43
 
-	 * Network: Binance Smart Chain TESTNET (BSC)     *
+	 * Network: Binance Smart Chain TESTNET (BSC)     
      * Melodity Bep20: 0x5EaA8Be0ebe73C0B6AdA8946f136B86b92128c55
      */
     constructor() {
-		address melodity = 0x13E971De9181eeF7A4aEAEAA67552A6a4cc54f43;
-
         _deployPRNG();
-        _deployStackingPandas();
-        _deployMarketplace();
-		_deployMelodityGovernance(melodity);
-		_deployMelodityDAOTimelock();
-		_deployMelodityDAO();
-		_deployMelodityStacking(melodity);
+        _deployStackingPandas(address(prng));
+        _deployMarketplace(address(prng));
     }
 
     /**
         Deploy stacking pandas NFT contract, deploying this contract let only the
         Masterchef itself mint new NFTs
      */
-    function _deployStackingPandas() private {
-        stackingPanda = StackingPanda(
-            payable(
-				Create2.deploy(
-					0,
-					keccak256("Masterchef/StackingPanda"),
-					type(StackingPanda).creationCode
-				)
-			)
-        );
-        prng.rotate();
+    function _deployStackingPandas(address _prng) private {
+        stackingPanda = new StackingPanda(_prng);
     }
 
     /**
@@ -80,16 +57,7 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
         PRNG address and call it
      */
     function _deployPRNG() private {
-        prng = PRNG(
-            payable(
-				Create2.deploy(
-					0,
-					keccak256("Masterchef/PRNG"),
-					type(PRNG).creationCode
-				)
-			)
-        );
-        prng.rotate();
+        prng = new PRNG();
     }
 
     /**
@@ -97,43 +65,9 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
         this gives the possibility for other generated smart contract to compute the
         PRNG address and call it
      */
-    function _deployMarketplace() private {
-        marketplace = Marketplace(
-            payable(
-				Create2.deploy(
-					0,
-					keccak256("Masterchef/Marketplace"),
-					type(Marketplace).creationCode
-				)
-			)
-        );
-        prng.rotate();
+    function _deployMarketplace(address _prng) private {
+        marketplace = new Marketplace(_prng);
     }
-
-	function _deployMelodityGovernance(address _meld) private {
-		melodityGovernanceToken = new MelodityGovernance(IERC20(_meld));
-        prng.rotate();
-	}
-
-	function _deployMelodityDAOTimelock() private {
-		address[] memory proposers = new address[](0);
-		address[] memory executor = new address[](1);
-		executor[0] = address(0);
-		melodityDAOTimelock = new MelodityDAOTimelock(proposers, executor);
-        prng.rotate();
-	}
-
-	function _deployMelodityDAO() private {
-		melodityDAO = new MelodityDAO(melodityGovernanceToken, melodityDAOTimelock);
-        prng.rotate();
-	}
-
-	function _deployMelodityStacking(address _meld) private {
-		melodityStacking = new MelodityStacking(address(this), _meld, address(melodityDAOTimelock), 10);
-        prng.rotate();
-
-		melodityStackingReceipt = melodityStacking.stackingReceipt();
-	}
 
     /**
         Trigger the minting of a new stacking panda, this function is publicly callable

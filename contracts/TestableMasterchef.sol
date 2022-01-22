@@ -106,7 +106,7 @@ contract TestableMasterchef is ERC721Holder, ReentrancyGuard {
 	}
 
 	function _deployMelodityStacking(address _meld) private {
-		melodityStacking = new MelodityStacking(address(this), _meld, address(melodityDAOTimelock), 10);
+		melodityStacking = new MelodityStacking(address(prng), address(stackingPanda), _meld, address(melodityDAOTimelock), 10);
         prng.rotate();
 
 		melodityStackingReceipt = melodityStacking.stackingReceipt();

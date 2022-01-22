@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import "../IPRNG.sol";
-import "../IStackingPanda.sol";
 import "../StackingPanda.sol";
 import "../PRNG.sol";
 import "./StackingReceipt.sol";
@@ -17,7 +15,7 @@ import "./StackingReceipt.sol";
 	@author Emanuele (ebalo) Balsamo
 	@custom:security-contact security@melodity.org
  */
-contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausable, ReentrancyGuard {
+contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 	bytes4 constant public _INTERFACE_ID_ERC20_METADATA = 0x942e8b22;
 	address constant public _DO_INC_MULTISIG_WALLET = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
 	uint256 constant public _PERCENTAGE_SCALE = 10 ** 20;
@@ -142,13 +140,13 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	/**
 		Initialize the values of the stacking contract
 
-		@param _masterchef The masterchef generator contract address,
+		@param _prng The masterchef generator contract address,
 			it deploies other contracts
 		@param _melodity Melodity ERC20 contract address
 	 */
-    constructor(address _masterchef, address _melodity, address _dao, uint8 _erasToGenerate) {
-		prng = PRNG(computePRNGAddress(_masterchef));
-		stackingPanda = StackingPanda(computeStackingPandaAddress(_masterchef));
+    constructor(address _prng, address _stackingPanda, address _melodity, address _dao, uint8 _erasToGenerate) {
+		prng = PRNG(_prng);
+		stackingPanda = StackingPanda(_stackingPanda);
 		melodity = ERC20(_melodity);
 		stackingReceipt = new StackingReceipt("Melodity stacking receipt", "sMELD");
 		

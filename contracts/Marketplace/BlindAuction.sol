@@ -5,10 +5,9 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "../IPRNG.sol";
 import "../PRNG.sol";
 
-contract BlindAuction is ERC721Holder, IPRNG, ReentrancyGuard {
+contract BlindAuction is ERC721Holder, ReentrancyGuard {
     PRNG public prng;
 
     struct Bid {
@@ -63,9 +62,9 @@ contract BlindAuction is ERC721Holder, IPRNG, ReentrancyGuard {
         uint256 _minimumBid,
         address _royaltyReceiver,
         uint256 _royaltyPercentage,
-        address _masterchef
+        address _prng
     ) {
-        prng = PRNG(computePRNGAddress(_masterchef));
+        prng = PRNG(_prng);
         prng.rotate();
 
         beneficiary = _beneficiaryAddress;

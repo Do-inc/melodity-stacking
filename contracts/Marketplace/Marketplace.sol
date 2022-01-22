@@ -5,14 +5,12 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "../IPRNG.sol";
 import "../PRNG.sol";
 import "./Auction.sol";
 import "./BlindAuction.sol";
 
-contract Marketplace is IPRNG, ReentrancyGuard {
+contract Marketplace is ReentrancyGuard {
     PRNG public prng;
-    address private _masterchef;
 
     Auction[] public auctions;
     BlindAuction[] public blindAuctions;
@@ -98,10 +96,8 @@ contract Marketplace is IPRNG, ReentrancyGuard {
         _;
     }
 
-    constructor() {
-        _masterchef = msg.sender;
-        prng = PRNG(computePRNGAddress(msg.sender));
-        prng.rotate();
+    constructor(address _prng) {
+        prng = PRNG(_prng);
     }
 
     /**
@@ -158,7 +154,7 @@ contract Marketplace is IPRNG, ReentrancyGuard {
                 _minimumPrice,
                 _royaltyReceiver,
                 _royaltyPercentage,
-                _masterchef
+                address(prng)
             );
             auctions.push(auction);
             _auctionAddress = address(auction);
@@ -175,7 +171,7 @@ contract Marketplace is IPRNG, ReentrancyGuard {
                 _minimumPrice,
                 _royaltyReceiver,
                 _royaltyPercentage,
-                _masterchef
+                address(prng)
             );
             blindAuctions.push(blindAuction);
             _auctionAddress = address(blindAuction);
