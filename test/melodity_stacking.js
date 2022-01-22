@@ -53,7 +53,7 @@ const deployMelodityStacking = async (
 		reward_pool,
 		receipt_value,
 		genesis_era_duration,
-		(genesis_reward_scale_factor = ethers.utils.parseEther("79.0")),
+		genesis_reward_scale_factor,
 		genesis_era_scale_factor,
 		exhausting,
 		dismissed,
@@ -68,6 +68,8 @@ const timetravel = async (seconds = 60) => {
 };
 
 describe("Melodity stacking", function () {
+	const _DO_INC_MULTISIG_WALLET =
+		"0x01Af10f1343C05855955418bb99302A6CF71aCB8";
 	let stacking_panda,
 		prng,
 		melodity,
@@ -94,7 +96,10 @@ describe("Melodity stacking", function () {
 			await melodity_stacking.stackingReceipt()
 		);
 
-		await melodity.mint(melodity_stacking.address, ethers.utils.parseEther("20000000.0"))
+		await melodity.mint(
+			melodity_stacking.address,
+			ethers.utils.parseEther("20000000.0")
+		);
 
 		tx = await stacking_panda.mint("test-nft", "https://example.com", {
 			decimals: 18,
@@ -321,9 +326,17 @@ describe("Melodity stacking", function () {
 		expect(await stacking_receipt.balanceOf(owner.address)).to.equals(
 			ethers.utils.parseEther("107.5").toString()
 		);
-		expect(await melodity_stacking.depositorNFT(0)).to.equals(owner.address)
-		expect((await melodity_stacking.stackedNFTs(owner.address, 0))["nftId"]).to.equals(0)
-		expect((await melodity_stacking.stackedNFTs(owner.address, 0))["stackedAmount"]).to.equals(ethers.utils.parseEther("107.5").toString())
+		expect(await melodity_stacking.depositorNFT(0)).to.equals(
+			owner.address
+		);
+		expect(
+			(await melodity_stacking.stackedNFTs(owner.address, 0))["nftId"]
+		).to.equals(0);
+		expect(
+			(await melodity_stacking.stackedNFTs(owner.address, 0))[
+				"stackedAmount"
+			]
+		).to.equals(ethers.utils.parseEther("107.5").toString());
 	});
 	it("cannot deposit with not owned NFT", async function () {
 		tx = await stacking_panda.mint("test-nft", "https://example.com", {
@@ -332,7 +345,7 @@ describe("Melodity stacking", function () {
 			toMeld: ethers.utils.parseEther("1.0"),
 		});
 		await tx.wait();
-		tx = await stacking_panda.transferFrom(owner.address, acc_1.address, 1)
+		tx = await stacking_panda.transferFrom(owner.address, acc_1.address, 1);
 		await tx.wait();
 
 		tx = await melodity.approve(
@@ -387,12 +400,10 @@ describe("Melodity stacking", function () {
 		);
 		await tx;
 
-		tx = await melodity_stacking.deposit(
-			ethers.utils.parseEther("100.0"),
-		);
+		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"));
 		await tx;
 
-		await timetravel(1000000)	// 7+ days
+		await timetravel(1000000); // 7+ days
 
 		tx = await melodity_stacking.refreshReceiptValue();
 		await tx;
@@ -403,16 +414,16 @@ describe("Melodity stacking", function () {
 		expect(rate.toString()).to.equals("1002773826106451450");
 
 		let bought = await stacking_receipt.balanceOf(owner.address);
-		expect(bought).to.equals(ethers.utils.parseEther("100.0"))
+		expect(bought).to.equals(ethers.utils.parseEther("100.0"));
 
-		tx = await melodity_stacking.withdraw(bought)
-		await tx
+		tx = await melodity_stacking.withdraw(bought);
+		await tx;
 
 		let remaining_receipt = await stacking_receipt.balanceOf(owner.address);
-		expect(remaining_receipt).to.equals(0)
+		expect(remaining_receipt).to.equals(0);
 
-		let melodity_balance = await melodity.balanceOf(owner.address)
-		expect(melodity_balance).to.equals("1000555534632417172700")
+		let melodity_balance = await melodity.balanceOf(owner.address);
+		expect(melodity_balance).to.equals("1000555534632417172700");
 	});
 	it("cannot withdraw null amount", async function () {
 		tx = await melodity.approve(
@@ -422,9 +433,7 @@ describe("Melodity stacking", function () {
 		await tx;
 
 		try {
-			tx = await melodity_stacking.withdraw(
-				0
-			);
+			tx = await melodity_stacking.withdraw(0);
 			await tx;
 		} catch (e) {
 			expect(e.message).to.equals(
@@ -441,9 +450,7 @@ describe("Melodity stacking", function () {
 		await tx;
 
 		try {
-			tx = await melodity_stacking.withdraw(
-				100
-			);
+			tx = await melodity_stacking.withdraw(100);
 			await tx;
 		} catch (e) {
 			expect(e.message).to.equals(
@@ -465,20 +472,16 @@ describe("Melodity stacking", function () {
 		);
 		await tx;
 
-		tx = await melodity_stacking.deposit(
-			ethers.utils.parseEther("100.0"),
-		);
+		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"));
 		await tx;
 
-		await timetravel(1000000)	// 7+ days
+		await timetravel(1000000); // 7+ days
 
 		tx = await melodity_stacking.refreshReceiptValue();
 		await tx;
 
 		try {
-			tx = await melodity_stacking.withdraw(
-				100
-			);
+			tx = await melodity_stacking.withdraw(100);
 			await tx;
 		} catch (e) {
 			expect(e.message).to.equals(
@@ -500,12 +503,10 @@ describe("Melodity stacking", function () {
 		);
 		await tx;
 
-		tx = await melodity_stacking.deposit(
-			ethers.utils.parseEther("100.0"),
-		);
+		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"));
 		await tx;
 
-		await timetravel(1000000)	// 7+ days
+		await timetravel(5 * 60 * 60 + 1); // 5h
 
 		tx = await melodity_stacking.refreshReceiptValue();
 		await tx;
@@ -513,18 +514,654 @@ describe("Melodity stacking", function () {
 		let rate = BigInt(
 			(await melodity_stacking.poolInfo())["receiptValue"].toString()
 		);
-		expect(rate.toString()).to.equals("1002773826106451450");
+		expect(rate.toString()).to.equals("1000050001000010000");
 
 		let bought = await stacking_receipt.balanceOf(owner.address);
-		expect(bought).to.equals(ethers.utils.parseEther("100.0"))
+		expect(bought).to.equals(ethers.utils.parseEther("100.0"));
 
-		tx = await melodity_stacking.withdraw(bought)
-		await tx
+		tx = await melodity_stacking.withdraw(bought);
+		await tx;
 
 		let remaining_receipt = await stacking_receipt.balanceOf(owner.address);
-		expect(remaining_receipt).to.equals(0)
+		expect(remaining_receipt).to.equals(0);
 
-		let melodity_balance = await melodity.balanceOf(owner.address)
-		expect(melodity_balance).to.equals("1000555534632417172700")
+		let melodity_balance = await melodity.balanceOf(owner.address);
+		expect(melodity_balance).to.equals("990009000405010800000"); // 990.009000405010800000
+
+		melodity_balance = await melodity.balanceOf(_DO_INC_MULTISIG_WALLET);
+		expect(melodity_balance).to.equals("5000500022500600000"); // 5.000500022500600000
+
+		melodity_balance = await melodity.balanceOf(dao.address);
+		expect(melodity_balance).to.equals("5000500022500600000"); // 5.000500022500600000
+	});
+	it("can withdraw with NFT", async function () {
+		tx = await melodity.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_receipt.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_panda.approve(melodity_stacking.address, 0);
+		await tx;
+
+		tx = await melodity_stacking.depositWithNFT(
+			ethers.utils.parseEther("100.0"),
+			0
+		);
+		await tx;
+
+		await timetravel(1000000); // 7+ days
+
+		tx = await melodity_stacking.refreshReceiptValue();
+		await tx;
+
+		expect(await stacking_receipt.balanceOf(owner.address)).to.equals(
+			ethers.utils.parseEther("107.5").toString()
+		);
+		expect(await melodity_stacking.depositorNFT(0)).to.equals(
+			owner.address
+		);
+		expect(await stacking_panda.ownerOf(0)).to.equals(
+			melodity_stacking.address
+		);
+
+		tx = await melodity_stacking.withdrawWithNFT(
+			ethers.utils.parseEther("107.5"),
+			0
+		);
+		await tx;
+
+		expect(await melodity_stacking.depositorNFT(0)).to.equals(null_address);
+		expect(await stacking_panda.ownerOf(0)).to.equals(owner.address);
+	});
+	it("withdrawing less than the receipt amount received does not release the NFT", async function () {
+		tx = await melodity.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_receipt.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_panda.approve(melodity_stacking.address, 0);
+		await tx;
+
+		tx = await melodity_stacking.depositWithNFT(
+			ethers.utils.parseEther("100.0"),
+			0
+		);
+		await tx;
+
+		await timetravel(1000000); // 7+ days
+
+		tx = await melodity_stacking.refreshReceiptValue();
+		await tx;
+
+		expect(await stacking_receipt.balanceOf(owner.address)).to.equals(
+			ethers.utils.parseEther("107.5")
+		);
+		expect(await melodity_stacking.depositorNFT(0)).to.equals(
+			owner.address
+		);
+		expect(await stacking_panda.ownerOf(0)).to.equals(
+			melodity_stacking.address
+		);
+
+		tx = await melodity_stacking.withdrawWithNFT(
+			ethers.utils.parseEther("100.0"),
+			0
+		);
+		await tx;
+
+		expect(await stacking_receipt.balanceOf(owner.address)).to.equals(
+			ethers.utils.parseEther("7.5")
+		);
+		expect(await melodity_stacking.depositorNFT(0)).to.equals(
+			owner.address
+		);
+		expect(
+			(await melodity_stacking.stackedNFTs(owner.address, 0))[
+				"stackedAmount"
+			]
+		).to.equals(ethers.utils.parseEther("7.5"));
+		expect(await stacking_panda.ownerOf(0)).to.equals(
+			melodity_stacking.address
+		);
+	});
+	it("cannot withdraw a random index", async function () {
+		tx = await melodity.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_receipt.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_panda.approve(melodity_stacking.address, 0);
+		await tx;
+
+		tx = await melodity_stacking.depositWithNFT(
+			ethers.utils.parseEther("100.0"),
+			0
+		);
+		await tx;
+
+		try {
+			tx = await melodity_stacking.withdrawWithNFT(
+				ethers.utils.parseEther("100.0"),
+				10
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Index out of bound'"
+			);
+		}
+	});
+	it("if pool exhausting alert works", async function () {
+		melodity_stacking = await deployMelodityStacking(
+			prng.address,
+			stacking_panda.address,
+			melodity.address,
+			dao.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		stacking_receipt = await loadMelodityReceipt(await melodity_stacking.stackingReceipt())
+
+		tx = await melodity.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_receipt.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_panda.approve(melodity_stacking.address, 0);
+		await tx;
+
+		tx = await melodity_stacking.depositWithNFT(
+			ethers.utils.parseEther("100.0"),
+			0
+		);
+		await tx;
+
+		tx = await melodity_stacking.withdrawWithNFT(
+			ethers.utils.parseEther("100.0"),
+			0
+		);
+		await tx;
+
+		expect((await melodity_stacking.poolInfo())["exhausting"]).to.equals(true)
+	});
+	it("can increase reward pool", async function () {
+		let old = BigInt((await melodity_stacking.poolInfo())["rewardPool"].toString()).toString()
+
+		tx = await melodity.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await melodity_stacking.increaseRewardPool(
+			ethers.utils.parseEther("1.0")
+		);
+		await tx;
+
+		let after = BigInt((await melodity_stacking.poolInfo())["rewardPool"].toString()).toString()
+		
+		expect(after).to.be.bignumber.greaterThan(old)
+	});
+	it("can refresh era info", async function () {
+		let era_infos_length = await melodity_stacking.getEraInfosLength();
+		expect(era_infos_length).to.equals(10);
+
+		tx = await melodity_stacking.refreshErasInfo(
+			10
+		);
+		await tx;
+
+		era_infos_length = await melodity_stacking.getEraInfosLength();
+		expect(era_infos_length).to.equals(11);
+	});
+	it("can update reward scale factor", async function () {
+		let current_era_index = +(await melodity_stacking.getCurrentEraIndex())
+		let old = BigInt((await melodity_stacking.eraInfos(current_era_index))["rewardScaleFactor"].toString()).toString()
+
+		tx = await melodity_stacking.updateRewardScaleFactor(
+			ethers.utils.parseEther("1.0"),
+			1
+		);
+		await tx;
+
+		let after = BigInt((await melodity_stacking.eraInfos(current_era_index))["rewardScaleFactor"].toString()).toString()
+
+		expect(after).to.be.bignumber.lessThan(old)
+	});
+	it("can update era scale factor", async function () {
+		let current_era_index = +(await melodity_stacking.getCurrentEraIndex())
+		let old = BigInt((await melodity_stacking.eraInfos(current_era_index))["eraScaleFactor"].toString()).toString()
+
+		tx = await melodity_stacking.updateEraScaleFactor(
+			ethers.utils.parseEther("1.0"),
+			1
+		);
+		await tx;
+
+		let after = BigInt((await melodity_stacking.eraInfos(current_era_index))["eraScaleFactor"].toString()).toString()
+
+		expect(after).to.be.bignumber.lessThan(old)
+	});
+	it("can update early withdraw fee percent", async function () {
+		let old = BigInt((await melodity_stacking.feeInfo())["feePercentage"].toString()).toString()
+
+		tx = await melodity_stacking.updateEarlyWithdrawFeePercent(
+			ethers.utils.parseEther("1.0")
+		);
+		await tx;
+
+		let after = BigInt((await melodity_stacking.feeInfo())["feePercentage"].toString()).toString()
+
+		expect(after).to.be.bignumber.lessThan(old)
+
+		try {
+			tx = await await melodity_stacking.updateEarlyWithdrawFeePercent(
+				ethers.utils.parseEther("100.0")
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Early withdraw fee too high'"
+			);
+		}
+		try {
+			tx = await await melodity_stacking.updateEarlyWithdrawFeePercent(
+				0
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Early withdraw fee too low'"
+			);
+		}
+	});
+	it("can update fee receiver address", async function () {
+		let old = BigInt((await melodity_stacking.feeInfo())["feeReceiver"].toString()).toString()
+
+		tx = await melodity_stacking.updateFeeReceiverAddress(
+			acc_2.address
+		);
+		await tx;
+
+		let after = BigInt((await melodity_stacking.feeInfo())["feeReceiver"].toString()).toString()
+
+		expect(after).to.be.bignumber.lessThan(old)
+
+		try {
+			tx = await await melodity_stacking.updateFeeReceiverAddress(
+				null_address
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Provided address is invalid'"
+			);
+		}
+	});
+	it("can update withdraw fee period", async function () {
+		let old = BigInt((await melodity_stacking.feeInfo())["withdrawFeePeriod"].toString()).toString()
+
+		tx = await melodity_stacking.updateWithdrawFeePeriod(
+			2,
+			true
+		);
+		await tx;
+
+		let after = BigInt((await melodity_stacking.feeInfo())["withdrawFeePeriod"].toString()).toString()
+		
+		tx = await melodity_stacking.updateWithdrawFeePeriod(
+			24,
+			false
+		);
+		await tx;
+
+		old = after	
+		after = BigInt((await melodity_stacking.feeInfo())["withdrawFeePeriod"].toString()).toString()
+
+		expect(after).to.be.bignumber.lessThan(old)
+
+		try {
+			tx = await await melodity_stacking.updateWithdrawFeePeriod(
+				0,
+				true
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Withdraw period too short'"
+			);
+		}
+		try {
+			tx = await await melodity_stacking.updateWithdrawFeePeriod(
+				100,
+				true
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Withdraw period too long'"
+			);
+		}
+		try {
+			tx = await await melodity_stacking.updateWithdrawFeePeriod(
+				0,
+				false
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Withdraw period too short'"
+			);
+		}
+		try {
+			tx = await await melodity_stacking.updateWithdrawFeePeriod(
+				1000,
+				false
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Withdraw period too long'"
+			);
+		}
+	});
+	it("can update maintainer's fee percent", async function () {
+		let old = BigInt((await melodity_stacking.feeInfo())["feeReceiverPercentage"].toString()).toString()
+		let old_maintainer = BigInt((await melodity_stacking.feeInfo())["feeMaintainerPercentage"].toString()).toString()
+
+		tx = await melodity_stacking.updateDaoFeePercentage(
+			ethers.utils.parseEther("5.0")
+		);
+		await tx;
+
+		let after = BigInt((await melodity_stacking.feeInfo())["feeReceiverPercentage"].toString()).toString()
+		let after_maintainer = BigInt((await melodity_stacking.feeInfo())["feeMaintainerPercentage"].toString()).toString()
+
+		expect(after).to.be.bignumber.lessThan(old)
+		expect(after_maintainer).to.be.bignumber.greaterThan(old_maintainer)
+		expect(after).to.equal(ethers.utils.parseEther("5.0"))
+		expect(after_maintainer).to.equal(ethers.utils.parseEther("95.0"))
+
+		try {
+			tx = await await melodity_stacking.updateDaoFeePercentage(
+				ethers.utils.parseEther("100.0")
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Dao's fee share too high'"
+			);
+		}
+		try {
+			tx = await await melodity_stacking.updateDaoFeePercentage(
+				0
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Dao's fee share too low'"
+			);
+		}
+	});
+	it("can update dao's fee percent", async function () {
+		let old = BigInt((await melodity_stacking.feeInfo())["feeReceiverPercentage"].toString()).toString()
+		let old_maintainer = BigInt((await melodity_stacking.feeInfo())["feeMaintainerPercentage"].toString()).toString()
+
+		tx = await melodity_stacking.updateMaintainerFeePercentage(
+			ethers.utils.parseEther("25.0")
+		);
+		await tx;
+
+		let after = BigInt((await melodity_stacking.feeInfo())["feeReceiverPercentage"].toString()).toString()
+		let after_maintainer = BigInt((await melodity_stacking.feeInfo())["feeMaintainerPercentage"].toString()).toString()
+
+		expect(after).to.be.bignumber.greaterThan(old)
+		expect(after_maintainer).to.be.bignumber.lessThan(old_maintainer)
+		expect(after).to.equal(ethers.utils.parseEther("75.0"))
+		expect(after_maintainer).to.equal(ethers.utils.parseEther("25.0"))
+
+		try {
+			tx = await await melodity_stacking.updateMaintainerFeePercentage(
+				ethers.utils.parseEther("100.0")
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Maintainer's fee share too high'"
+			);
+		}
+		try {
+			tx = await await melodity_stacking.updateMaintainerFeePercentage(
+				0
+			);
+			await tx;
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Maintainer's fee share too low'"
+			);
+		}
+	});
+	it("can pause and resume", async function () {
+		let old = await melodity_stacking.paused()
+
+		tx = await melodity_stacking.pause();
+		await tx;
+
+		let after = await melodity_stacking.paused()
+
+		expect(after).to.equals(!old)
+		expect(after).to.equals(true)
+
+		tx = await melodity_stacking.resume();
+		await tx;
+
+		old = after
+		after = await melodity_stacking.paused()
+
+		expect(after).to.equals(!old)
+		expect(after).to.equals(false)
+	});
+	it("can run dismission withdraw", async function () {
+		melodity_stacking = await deployMelodityStacking(
+			prng.address,
+			stacking_panda.address,
+			melodity.address,
+			dao.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		stacking_receipt = await loadMelodityReceipt(await melodity_stacking.stackingReceipt())
+
+		await melodity.mint(
+			melodity_stacking.address,
+			ethers.utils.parseEther("20000000.0")
+		);
+
+		tx = await melodity.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_receipt.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_panda.approve(melodity_stacking.address, 0);
+		await tx;
+
+		tx = await melodity_stacking.depositWithNFT(
+			ethers.utils.parseEther("100.0"),
+			0
+		);
+		await tx;
+
+		await timetravel(1000000); // 7+ days
+
+		let old = await melodity_stacking.paused()
+
+		tx = await melodity_stacking.pause();
+		await tx;
+
+		let after = await melodity_stacking.paused()
+
+		expect(after).to.equals(!old)
+		expect(after).to.equals(true)
+
+		tx = await melodity_stacking.withdraw(ethers.utils.parseEther("107.5"))
+		await tx
+
+		expect(await stacking_panda.ownerOf(0)).to.equals(melodity_stacking.address)
+
+		tx = await melodity_stacking.dismissionWithdraw()
+		await tx
+
+		expect(await stacking_panda.ownerOf(0)).to.equals(owner.address)
+	});
+	it("cannot dismiss pool untill there are circulating receipt", async function () {
+		melodity_stacking = await deployMelodityStacking(
+			prng.address,
+			stacking_panda.address,
+			melodity.address,
+			dao.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		stacking_receipt = await loadMelodityReceipt(await melodity_stacking.stackingReceipt())
+
+		await melodity.mint(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+
+		tx = await melodity.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_receipt.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_panda.approve(melodity_stacking.address, 0);
+		await tx;
+
+		tx = await melodity_stacking.depositWithNFT(
+			ethers.utils.parseEther("100.0"),
+			0
+		);
+		await tx;
+
+		await timetravel(1000000); // 7+ days
+
+		let old = await melodity_stacking.paused()
+
+		tx = await melodity_stacking.pause();
+		await tx;
+
+		let after = await melodity_stacking.paused()
+
+		expect(after).to.equals(!old)
+		expect(after).to.equals(true)
+
+		tx = await melodity_stacking.withdraw(ethers.utils.parseEther("100.0"))
+		await tx
+
+		try {
+			tx = await melodity_stacking.dismissionWithdraw()
+			await tx
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Unable to dismit the stacking pool as there are still circulating receipt'"
+			);
+		}
+	});
+	it("cannot dismiss stacking pool if not exhausting", async function () {
+		tx = await melodity.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_receipt.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther("1000.0")
+		);
+		await tx;
+
+		tx = await stacking_panda.approve(melodity_stacking.address, 0);
+		await tx;
+
+		tx = await melodity_stacking.depositWithNFT(
+			ethers.utils.parseEther("100.0"),
+			0
+		);
+		await tx;
+
+		await timetravel(1000000); // 7+ days
+
+		let old = await melodity_stacking.paused()
+
+		tx = await melodity_stacking.pause();
+		await tx;
+
+		let after = await melodity_stacking.paused()
+
+		expect(after).to.equals(!old)
+		expect(after).to.equals(true)
+
+
+		try {
+			tx = await melodity_stacking.dismissionWithdraw()
+			await tx
+		} catch (e) {
+			expect(e.message).to.equals(
+				"VM Exception while processing transaction: reverted with reason string " +
+					"'Dismission enabled only once the stacking pool is exhausting'"
+			);
+		}
 	});
 });

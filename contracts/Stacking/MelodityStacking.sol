@@ -569,6 +569,65 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	}
 
 	/**
+		Retrieve the current era index in the eraInfos array
+
+		@return Index of the current era
+	 */
+	function getCurrentEraIndex() public view returns(uint256) {
+		uint256 _now = block.timestamp;
+		uint256 eraEndingTime;
+		for(uint256 i; i < eraInfos.length; i++) {
+			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
+			if(eraInfos[i].startingTime <= _now && _now <= eraEndingTime) {
+				return i;
+			}
+		}
+		return 0;
+	}
+
+	/**
+		Returns the ordinal number of the current era
+
+		@return Number of era passed
+	 */
+	function getCurrentEra() public view returns(uint256) {
+		return getCurrentEraIndex() + 1;
+	}
+
+	/**
+		Returns the number of epoch passed from the start of the pool
+
+		@return Number or epoch passed
+	 */
+	function getEpochPassed() public view returns(uint256) {
+		uint256 _now = block.timestamp;
+		uint256 lastUpdateTime = poolInfo.lastReceiptUpdateTime;
+		uint256 currentEra = getCurrentEraIndex();
+		uint256 passedEpoch;
+		uint256 eraEndingTime;
+
+		// loop through previous eras
+		for(uint256 i; i < currentEra; i++) {
+			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
+			passedEpoch += (eraInfos[i].startingTime - eraEndingTime) / _EPOCH_DURATION;
+		}
+
+		uint256 diffSinceLastUpdate = _now - lastUpdateTime;
+		uint256 epochsSinceLastUpdate = diffSinceLastUpdate / _EPOCH_DURATION;
+
+		uint256 diffSinceEraStart = _now - eraInfos[currentEra].startingTime;
+		uint256 epochsSinceEraStart = diffSinceEraStart / _EPOCH_DURATION;
+
+		uint256 missingFullEpochs = epochsSinceLastUpdate;
+
+		if(epochsSinceEraStart > epochsSinceLastUpdate) {
+			missingFullEpochs = epochsSinceEraStart - epochsSinceLastUpdate;
+		}
+
+		return passedEpoch + missingFullEpochs;
+	}
+
+	/**
 		Increase the reward pool of this contract of _amount.
 		Funds gets withdrawn from the caller address
 
@@ -586,20 +645,6 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 
 		_checkIfExhausting();
 		emit RewardPoolIncreased(_amount);
-	}
-
-	/**
-		Update the era duration and trigger the regeneration of 5 era infos
-
-		@param _epochsNumber Number of epoch an era should last
-	 */
-	function updateEraDuration(uint256 _epochsNumber) public onlyOwner nonReentrant {
-		prng.rotate();
-		
-		uint256 old = poolInfo.genesisEraDuration;
-		poolInfo.genesisEraDuration = _epochsNumber * _EPOCH_DURATION;
-		_triggerErasInfoRefresh(5);
-		emit EraDurationUpdate(old, poolInfo.genesisEraDuration);
 	}
 
 	/**
@@ -624,11 +669,13 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function updateRewardScaleFactor(uint256 _factor, uint8 _erasToRefresh) public onlyOwner nonReentrant {
 		prng.rotate();
-		
-		uint256 old = poolInfo.genesisEraDuration;
-		poolInfo.genesisRewardScaleFactor = _factor;
+
+		uint256 eraIndex = getCurrentEraIndex();
+		EraInfo storage eraInfo = eraInfos[eraIndex];
+		uint256 old = eraInfo.rewardScaleFactor;
+		eraInfo.rewardScaleFactor = _factor;
 		_triggerErasInfoRefresh(_erasToRefresh);
-		emit RewardScalingFactorUpdate(old, poolInfo.genesisEraDuration);
+		emit RewardScalingFactorUpdate(old, eraInfo.rewardScaleFactor);
 	}
 
 	/**
@@ -642,13 +689,15 @@ contract MelodityStacking is IPRNG, IStackingPanda, ERC721Holder, Ownable, Pausa
 	 */
 	function updateEraScaleFactor(uint256 _factor, uint8 _erasToRefresh) public onlyOwner nonReentrant {
 		prng.rotate();
-		
-		uint256 old = poolInfo.genesisEraScaleFactor;
-		poolInfo.genesisEraScaleFactor = _factor;
-		_triggerErasInfoRefresh(_erasToRefresh);
-		emit EraScalingFactorUpdate(old, poolInfo.genesisEraScaleFactor);
-	}
 
+		uint256 eraIndex = getCurrentEraIndex();
+		EraInfo storage eraInfo = eraInfos[eraIndex];
+		uint256 old = eraInfo.eraScaleFactor;
+		eraInfo.eraScaleFactor = _factor;
+		_triggerErasInfoRefresh(_erasToRefresh);
+		emit EraScalingFactorUpdate(old, eraInfo.eraScaleFactor);
+	}
+	
 	/**
 		Update the fee percentage applied to users withdrawing funds earlier
 
