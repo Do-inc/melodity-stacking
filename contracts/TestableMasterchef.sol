@@ -1,27 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./TestableStackingPanda.sol";
 import "./PRNG.sol";
 import "./Marketplace/TestableMarketplace.sol";
-import "./Marketplace/Marketplace.sol";
-import "./DAO/MelodityGovernance.sol";
-import "./DAO/MelodityDAOTimelock.sol";
-import "./DAO/MelodityDAO.sol";
-import "./Stacking/MelodityStacking.sol";
 
 contract TestableMasterchef is ERC721Holder, ReentrancyGuard {
     TestableStackingPanda public stackingPanda;
     PRNG public prng;
     TestableMarketplace public marketplace;
-	MelodityGovernance public melodityGovernanceToken;
-	MelodityDAOTimelock public melodityDAOTimelock;
-	MelodityDAO public melodityDAO;
-	MelodityStacking public melodityStacking;
-	StackingReceipt public melodityStackingReceipt;
 
     uint256 public mintingEpoch = 7 days;
     uint256 public lastMintingEvent;
@@ -40,22 +29,16 @@ contract TestableMasterchef is ERC721Holder, ReentrancyGuard {
     event StackingPandaForSale(address auction, uint256 id);
 
 	/**
-     * Network: Binance Smart Chain (BSC)     *
+     * Network: Binance Smart Chain (BSC)     
      * Melodity Bep20: 0x13E971De9181eeF7A4aEAEAA67552A6a4cc54f43
 
-	 * Network: Binance Smart Chain TESTNET (BSC)     *
+	 * Network: Binance Smart Chain TESTNET (BSC)     
      * Melodity Bep20: 0x5EaA8Be0ebe73C0B6AdA8946f136B86b92128c55
      */
     constructor() {
-		address melodity = 0x13E971De9181eeF7A4aEAEAA67552A6a4cc54f43;
-
         _deployPRNG();
         _deployStackingPandas();
         _deployMarketplace();
-		_deployMelodityGovernance(melodity);
-		_deployMelodityDAOTimelock();
-		_deployMelodityDAO();
-		_deployMelodityStacking(melodity);
     }
 
     /**
@@ -64,7 +47,6 @@ contract TestableMasterchef is ERC721Holder, ReentrancyGuard {
      */
     function _deployStackingPandas() private {
         stackingPanda = new TestableStackingPanda(address(prng));
-        prng.rotate();
     }
 
     /**
@@ -74,7 +56,6 @@ contract TestableMasterchef is ERC721Holder, ReentrancyGuard {
      */
     function _deployPRNG() private {
         prng = new PRNG();
-        prng.rotate();
     }
 
     /**
@@ -84,33 +65,7 @@ contract TestableMasterchef is ERC721Holder, ReentrancyGuard {
      */
     function _deployMarketplace() private {
         marketplace = new TestableMarketplace(address(prng));
-        prng.rotate();
     }
-
-	function _deployMelodityGovernance(address _meld) private {
-		melodityGovernanceToken = new MelodityGovernance(IERC20(_meld));
-        prng.rotate();
-	}
-
-	function _deployMelodityDAOTimelock() private {
-		address[] memory proposers = new address[](0);
-		address[] memory executor = new address[](1);
-		executor[0] = address(0);
-		melodityDAOTimelock = new MelodityDAOTimelock(proposers, executor);
-        prng.rotate();
-	}
-
-	function _deployMelodityDAO() private {
-		melodityDAO = new MelodityDAO(melodityGovernanceToken, melodityDAOTimelock);
-        prng.rotate();
-	}
-
-	function _deployMelodityStacking(address _meld) private {
-		melodityStacking = new MelodityStacking(address(prng), address(stackingPanda), _meld, address(melodityDAOTimelock), 10);
-        prng.rotate();
-
-		melodityStackingReceipt = melodityStacking.stackingReceipt();
-	}
 
     /**
         Trigger the minting of a new stacking panda, this function is publicly callable
@@ -156,7 +111,7 @@ contract TestableMasterchef is ERC721Holder, ReentrancyGuard {
         // approve the marketplace to create and start the auction
         stackingPanda.approve(address(marketplace), _pandaId);
 
-        address auction = marketplace.createAuctionWithRoyalties(
+        address auction = marketplace.createAuction(
             _pandaId,
             address(stackingPanda),
             // Melodity's multisig wallet address

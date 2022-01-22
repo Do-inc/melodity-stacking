@@ -28,8 +28,6 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
     event StackingPandaMinted(uint256 id);
     event StackingPandaForSale(address auction, uint256 id);
 
-	bool initializedMelodityDao;
-
     /**
      * Network: Binance Smart Chain (BSC)     
      * Melodity Bep20: 0x13E971De9181eeF7A4aEAEAA67552A6a4cc54f43
@@ -113,7 +111,7 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
         // approve the marketplace to create and start the auction
         stackingPanda.approve(address(marketplace), _pandaId);
 
-        address auction = marketplace.createAuctionWithRoyalties(
+        address auction = marketplace.createAuction(
             _pandaId,
             address(stackingPanda),
             // Melodity's multisig wallet address

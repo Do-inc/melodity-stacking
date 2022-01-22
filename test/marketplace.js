@@ -72,7 +72,7 @@ describe("Marketplace", function () {
 			.approve(marketplace.address, 0);
 		await tx.wait();
 
-		tx = await marketplace.connect(acc_1).createAuctionWithRoyalties(
+		tx = await marketplace.connect(acc_1).createAuction(
 			0,
 			stacking_panda.address,
 			acc_1.address,
@@ -112,7 +112,7 @@ describe("Marketplace", function () {
 		expect(await stacking_panda.ownerOf(0)).to.equals(acc_1.address);
 
 		try {
-			tx = await marketplace.connect(acc_1).createAuctionWithRoyalties(
+			tx = await marketplace.connect(acc_1).createAuction(
 				0,
 				stacking_panda.address,
 				acc_1.address,
@@ -145,7 +145,7 @@ describe("Marketplace", function () {
 		await tx.wait();
 
 		try {
-			tx = await marketplace.connect(acc_1).createAuctionWithRoyalties(
+			tx = await marketplace.connect(acc_1).createAuction(
 				0,
 				stacking_panda.address,
 				acc_1.address,
@@ -178,7 +178,7 @@ describe("Marketplace", function () {
 		await tx.wait();
 
 		try {
-			tx = await marketplace.createAuctionWithRoyalties(
+			tx = await marketplace.createAuction(
 				0,
 				stacking_panda.address,
 				owner.address,
@@ -198,7 +198,7 @@ describe("Marketplace", function () {
 	});
 	it("cannot create auction if address does not implement ERC721", async function () {
 		try {
-			tx = await marketplace.createAuctionWithRoyalties(
+			tx = await marketplace.createAuction(
 				0,
 				dead_address,
 				owner.address,
@@ -242,7 +242,7 @@ describe("Marketplace", function () {
 			.approve(marketplace.address, 0);
 		await tx.wait();
 
-		tx = await marketplace.connect(acc_1).createBlindAuctionwithRoyalties(
+		tx = await marketplace.connect(acc_1).createBlindAuction(
 			0,
 			stacking_panda.address,
 			acc_1.address,
@@ -282,7 +282,7 @@ describe("Marketplace", function () {
 		expect(await stacking_panda.ownerOf(0)).to.equals(acc_1.address);
 
 		try {
-			tx = await marketplace.connect(acc_1).createBlindAuctionwithRoyalties(
+			tx = await marketplace.connect(acc_1).createBlindAuction(
 				0,
 				stacking_panda.address,
 				acc_1.address,
@@ -315,7 +315,7 @@ describe("Marketplace", function () {
 		await tx.wait();
 
 		try {
-			tx = await marketplace.connect(acc_1).createBlindAuctionwithRoyalties(
+			tx = await marketplace.connect(acc_1).createBlindAuction(
 				0,
 				stacking_panda.address,
 				acc_1.address,
@@ -348,7 +348,7 @@ describe("Marketplace", function () {
 		await tx.wait();
 
 		try {
-			tx = await marketplace.createBlindAuctionwithRoyalties(
+			tx = await marketplace.createBlindAuction(
 				0,
 				stacking_panda.address,
 				owner.address,
@@ -368,7 +368,7 @@ describe("Marketplace", function () {
 	});
 	it("cannot create blind auction if address does not implement ERC721", async function () {
 		try {
-			tx = await marketplace.createBlindAuctionwithRoyalties(
+			tx = await marketplace.createBlindAuction(
 				0,
 				dead_address,
 				owner.address,
@@ -400,7 +400,7 @@ describe("Marketplace", function () {
 		tx = await stacking_panda.approve(marketplace.address, 0);
 		await tx.wait();
 
-		tx = await marketplace.createAuctionWithRoyalties(
+		tx = await marketplace.createAuction(
 			0,
 			stacking_panda.address,
 			owner.address,
@@ -453,7 +453,7 @@ describe("Marketplace", function () {
 		tx = await stacking_panda.approve(marketplace.address, 0);
 		await tx.wait();
 
-		tx = await marketplace.createAuctionWithRoyalties(
+		tx = await marketplace.createAuction(
 			0,
 			stacking_panda.address,
 			owner.address,
@@ -515,7 +515,7 @@ describe("Marketplace", function () {
 		tx = await stacking_panda.approve(marketplace.address, 0);
 		await tx.wait();
 
-		tx = await marketplace.createAuctionWithRoyalties(
+		tx = await marketplace.createAuction(
 			0,
 			stacking_panda.address,
 			owner.address,

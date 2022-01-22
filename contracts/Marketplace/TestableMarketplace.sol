@@ -11,11 +11,9 @@ import "./TestableBlindAuction.sol";
 
 contract TestableMarketplace is ReentrancyGuard {
     PRNG public prng;
-    address private _masterchef;
 
     TestableAuction[] public auctions;
     TestableBlindAuction[] public blindAuctions;
-    address[] public sales;
 
     struct Royalty {
         // number of decimal position to include in the royalty percent
@@ -100,7 +98,6 @@ contract TestableMarketplace is ReentrancyGuard {
 
     constructor(address _prng) {
         prng = PRNG(_prng);
-        prng.rotate();
     }
 
     /**
@@ -126,7 +123,7 @@ contract TestableMarketplace is ReentrancyGuard {
                 the royalty receiver
 		@param _blind Whether the auction to be created is a blind auction or a simple one
      */
-    function createAuction(
+    function _createAuction(
         uint256 _nftId,
         address _nftContract,
         address _payee,
@@ -276,7 +273,7 @@ contract TestableMarketplace is ReentrancyGuard {
         @param _royaltyInitializer The address that will be allowed to edit the royalties, if the
                 null address is provided sender address will be used
      */
-    function createAuctionWithRoyalties(
+    function createAuction(
         uint256 _nftId,
         address _nftContract,
         address _payee,
@@ -317,7 +314,7 @@ contract TestableMarketplace is ReentrancyGuard {
         );
 
         return
-            createAuction(
+            _createAuction(
                 _nftId,
                 _nftContract,
                 _payee,
@@ -390,7 +387,7 @@ contract TestableMarketplace is ReentrancyGuard {
         return royalties[royaltyIdentifier];
     }
 
-    function createBlindAuctionwithRoyalties(
+    function createBlindAuction(
         uint256 _nftId,
         address _nftContract,
         address _payee,
@@ -430,7 +427,7 @@ contract TestableMarketplace is ReentrancyGuard {
         );
 
         return
-            createAuction(
+            _createAuction(
                 _nftId,
                 _nftContract,
                 _payee,

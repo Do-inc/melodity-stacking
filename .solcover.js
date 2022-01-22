@@ -1,11 +1,14 @@
 module.exports = {
 	skipFiles: [
-		"Auction.sol",
-		"BlindAuction.sol",
+		"Marketplace/Auction.sol",
+		"Marketplace/BlindAuction.sol",
 		"StackingPanda.sol",
-		"Marketplace.sol",
+		"Marketplace/Marketplace.sol",
 		"Masterchef.sol",
-		"IStackingPanda.sol",
-		"IPRNG.sol",
+		"Stacking/MelodityStacking.sol",
+		"Stacking/StackingReceipt.sol",
+		"DAO/MelodityDAO.sol",
+		"DAO/MelodityDAOTimelock.sol",
+		"DAO/MelodityGovernance.sol",
 	],
 };

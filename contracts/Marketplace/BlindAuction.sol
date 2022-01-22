@@ -33,7 +33,7 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
     uint256 public highestBid;
 
     // Allowed withdrawals of previous bids that were overbid
-    mapping(address => uint256) private pendingReturns;
+    mapping(address => uint256) public pendingReturns;
 
     event BidPlaced(address bidder);
     event AuctionEnded(address winner, uint256 highestBid);
@@ -171,8 +171,10 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
         }
     }
 
-    /// End the auction and send the highest bid
-    /// to the beneficiary.
+    /**
+		End the auction and send the highest bid
+    	to the beneficiary.
+	*/
     function endAuction() public nonReentrant onlyAfter(revealEnd) {
         prng.rotate();
 
@@ -199,7 +201,7 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
                 Address.sendValue(beneficiary, highestBid);
             }
             else {
-                // the royalty percentage has 18 decimals + 2 percetage positions
+                // the royalty percentage has 18 decimals + 2 percentage positions
                 uint256 royalty = highestBid * royaltyPercent / 10 ** 20;
                 uint256 beneficiaryEarning = highestBid - royalty;
 

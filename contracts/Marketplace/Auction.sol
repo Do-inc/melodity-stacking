@@ -104,7 +104,7 @@ contract Auction is ERC721Holder, ReentrancyGuard {
     }
 
     /**
-        Withdraw a bids that were overbid.
+       Withdraw bids that were overbid.
     */
     function withdraw() public nonReentrant {
         prng.rotate();

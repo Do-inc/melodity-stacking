@@ -11,7 +11,7 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-	struct StackingBonus {
+    struct StackingBonus {
         uint8 decimals;
         uint256 meldToMeld;
         uint256 toMeld;
@@ -32,7 +32,10 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
 
     // Init the NFT contract with the ownable abstact in order to let only the owner
     // mint new NFTs
-    constructor(address _prng) ERC721("Melodity Stacking Panda", "STACKP") Ownable() {
+    constructor(address _prng)
+        ERC721("Melodity Stacking Panda", "STACKP")
+        Ownable()
+    {
         masterchef = msg.sender;
         prng = PRNG(_prng);
     }

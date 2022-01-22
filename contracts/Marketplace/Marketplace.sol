@@ -123,7 +123,7 @@ contract Marketplace is ReentrancyGuard {
                 the royalty receiver
 		@param _blind Whether the auction to be created is a blind auction or a simple one
      */
-    function createAuction(
+    function _createAuction(
         uint256 _nftId,
         address _nftContract,
         address _payee,
@@ -273,7 +273,7 @@ contract Marketplace is ReentrancyGuard {
         @param _royaltyInitializer The address that will be allowed to edit the royalties, if the
                 null address is provided sender address will be used
      */
-    function createAuctionWithRoyalties(
+    function createAuction(
         uint256 _nftId,
         address _nftContract,
         address _payee,
@@ -314,7 +314,7 @@ contract Marketplace is ReentrancyGuard {
         );
 
         return
-            createAuction(
+            _createAuction(
                 _nftId,
                 _nftContract,
                 _payee,
@@ -427,7 +427,7 @@ contract Marketplace is ReentrancyGuard {
         );
 
         return
-            createAuction(
+            _createAuction(
                 _nftId,
                 _nftContract,
                 _payee,
