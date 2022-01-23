@@ -1,0 +1,1085 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_prng",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_stackingPanda",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_melodity",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_dao",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_rewardPool",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_receiptValue",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_genesisEraDuration",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_genesisRewardScaleFactor",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_genesisEraScaleFactor",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "_exhausting",
+                "type": "bool"
+            },
+            {
+                "internalType": "bool",
+                "name": "_dismissed",
+                "type": "bool"
+            },
+            {
+                "internalType": "uint8",
+                "name": "_erasToGenerate",
+                "type": "uint8"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "oldShare",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "newShare",
+                "type": "uint256"
+            }
+        ],
+        "name": "DaoFeeSharedUpdate",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "receiptAmount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "depositTime",
+                "type": "uint256"
+            }
+        ],
+        "name": "Deposit",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "oldFactor",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "newFactor",
+                "type": "uint256"
+            }
+        ],
+        "name": "EarlyWithdrawFeeUpdate",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "oldDuration",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "newDuration",
+                "type": "uint256"
+            }
+        ],
+        "name": "EraDurationUpdate",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "oldFactor",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "newFactor",
+                "type": "uint256"
+            }
+        ],
+        "name": "EraScalingFactorUpdate",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "receiptAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "FeePaid",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "_old",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "_new",
+                "type": "address"
+            }
+        ],
+        "name": "FeeReceiverUpdate",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "oldShare",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "newShare",
+                "type": "uint256"
+            }
+        ],
+        "name": "MaintainerFeeSharedUpdate",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "nftId",
+                "type": "uint256"
+            }
+        ],
+        "name": "NFTDeposit",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "nftId",
+                "type": "uint256"
+            }
+        ],
+        "name": "NFTWithdraw",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "previousOwner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            }
+        ],
+        "name": "Paused",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [],
+        "name": "PoolDismissed",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amountLeft",
+                "type": "uint256"
+            }
+        ],
+        "name": "PoolExhausting",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "name": "ReceiptValueUpdate",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "insertedAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "RewardPoolIncreased",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "oldFactor",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "newFactor",
+                "type": "uint256"
+            }
+        ],
+        "name": "RewardScalingFactorUpdate",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            }
+        ],
+        "name": "Unpaused",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "receiptAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "Withdraw",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "oldPeriod",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "newPeriod",
+                "type": "uint256"
+            }
+        ],
+        "name": "WithdrawPeriodUpdate",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "_DO_INC_MULTISIG_WALLET",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "_EPOCH_DURATION",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "_INTERFACE_ID_ERC20_METADATA",
+        "outputs": [
+            {
+                "internalType": "bytes4",
+                "name": "",
+                "type": "bytes4"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "_PERCENTAGE_SCALE",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "deposit",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_nftId",
+                "type": "uint256"
+            }
+        ],
+        "name": "depositWithNFT",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "depositorNFT",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "dismissionWithdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "eraInfos",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "startingTime",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "eraDuration",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "rewardScaleFactor",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "eraScaleFactor",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "rewardFactorPerEpoch",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "feeInfo",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "maxFeePercentage",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minFeePercentage",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "feePercentage",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "feeReceiver",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "withdrawFeePeriod",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "feeReceiverPercentage",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "feeMaintainerPercentage",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "feeReceiverMinPercent",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "feeMaintainerMinPercent",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getCurrentEra",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getCurrentEraIndex",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getEpochPassed",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getEraInfosLength",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "increaseRewardPool",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "melodity",
+        "outputs": [
+            {
+                "internalType": "contract ERC20",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes",
+                "name": "",
+                "type": "bytes"
+            }
+        ],
+        "name": "onERC721Received",
+        "outputs": [
+            {
+                "internalType": "bytes4",
+                "name": "",
+                "type": "bytes4"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "pause",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "paused",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "poolInfo",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "rewardPool",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "receiptValue",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "lastReceiptUpdateTime",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "genesisEraDuration",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "genesisTime",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "genesisRewardScaleFactor",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "genesisEraScaleFactor",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "genesisRewardFactorPerEpoch",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "exhausting",
+                "type": "bool"
+            },
+            {
+                "internalType": "bool",
+                "name": "dismissed",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "prng",
+        "outputs": [
+            {
+                "internalType": "contract PRNG",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint8",
+                "name": "_eraAmount",
+                "type": "uint8"
+            }
+        ],
+        "name": "refreshErasInfo",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "refreshReceiptValue",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "renounceOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "resume",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "stackedNFTs",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "stackedAmount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "nftId",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "stackingPanda",
+        "outputs": [
+            {
+                "internalType": "contract StackingPanda",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "stackingReceipt",
+        "outputs": [
+            {
+                "internalType": "contract StackingReceipt",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "transferOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_percent",
+                "type": "uint256"
+            }
+        ],
+        "name": "updateDaoFeePercentage",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_percent",
+                "type": "uint256"
+            }
+        ],
+        "name": "updateEarlyWithdrawFeePercent",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_factor",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint8",
+                "name": "_erasToRefresh",
+                "type": "uint8"
+            }
+        ],
+        "name": "updateEraScaleFactor",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_dao",
+                "type": "address"
+            }
+        ],
+        "name": "updateFeeReceiverAddress",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_percent",
+                "type": "uint256"
+            }
+        ],
+        "name": "updateMaintainerFeePercentage",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_factor",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint8",
+                "name": "_erasToRefresh",
+                "type": "uint8"
+            }
+        ],
+        "name": "updateRewardScaleFactor",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_period",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "_isDay",
+                "type": "bool"
+            }
+        ],
+        "name": "updateWithdrawFeePeriod",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "withdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_index",
+                "type": "uint256"
+            }
+        ],
+        "name": "withdrawWithNFT",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]

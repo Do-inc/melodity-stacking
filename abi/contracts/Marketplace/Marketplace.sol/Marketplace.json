@@ -1,0 +1,354 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_prng",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "auction",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "nftId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "nftContract",
+                "type": "address"
+            }
+        ],
+        "name": "AuctionCreated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "auction",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "nftId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "nftContract",
+                "type": "address"
+            }
+        ],
+        "name": "BlindAuctionCreated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "nftId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "nftContract",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "royaltyPercent",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "royaltyReceiver",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "royaltyInitializer",
+                "type": "address"
+            }
+        ],
+        "name": "RoyaltyUpdated",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "auctions",
+        "outputs": [
+            {
+                "internalType": "contract Auction",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "blindAuctions",
+        "outputs": [
+            {
+                "internalType": "contract BlindAuction",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_nftId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "_nftContract",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_payee",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_auctionDuration",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_minimumPrice",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_royaltyPercent",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "_royaltyReceiver",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_royaltyInitializer",
+                "type": "address"
+            }
+        ],
+        "name": "createAuction",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_nftId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "_nftContract",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_payee",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_auctionDuration",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_minimumPrice",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_royaltyPercent",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "_royaltyReceiver",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_royaltyInitializer",
+                "type": "address"
+            }
+        ],
+        "name": "createBlindAuction",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "prng",
+        "outputs": [
+            {
+                "internalType": "contract PRNG",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "name": "royalties",
+        "outputs": [
+            {
+                "internalType": "uint8",
+                "name": "decimals",
+                "type": "uint8"
+            },
+            {
+                "internalType": "uint256",
+                "name": "royaltyPercent",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "royaltyReceiver",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "royaltyInitializer",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_nftId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "_nftContract",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_royaltyPercent",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "_royaltyReceiver",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_royaltyInitializer",
+                "type": "address"
+            }
+        ],
+        "name": "updateRoyalty",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint8",
+                        "name": "decimals",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "royaltyPercent",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "royaltyReceiver",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "royaltyInitializer",
+                        "type": "address"
+                    }
+                ],
+                "internalType": "struct Marketplace.Royalty",
+                "name": "",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]
