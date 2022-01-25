@@ -73,7 +73,7 @@ library Strings {
 
 // File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/cryptography/ECDSA.sol)
 
 pragma solidity ^0.8.0;
@@ -309,7 +309,7 @@ library ECDSA {
 
 // File @openzeppelin/contracts/utils/cryptography/draft-EIP712.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/cryptography/draft-EIP712.sol)
 
 pragma solidity ^0.8.0;
@@ -415,7 +415,7 @@ abstract contract EIP712 {
 
 // File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/IERC165.sol)
 
 pragma solidity ^0.8.0;
@@ -444,7 +444,7 @@ interface IERC165 {
 
 // File @openzeppelin/contracts/utils/introspection/ERC165.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/ERC165.sol)
 
 pragma solidity ^0.8.0;
@@ -475,7 +475,7 @@ abstract contract ERC165 is IERC165 {
 
 // File @openzeppelin/contracts/utils/math/SafeCast.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/math/SafeCast.sol)
 
 pragma solidity ^0.8.0;
@@ -720,7 +720,7 @@ library SafeCast {
 
 // File @openzeppelin/contracts/utils/Address.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Address.sol)
 
 pragma solidity ^0.8.0;
@@ -941,7 +941,7 @@ library Address {
 
 // File @openzeppelin/contracts/utils/Context.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
 
 pragma solidity ^0.8.0;
@@ -969,7 +969,7 @@ abstract contract Context {
 
 // File @openzeppelin/contracts/utils/Timers.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Timers.sol)
 
 pragma solidity ^0.8.0;
@@ -1046,7 +1046,7 @@ library Timers {
 
 // File @openzeppelin/contracts/governance/IGovernor.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (governance/IGovernor.sol)
 
 pragma solidity ^0.8.0;
@@ -1266,7 +1266,7 @@ abstract contract IGovernor is IERC165 {
 
 // File @openzeppelin/contracts/governance/Governor.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (governance/Governor.sol)
 
 pragma solidity ^0.8.0;
@@ -1625,7 +1625,7 @@ abstract contract Governor is Context, ERC165, EIP712, IGovernor {
 
 // File @openzeppelin/contracts/governance/extensions/GovernorSettings.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (governance/extensions/GovernorSettings.sol)
 
 pragma solidity ^0.8.0;
@@ -1741,7 +1741,7 @@ abstract contract GovernorSettings is Governor {
 
 // File @openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (governance/extensions/GovernorCountingSimple.sol)
 
 pragma solidity ^0.8.0;
@@ -1849,7 +1849,7 @@ abstract contract GovernorCountingSimple is Governor {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-IERC20Permit.sol)
 
 pragma solidity ^0.8.0;
@@ -1913,7 +1913,7 @@ interface IERC20Permit {
 
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/IERC20.sol)
 
 pragma solidity ^0.8.0;
@@ -1999,7 +1999,7 @@ interface IERC20 {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
 
 pragma solidity ^0.8.0;
@@ -2029,7 +2029,7 @@ interface IERC20Metadata is IERC20 {
 
 // File @openzeppelin/contracts/token/ERC20/ERC20.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/ERC20.sol)
 
 pragma solidity ^0.8.0;
@@ -2387,7 +2387,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 
 // File @openzeppelin/contracts/utils/Counters.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Counters.sol)
 
 pragma solidity ^0.8.0;
@@ -2434,7 +2434,7 @@ library Counters {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-ERC20Permit.sol)
 
 pragma solidity ^0.8.0;
@@ -2523,7 +2523,7 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
 
 // File @openzeppelin/contracts/utils/math/Math.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/math/Math.sol)
 
 pragma solidity ^0.8.0;
@@ -2570,7 +2570,7 @@ library Math {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/ERC20Votes.sol)
 
 pragma solidity ^0.8.0;
@@ -2832,7 +2832,7 @@ abstract contract ERC20Votes is ERC20Permit {
 
 // File @openzeppelin/contracts/governance/extensions/GovernorVotes.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (governance/extensions/GovernorVotes.sol)
 
 pragma solidity ^0.8.0;
@@ -2862,7 +2862,7 @@ abstract contract GovernorVotes is Governor {
 
 // File @openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (governance/extensions/GovernorVotesQuorumFraction.sol)
 
 pragma solidity ^0.8.0;
@@ -2914,7 +2914,7 @@ abstract contract GovernorVotesQuorumFraction is GovernorVotes {
 
 // File @openzeppelin/contracts/governance/extensions/IGovernorTimelock.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (governance/extensions/IGovernorTimelock.sol)
 
 pragma solidity ^0.8.0;
@@ -2942,7 +2942,7 @@ abstract contract IGovernorTimelock is IGovernor {
 
 // File @openzeppelin/contracts/access/IAccessControl.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (access/IAccessControl.sol)
 
 pragma solidity ^0.8.0;
@@ -3034,7 +3034,7 @@ interface IAccessControl {
 
 // File @openzeppelin/contracts/access/AccessControl.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (access/AccessControl.sol)
 
 pragma solidity ^0.8.0;
@@ -3259,7 +3259,7 @@ abstract contract AccessControl is Context, IAccessControl, ERC165 {
 
 // File @openzeppelin/contracts/governance/TimelockController.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (governance/TimelockController.sol)
 
 pragma solidity ^0.8.0;
@@ -3614,7 +3614,7 @@ contract TimelockController is AccessControl {
 
 // File @openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (governance/extensions/GovernorTimelockControl.sol)
 
 pragma solidity ^0.8.0;
@@ -3770,7 +3770,7 @@ abstract contract GovernorTimelockControl is IGovernorTimelock, Governor {
 
 // File contracts/DAO/MelodityDAO.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.11;
 
 

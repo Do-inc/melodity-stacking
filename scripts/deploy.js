@@ -24,7 +24,7 @@ async function main() {
 		melodityStacking,
 		melodityStackingReceipt,
 		tx,
-		meld = "0x13E971De9181eeF7A4aEAEAA67552A6a4cc54f43",
+		meld = "0x5EaA8Be0ebe73C0B6AdA8946f136B86b92128c55",
 		proposerRole =
 			"0xb09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc1",
 		adminRole =
@@ -93,7 +93,7 @@ async function main() {
 	melodityStacking = await MelodityStacking.deploy(
 		await masterchef.prng(),
 		await masterchef.stackingPanda(),
-		meld,
+		melodityGovernance.address,
 		melodityDAOTimelock.address,
 		10,
 		{
@@ -128,16 +128,20 @@ async function main() {
 	melodityDAOTimelock = melodityDAOTimelock.address;
 
 	// complete the setup of the governance token
-	tx = await melodityGovernance.updateDAO(melodityDAOTimelock, {
+	tx = await melodityGovernance.addToWhitelist(melodityDAOTimelock, true, {
 		gasLimit: 10_000_000,
 		gasPrice: 10_000_000_000,
 	});
 	await tx;
-	tx = await melodityGovernance.renounceOwnership({
+	tx = await melodityGovernance.addToWhitelist(melodityStacking.address, true, {
 		gasLimit: 10_000_000,
 		gasPrice: 10_000_000_000,
 	});
 	await tx;
+	// ownership not renounced as the whitelist must be disabled at listing time and cannot
+	// be limited to the dao (participation may be too low).
+	// after listing time the ownership will be renounced, anyway owning the contract
+	// does not give any special power like minting or similar
 	melodityGovernance = melodityGovernance.address;
 
 	// complete the setup of the stacking

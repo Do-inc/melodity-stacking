@@ -88,7 +88,7 @@ interface IERC20 {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
 
 pragma solidity ^0.8.0;
@@ -118,7 +118,7 @@ interface IERC20Metadata is IERC20 {
 
 // File @openzeppelin/contracts/utils/Context.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
 
 pragma solidity ^0.8.0;
@@ -146,7 +146,7 @@ abstract contract Context {
 
 // File @openzeppelin/contracts/token/ERC20/ERC20.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/ERC20.sol)
 
 pragma solidity ^0.8.0;
@@ -504,7 +504,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 
 // File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/IERC165.sol)
 
 pragma solidity ^0.8.0;
@@ -533,7 +533,7 @@ interface IERC165 {
 
 // File @openzeppelin/contracts/utils/introspection/ERC165Checker.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/ERC165Checker.sol)
 
 pragma solidity ^0.8.0;
@@ -648,7 +648,7 @@ library ERC165Checker {
 
 // File @openzeppelin/contracts/security/ReentrancyGuard.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (security/ReentrancyGuard.sol)
 
 pragma solidity ^0.8.0;
@@ -715,7 +715,7 @@ abstract contract ReentrancyGuard {
 
 // File @openzeppelin/contracts/access/Ownable.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (access/Ownable.sol)
 
 pragma solidity ^0.8.0;
@@ -793,7 +793,7 @@ abstract contract Ownable is Context {
 
 // File @openzeppelin/contracts/security/Pausable.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (security/Pausable.sol)
 
 pragma solidity ^0.8.0;
@@ -886,7 +886,7 @@ abstract contract Pausable is Context {
 
 // File @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/IERC721Receiver.sol)
 
 pragma solidity ^0.8.0;
@@ -917,7 +917,7 @@ interface IERC721Receiver {
 
 // File @openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/utils/ERC721Holder.sol)
 
 pragma solidity ^0.8.0;
@@ -947,7 +947,7 @@ contract ERC721Holder is IERC721Receiver {
 
 // File @openzeppelin/contracts/token/ERC721/IERC721.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/IERC721.sol)
 
 pragma solidity ^0.8.0;
@@ -1092,7 +1092,7 @@ interface IERC721 is IERC165 {
 
 // File @openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/extensions/IERC721Metadata.sol)
 
 pragma solidity ^0.8.0;
@@ -1121,7 +1121,7 @@ interface IERC721Metadata is IERC721 {
 
 // File @openzeppelin/contracts/utils/Address.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Address.sol)
 
 pragma solidity ^0.8.0;
@@ -1342,7 +1342,7 @@ library Address {
 
 // File @openzeppelin/contracts/utils/Strings.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Strings.sol)
 
 pragma solidity ^0.8.0;
@@ -1413,7 +1413,7 @@ library Strings {
 
 // File @openzeppelin/contracts/utils/introspection/ERC165.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/ERC165.sol)
 
 pragma solidity ^0.8.0;
@@ -1444,7 +1444,7 @@ abstract contract ERC165 is IERC165 {
 
 // File @openzeppelin/contracts/token/ERC721/ERC721.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/ERC721.sol)
 
 pragma solidity ^0.8.0;
@@ -1870,7 +1870,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
 // File @openzeppelin/contracts/utils/Counters.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Counters.sol)
 
 pragma solidity ^0.8.0;
@@ -1917,7 +1917,7 @@ library Counters {
 
 // File contracts/PRNG.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.11;
 
 contract PRNG {
@@ -1989,7 +1989,7 @@ contract PRNG {
 
 // File contracts/StackingPanda.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.11;
 
 
@@ -2081,7 +2081,7 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/ERC20Burnable.sol)
 
 pragma solidity ^0.8.0;
@@ -2126,7 +2126,7 @@ abstract contract ERC20Burnable is Context, ERC20 {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-IERC20Permit.sol)
 
 pragma solidity ^0.8.0;
@@ -2190,7 +2190,7 @@ interface IERC20Permit {
 
 // File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/cryptography/ECDSA.sol)
 
 pragma solidity ^0.8.0;
@@ -2426,7 +2426,7 @@ library ECDSA {
 
 // File @openzeppelin/contracts/utils/cryptography/draft-EIP712.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/cryptography/draft-EIP712.sol)
 
 pragma solidity ^0.8.0;
@@ -2532,7 +2532,7 @@ abstract contract EIP712 {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-ERC20Permit.sol)
 
 pragma solidity ^0.8.0;
@@ -2621,7 +2621,7 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
 
 // File contracts/Stacking/StackingReceipt.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.2;
 
 
@@ -2664,7 +2664,7 @@ contract StackingReceipt is ERC20, ERC20Burnable, Ownable, ERC20Permit {
 
 // File contracts/Stacking/MelodityStacking.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.11;
 
 

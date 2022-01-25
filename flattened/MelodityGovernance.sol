@@ -2132,21 +2132,55 @@ pragma solidity 0.8.11;
 
 
 
-contract MelodityGovernance is ERC20, ERC20Permit, ERC20Votes, ERC20Wrapper, Ownable {
-	address public dao;
+
+contract MelodityGovernance is
+    ERC20,
+    ERC20Permit,
+    ERC20Votes,
+    ERC20Wrapper,
+    Ownable
+{
+    // control switch for whitelist and blacklist, this are used *ONLY* to
+    // avoid dex listing prior to the release time
+    bool public isWhitelistEnabled;
+    bool public isBlacklistEnabled;
+    mapping(address => bool) public whitelist;
+    mapping(address => bool) public blacklist;
+
+    modifier isWhitelisted(address recipient) {
+        // whitelist not enabled => everyone pass
+        // address in whitelist has assigned true => pass
+        if (!isWhitelistEnabled || whitelist[recipient]) {
+            _;
+        }
+        revert("Recipient not whitelisted");
+    }
+
+    modifier isBlacklisted(address recipient) {
+        // blacklist not enabled => everyone pass
+        // address in blacklist has assigned true => block
+        if (!isBlacklistEnabled || !blacklist[recipient]) {
+            _;
+        }
+        revert("Recipient blacklisted");
+    }
 
     constructor(IERC20 wrappedToken)
         ERC20("Melodity governance", "gMELD")
         ERC20Permit("Melodity governance")
         ERC20Wrapper(wrappedToken)
-    {}
+    {
+        // enables whitelist by default
+        isWhitelistEnabled = true;
+    }
 
     // The functions below are overrides required by Solidity.
 
-    function _afterTokenTransfer(address from, address to, uint256 amount)
-        internal
-        override(ERC20, ERC20Votes)
-    {
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20, ERC20Votes) {
         super._afterTokenTransfer(from, to, amount);
     }
 
@@ -2164,13 +2198,52 @@ contract MelodityGovernance is ERC20, ERC20Permit, ERC20Votes, ERC20Wrapper, Own
         super._burn(account, amount);
     }
 
-	function updateDAO(address _dao) public onlyOwner {
-		dao = _dao;
-	}
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    )
+        public
+        override
+        isWhitelisted(recipient)
+        isBlacklisted(recipient)
+        returns (bool)
+    {
+        return ERC20.transferFrom(sender, recipient, amount);
+    }
 
-	function recover() public returns (uint256) {
-		uint256 value = underlying.balanceOf(address(this)) - totalSupply();
-		_mint(dao, value);
-		return value;
-	}
+    function safeTransferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    )
+        public
+        isWhitelisted(recipient)
+        isBlacklisted(recipient)
+        returns (bool)
+    {
+        return ERC20.transferFrom(sender, recipient, amount);
+    }
+
+    function depositFor(address account, uint256 amount)
+        public
+        pure
+        override
+        returns (bool)
+    {
+        revert("Unimplemented method");
+    }
+
+    function withdrawTo(address account, uint256 amount)
+        public
+        pure
+        override
+        returns (bool)
+    {
+        revert("Unimplemented method");
+    }
+
+    function wrap(uint256 amount) public returns (bool) {
+        return ERC20Wrapper.depositFor(msg.sender, amount);
+    }
 }

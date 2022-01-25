@@ -94,7 +94,7 @@ interface IAccessControl {
 
 // File @openzeppelin/contracts/utils/Context.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
 
 pragma solidity ^0.8.0;
@@ -122,7 +122,7 @@ abstract contract Context {
 
 // File @openzeppelin/contracts/utils/Strings.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Strings.sol)
 
 pragma solidity ^0.8.0;
@@ -193,7 +193,7 @@ library Strings {
 
 // File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/IERC165.sol)
 
 pragma solidity ^0.8.0;
@@ -222,7 +222,7 @@ interface IERC165 {
 
 // File @openzeppelin/contracts/utils/introspection/ERC165.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/ERC165.sol)
 
 pragma solidity ^0.8.0;
@@ -253,7 +253,7 @@ abstract contract ERC165 is IERC165 {
 
 // File @openzeppelin/contracts/access/AccessControl.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (access/AccessControl.sol)
 
 pragma solidity ^0.8.0;
@@ -478,7 +478,7 @@ abstract contract AccessControl is Context, IAccessControl, ERC165 {
 
 // File @openzeppelin/contracts/governance/TimelockController.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (governance/TimelockController.sol)
 
 pragma solidity ^0.8.0;
@@ -833,7 +833,7 @@ contract TimelockController is AccessControl {
 
 // File contracts/DAO/MelodityDAOTimelock.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.11;
 
 contract MelodityDAOTimelock is TimelockController {
