@@ -88,7 +88,7 @@ interface IERC20 {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
 
 pragma solidity ^0.8.0;
@@ -118,7 +118,7 @@ interface IERC20Metadata is IERC20 {
 
 // File @openzeppelin/contracts/utils/Context.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
 
 pragma solidity ^0.8.0;
@@ -146,7 +146,7 @@ abstract contract Context {
 
 // File @openzeppelin/contracts/token/ERC20/ERC20.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/ERC20.sol)
 
 pragma solidity ^0.8.0;
@@ -504,7 +504,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-IERC20Permit.sol)
 
 pragma solidity ^0.8.0;
@@ -568,7 +568,7 @@ interface IERC20Permit {
 
 // File @openzeppelin/contracts/utils/Strings.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Strings.sol)
 
 pragma solidity ^0.8.0;
@@ -639,7 +639,7 @@ library Strings {
 
 // File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/cryptography/ECDSA.sol)
 
 pragma solidity ^0.8.0;
@@ -875,7 +875,7 @@ library ECDSA {
 
 // File @openzeppelin/contracts/utils/cryptography/draft-EIP712.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/cryptography/draft-EIP712.sol)
 
 pragma solidity ^0.8.0;
@@ -981,7 +981,7 @@ abstract contract EIP712 {
 
 // File @openzeppelin/contracts/utils/Counters.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Counters.sol)
 
 pragma solidity ^0.8.0;
@@ -1028,7 +1028,7 @@ library Counters {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-ERC20Permit.sol)
 
 pragma solidity ^0.8.0;
@@ -1117,7 +1117,7 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
 
 // File @openzeppelin/contracts/utils/math/Math.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/math/Math.sol)
 
 pragma solidity ^0.8.0;
@@ -1164,7 +1164,7 @@ library Math {
 
 // File @openzeppelin/contracts/utils/math/SafeCast.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/math/SafeCast.sol)
 
 pragma solidity ^0.8.0;
@@ -1409,7 +1409,7 @@ library SafeCast {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/ERC20Votes.sol)
 
 pragma solidity ^0.8.0;
@@ -1671,7 +1671,7 @@ abstract contract ERC20Votes is ERC20Permit {
 
 // File @openzeppelin/contracts/utils/Address.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Address.sol)
 
 pragma solidity ^0.8.0;
@@ -1892,7 +1892,7 @@ library Address {
 
 // File @openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/utils/SafeERC20.sol)
 
 pragma solidity ^0.8.0;
@@ -1993,7 +1993,7 @@ library SafeERC20 {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/ERC20Wrapper.sol)
 
 pragma solidity ^0.8.0;
@@ -2047,7 +2047,7 @@ abstract contract ERC20Wrapper is ERC20 {
 
 // File @openzeppelin/contracts/access/Ownable.sol@v4.4.2
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (access/Ownable.sol)
 
 pragma solidity ^0.8.0;
@@ -2125,7 +2125,7 @@ abstract contract Ownable is Context {
 
 // File contracts/DAO/MelodityGovernance.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.11;
 
 
@@ -2140,6 +2140,8 @@ contract MelodityGovernance is
     ERC20Wrapper,
     Ownable
 {
+    address public _dao;
+
     // control switch for whitelist and blacklist, this are used *ONLY* to
     // avoid dex listing prior to the release time
     bool public isWhitelistEnabled;
@@ -2147,22 +2149,27 @@ contract MelodityGovernance is
     mapping(address => bool) public whitelist;
     mapping(address => bool) public blacklist;
 
+    modifier onlyOwnerOrDAO() {
+        require(msg.sender == _dao || msg.sender == owner(), "Unauthorized");
+        _;
+    }
+
     modifier isWhitelisted(address recipient) {
         // whitelist not enabled => everyone pass
         // address in whitelist has assigned true => pass
-        if (!isWhitelistEnabled || whitelist[recipient]) {
-            _;
+        if (isWhitelistEnabled && !whitelist[recipient]) {
+            revert("Recipient not whitelisted");
         }
-        revert("Recipient not whitelisted");
+        _;
     }
 
     modifier isBlacklisted(address recipient) {
         // blacklist not enabled => everyone pass
         // address in blacklist has assigned true => block
-        if (!isBlacklistEnabled || !blacklist[recipient]) {
-            _;
+        if (isBlacklistEnabled && blacklist[recipient]) {
+            revert("Recipient blacklisted");
         }
-        revert("Recipient blacklisted");
+        _;
     }
 
     constructor(IERC20 wrappedToken)
@@ -2216,12 +2223,7 @@ contract MelodityGovernance is
         address sender,
         address recipient,
         uint256 amount
-    )
-        public
-        isWhitelisted(recipient)
-        isBlacklisted(recipient)
-        returns (bool)
-    {
+    ) public isWhitelisted(recipient) isBlacklisted(recipient) returns (bool) {
         return ERC20.transferFrom(sender, recipient, amount);
     }
 
@@ -2245,5 +2247,37 @@ contract MelodityGovernance is
 
     function wrap(uint256 amount) public returns (bool) {
         return ERC20Wrapper.depositFor(msg.sender, amount);
+    }
+
+    function enableWhitelist() public onlyOwnerOrDAO {
+        isWhitelistEnabled = true;
+        isBlacklistEnabled = false;
+    }
+
+    function disableWhitelist() public onlyOwnerOrDAO {
+        isWhitelistEnabled = false;
+    }
+
+    function enableBlacklist() public onlyOwnerOrDAO {
+        isWhitelistEnabled = false;
+        isBlacklistEnabled = true;
+    }
+
+    function disableBlacklist() public onlyOwnerOrDAO {
+        isBlacklistEnabled = false;
+    }
+
+    function addToWhitelist(address _addr, bool whitelisted)
+        public
+        onlyOwnerOrDAO
+    {
+        whitelist[_addr] = whitelisted;
+    }
+
+    function addToBlacklist(address _addr, bool blacklisted)
+        public
+        onlyOwnerOrDAO
+    {
+        blacklist[_addr] = blacklisted;
     }
 }

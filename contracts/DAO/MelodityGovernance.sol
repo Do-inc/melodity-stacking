@@ -15,7 +15,7 @@ contract MelodityGovernance is
     ERC20Wrapper,
     Ownable
 {
-	address public _dao;
+    address public _dao;
 
     // control switch for whitelist and blacklist, this are used *ONLY* to
     // avoid dex listing prior to the release time
@@ -24,27 +24,27 @@ contract MelodityGovernance is
     mapping(address => bool) public whitelist;
     mapping(address => bool) public blacklist;
 
-	modifier onlyOwnerOrDAO() {
-		require(msg.sender == _dao || msg.sender == owner(), "Unauthorized");
-		_;
-	}
+    modifier onlyOwnerOrDAO() {
+        require(msg.sender == _dao || msg.sender == owner(), "Unauthorized");
+        _;
+    }
 
     modifier isWhitelisted(address recipient) {
         // whitelist not enabled => everyone pass
         // address in whitelist has assigned true => pass
-        if (!isWhitelistEnabled || whitelist[recipient]) {
-            _;
+        if (isWhitelistEnabled && !whitelist[recipient]) {
+            revert("Recipient not whitelisted");
         }
-        revert("Recipient not whitelisted");
+        _;
     }
 
     modifier isBlacklisted(address recipient) {
         // blacklist not enabled => everyone pass
         // address in blacklist has assigned true => block
-        if (!isBlacklistEnabled || !blacklist[recipient]) {
-            _;
+        if (isBlacklistEnabled && blacklist[recipient]) {
+            revert("Recipient blacklisted");
         }
-        revert("Recipient blacklisted");
+        _;
     }
 
     constructor(IERC20 wrappedToken)
@@ -98,12 +98,7 @@ contract MelodityGovernance is
         address sender,
         address recipient,
         uint256 amount
-    )
-        public
-        isWhitelisted(recipient)
-        isBlacklisted(recipient)
-        returns (bool)
-    {
+    ) public isWhitelisted(recipient) isBlacklisted(recipient) returns (bool) {
         return ERC20.transferFrom(sender, recipient, amount);
     }
 
@@ -129,29 +124,35 @@ contract MelodityGovernance is
         return ERC20Wrapper.depositFor(msg.sender, amount);
     }
 
-	function enableWhitelist() public onlyOwnerOrDAO {
-		isWhitelistEnabled = true;
-		isBlacklistEnabled = false;
-	}
+    function enableWhitelist() public onlyOwnerOrDAO {
+        isWhitelistEnabled = true;
+        isBlacklistEnabled = false;
+    }
 
-	function disableWhitelist() public onlyOwnerOrDAO {
-		isWhitelistEnabled = false;
-	}
+    function disableWhitelist() public onlyOwnerOrDAO {
+        isWhitelistEnabled = false;
+    }
 
-	function enableBlacklist() public onlyOwnerOrDAO {
-		isWhitelistEnabled = false;
-		isBlacklistEnabled = true;
-	}
+    function enableBlacklist() public onlyOwnerOrDAO {
+        isWhitelistEnabled = false;
+        isBlacklistEnabled = true;
+    }
 
-	function disableBlacklist() public onlyOwnerOrDAO {
-		isBlacklistEnabled = false;
-	}
+    function disableBlacklist() public onlyOwnerOrDAO {
+        isBlacklistEnabled = false;
+    }
 
-	function addToWhitelist(address _addr, bool whitelisted) public onlyOwnerOrDAO {
-		whitelist[_addr] = whitelisted;
-	}
+    function addToWhitelist(address _addr, bool whitelisted)
+        public
+        onlyOwnerOrDAO
+    {
+        whitelist[_addr] = whitelisted;
+    }
 
-	function addToBlacklist(address _addr, bool blacklisted) public onlyOwnerOrDAO {
-		blacklist[_addr] = blacklisted;
-	}
+    function addToBlacklist(address _addr, bool blacklisted)
+        public
+        onlyOwnerOrDAO
+    {
+        blacklist[_addr] = blacklisted;
+    }
 }
