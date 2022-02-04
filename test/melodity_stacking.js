@@ -1209,6 +1209,6 @@ describe("Melodity stacking", function () {
 
 		new_receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
 
-		expect(new_receipt_value.toString()).to.equals("1007225946060242502")
+		expect(new_receipt_value.toString()).to.equals("1007215873901503487")
 	});
 });

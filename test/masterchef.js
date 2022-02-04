@@ -32,6 +32,12 @@ describe("Masterchef", function () {
 		[owner, acc_1, acc_2] = await ethers.getSigners();
 
 		masterchef = await deployMasterchef();
+		let tx = await masterchef.addPandaIdentificationInfo("test", "https://example.com")
+		await tx
+		tx = await masterchef.addPandaIdentificationInfo("test", "https://example.com")
+		await tx
+		tx = await masterchef.addPandaIdentificationInfo("test", "https://example.com")
+		await tx
 	});
 
 	it("should deploy contracts at startup", async function () {
@@ -61,7 +67,7 @@ describe("Masterchef", function () {
 
 		let metadata = await stacking_panda.getMetadata(0);
 		expect(metadata.name).to.equals("test");
-		expect(metadata.picUrl).to.equals("url");
+		expect(metadata.picUrl).to.equals("https://example.com");
 		expect(metadata.bonus.decimals).to.equals(18);
 
 		// need to cast everything to string as chain does not support ethers bignumber

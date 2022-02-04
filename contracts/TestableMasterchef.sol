@@ -3,11 +3,12 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./TestableStackingPanda.sol";
 import "./PRNG.sol";
 import "./Marketplace/TestableMarketplace.sol";
 
-contract TestableMasterchef is ERC721Holder, ReentrancyGuard {
+contract TestableMasterchef is ERC721Holder, Ownable, ReentrancyGuard {
     TestableStackingPanda public stackingPanda;
     PRNG public prng;
     TestableMarketplace public marketplace;
@@ -24,6 +25,7 @@ contract TestableMasterchef is ERC721Holder, ReentrancyGuard {
     }
 
     PandaIdentification[] public pandas;
+	int256 public lastPandaId = -1;
 
     event StackingPandaMinted(uint256 id);
     event StackingPandaForSale(address auction, uint256 id);
@@ -67,6 +69,13 @@ contract TestableMasterchef is ERC721Holder, ReentrancyGuard {
         marketplace = new TestableMarketplace(address(prng));
     }
 
+	function addPandaIdentificationInfo(string calldata name, string calldata url) public nonReentrant onlyOwner {
+		pandas.push(PandaIdentification({
+			name: name,
+			url: url
+		}));
+	}
+
     /**
         Trigger the minting of a new stacking panda, this function is publicly callable
         as the minted NFT will be given to the Masterchef contract.
@@ -93,14 +102,15 @@ contract TestableMasterchef is ERC721Holder, ReentrancyGuard {
 
         // mint the panda using its name-url from the stored pair and randomly compute the bonuses
         uint256 pandaId = stackingPanda.mint(
-            "test",
-            "url",
+            pandas[uint256(lastPandaId +1)].name,
+            pandas[uint256(lastPandaId +1)].url,
             TestableStackingPanda.StackingBonus({
                 decimals: 18,
                 meldToMeld: meld2meldBonus,
                 toMeld: toMeldBonus
             })
         );
+		lastPandaId = int256(pandaId);
 
         emit StackingPandaMinted(pandaId);
 

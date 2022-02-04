@@ -3,11 +3,12 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./StackingPanda.sol";
 import "./PRNG.sol";
 import "./Marketplace/Marketplace.sol";
 
-contract Masterchef is ERC721Holder, ReentrancyGuard {
+contract Masterchef is ERC721Holder, Ownable, ReentrancyGuard {
     StackingPanda public stackingPanda;
     PRNG public prng;
     Marketplace public marketplace;
@@ -24,6 +25,7 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
     }
 
     PandaIdentification[] public pandas;
+	int256 public lastPandaId = -1;
 
     event StackingPandaMinted(uint256 id);
     event StackingPandaForSale(address auction, uint256 id);
@@ -67,6 +69,13 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
         marketplace = new Marketplace(_prng);
     }
 
+	function addPandaIdentificationInfo(string calldata name, string calldata url) public nonReentrant onlyOwner {
+		pandas.push(PandaIdentification({
+			name: name,
+			url: url
+		}));
+	}
+
     /**
         Trigger the minting of a new stacking panda, this function is publicly callable
         as the minted NFT will be given to the Masterchef contract.
@@ -88,19 +97,20 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
         uint256 meld2meldBonus = prng.rotate() % 7.5 ether;
 
         // retrieve the random number and set the bonus percentage using 18 decimals.
-        // NOTE: the maximum percentage here is 3.999999999999999999%
-        uint256 toMeldBonus = prng.rotate() % 4 ether;
+        // NOTE: the maximum percentage here is 3.499999999999999999%
+        uint256 toMeldBonus = prng.rotate() % 3.5 ether;
 
         // mint the panda using its name-url from the stored pair and randomly compute the bonuses
         uint256 pandaId = stackingPanda.mint(
-            "test",
-            "url",
+            pandas[uint256(lastPandaId +1)].name,
+            pandas[uint256(lastPandaId +1)].url,
             StackingPanda.StackingBonus({
                 decimals: 18,
                 meldToMeld: meld2meldBonus,
                 toMeld: toMeldBonus
             })
         );
+		lastPandaId = int256(pandaId);
 
         emit StackingPandaMinted(pandaId);
 

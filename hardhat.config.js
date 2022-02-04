@@ -4,7 +4,7 @@ require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
-require('hardhat-abi-exporter');
+require("hardhat-abi-exporter");
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -48,7 +48,7 @@ module.exports = {
 					: [],
 			chainId: 97,
 			gas: 100_000_000,
-			gasPrice: 5000000000,
+			gasPrice: 10000000000,
 		},
 		bsc: {
 			url: "https://bsc-dataseed.binance.org/",
@@ -58,7 +58,7 @@ module.exports = {
 					: [],
 			chainId: 56,
 			gas: 100_000_000,
-			gasPrice: 5000000000,
+			gasPrice: 10000000000,
 		},
 		tfantom: {
 			url: "https://rpc.testnet.fantom.network/",
@@ -68,7 +68,7 @@ module.exports = {
 					: [],
 			chainId: 4002,
 			gas: 100_000_000,
-			gasPrice: 5000000000,
+			gasPrice: 10000000000,
 		},
 		fantom: {
 			url: "https://rpc.ftm.tools/",
@@ -78,8 +78,8 @@ module.exports = {
 					: [],
 			chainId: 250,
 			gas: 100_000_000,
-			gasPrice: 5000000000,
-		}
+			gasPrice: 10000000000,
+		},
 	},
 	gasReporter: {
 		enabled: process.env.REPORT_GAS !== undefined,
@@ -97,5 +97,5 @@ module.exports = {
 		clear: true,
 		spacing: 4,
 		pretty: false,
-	  }
+	},
 };
