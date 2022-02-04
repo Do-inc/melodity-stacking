@@ -423,7 +423,7 @@ describe("Melodity stacking", function () {
 		expect(remaining_receipt).to.equals(0);
 
 		let melodity_balance = await melodity.balanceOf(owner.address);
-		expect(melodity_balance).to.equals("1000555534632417172700");
+		expect(melodity_balance).to.equals("1000277382610645145000");
 	});
 	it("cannot withdraw null amount", async function () {
 		tx = await melodity.approve(
@@ -526,13 +526,13 @@ describe("Melodity stacking", function () {
 		expect(remaining_receipt).to.equals(0);
 
 		let melodity_balance = await melodity.balanceOf(owner.address);
-		expect(melodity_balance).to.equals("990009000405010800000"); // 990.009000405010800000
+		expect(melodity_balance).to.equals("990004500090000900000"); // 990.004500090000900000
 
 		melodity_balance = await melodity.balanceOf(_DO_INC_MULTISIG_WALLET);
-		expect(melodity_balance).to.equals("5000500022500600000"); // 5.000500022500600000
+		expect(melodity_balance).to.equals("5000250005000050000"); // 5.000250005000050000
 
 		melodity_balance = await melodity.balanceOf(dao.address);
-		expect(melodity_balance).to.equals("5000500022500600000"); // 5.000500022500600000
+		expect(melodity_balance).to.equals("5000250005000050000"); // 5.000250005000050000
 	});
 	it("can withdraw with NFT", async function () {
 		tx = await melodity.approve(
@@ -1163,5 +1163,52 @@ describe("Melodity stacking", function () {
 					"'Dismission enabled only once the stacking pool is exhausting'"
 			);
 		}
+	});
+	it("calling multiple times refreshReceiptValue does not increase the price", async function () {
+		await timetravel(60*60*24)
+
+		tx = await melodity_stacking.refreshReceiptValue();
+		await tx.wait();
+
+		let old_receipt_value = (await melodity_stacking.poolInfo())["receiptValue"],
+			new_receipt_value
+
+		await timetravel(60)
+		tx = await melodity_stacking.refreshReceiptValue();
+		await tx.wait();
+
+		new_receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+
+		expect(old_receipt_value.toString()).to.equals(new_receipt_value.toString())
+
+		old_receipt_value = new_receipt_value
+
+		await timetravel(60)
+		tx = await melodity_stacking.refreshReceiptValue();
+		await tx.wait();
+
+		new_receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+
+		expect(old_receipt_value.toString()).to.equals(new_receipt_value.toString())
+
+		old_receipt_value = new_receipt_value
+
+		await timetravel(60)
+		tx = await melodity_stacking.refreshReceiptValue();
+		await tx.wait();
+
+		new_receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+
+		expect(old_receipt_value.toString()).to.equals(new_receipt_value.toString())
+
+		old_receipt_value = new_receipt_value
+
+		await timetravel(29 * 60 * 60 * 24)
+		tx = await melodity_stacking.refreshReceiptValue();
+		await tx.wait();
+
+		new_receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+
+		expect(new_receipt_value.toString()).to.equals("1007225946060242502")
 	});
 });

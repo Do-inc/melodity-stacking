@@ -3166,23 +3166,22 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
-					uint256 diffSinceLastUpdate = _now - lastUpdateTime;
-					uint256 epochsSinceLastUpdate = diffSinceLastUpdate / _EPOCH_DURATION;
 
-					uint256 diffSinceEraStart = _now - eraInfos[i].startingTime;
-					uint256 epochsSinceEraStart = diffSinceEraStart / _EPOCH_DURATION;
+					uint256 diffFromEraEnd = eraEndingTime - _now;
+					uint256 diffFromEpochEndAlignment = diffFromEraEnd % _EPOCH_DURATION;
+					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - diffFromEpochEndAlignment;
+					uint256 realEpochStartTime = _now - diffFromEpochStartAlignment;
+					uint256 realPassedEpochs = realEpochStartTime / _EPOCH_DURATION;
 
-					uint256 missingFullEpochs = epochsSinceLastUpdate;
-
-					if(epochsSinceEraStart > epochsSinceLastUpdate) {
-						missingFullEpochs = epochsSinceEraStart - epochsSinceLastUpdate;
-					}
+					uint256 realPassedEpochsAtLastUpdate = lastUpdateTime / _EPOCH_DURATION;
+					uint256 diff = realPassedEpochs - realPassedEpochsAtLastUpdate;
 
 					// recompute the receipt value missingFullEpochs times
-					while(missingFullEpochs > 0) {
+					while(diff > 0) {
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
-						missingFullEpochs--;
+						diff--;
 					}
+					poolInfo.lastReceiptUpdateTime = realEpochStartTime;
 
 					// as _now was into the given era, we can stop the current loop here
 					i = eraInfos.length;
@@ -3194,22 +3193,19 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
-					uint256 diffSinceEraEnd = eraEndingTime - lastUpdateTime;
-					uint256 epochsSinceEraEnd = diffSinceEraEnd / _EPOCH_DURATION;
+					uint256 diffFromEraEnd = eraEndingTime;
+					uint256 diffFromEpochEndAlignment = diffFromEraEnd % _EPOCH_DURATION;
+					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - diffFromEpochEndAlignment;
+					uint256 realEpochStartTime = _now - diffFromEpochStartAlignment;
+					uint256 realPassedEpochs = realEpochStartTime / _EPOCH_DURATION;
 
-					uint256 diffSinceEraStart = eraEndingTime - eraInfos[i].startingTime;
-					uint256 epochsSinceEraStart = diffSinceEraStart / _EPOCH_DURATION;
-
-					uint256 missingFullEpochs = epochsSinceEraEnd;
-
-					if(epochsSinceEraStart > epochsSinceEraEnd) {
-						missingFullEpochs = epochsSinceEraStart - epochsSinceEraEnd;
-					}
+					uint256 realPassedEpochsAtLastUpdate = lastUpdateTime / _EPOCH_DURATION;
+					uint256 diff = realPassedEpochs - realPassedEpochsAtLastUpdate;
 
 					// recompute the receipt value missingFullEpochs times
-					while(missingFullEpochs > 0) {
+					while(diff > 0) {
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
-						missingFullEpochs--;
+						diff--;
 					}
 				}
 			}
@@ -3221,6 +3217,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 			// in order to avoid the triggering of the error check at the begin of this method here we reduce the last receipt time by 1
 			// this is an easy hack around the error check
 			poolInfo.lastReceiptUpdateTime--;
+		console.log("poolInfo.lastReceiptUpdateTime", poolInfo.lastReceiptUpdateTime);
 
 			_triggerErasInfoRefresh(2);
 			refreshReceiptValue();
