@@ -3217,7 +3217,6 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 			// in order to avoid the triggering of the error check at the begin of this method here we reduce the last receipt time by 1
 			// this is an easy hack around the error check
 			poolInfo.lastReceiptUpdateTime--;
-		console.log("poolInfo.lastReceiptUpdateTime", poolInfo.lastReceiptUpdateTime);
 
 			_triggerErasInfoRefresh(2);
 			refreshReceiptValue();
