@@ -53,7 +53,7 @@
         "anonymous": false,
         "inputs": [
             {
-                "indexed": false,
+                "indexed": true,
                 "internalType": "address",
                 "name": "account",
                 "type": "address"
@@ -68,12 +68,6 @@
                 "indexed": false,
                 "internalType": "uint256",
                 "name": "receiptAmount",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "depositTime",
                 "type": "uint256"
             }
         ],
@@ -198,7 +192,7 @@
         "anonymous": false,
         "inputs": [
             {
-                "indexed": false,
+                "indexed": true,
                 "internalType": "address",
                 "name": "account",
                 "type": "address"
@@ -207,6 +201,12 @@
                 "indexed": false,
                 "internalType": "uint256",
                 "name": "nftId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "nftPositionIndex",
                 "type": "uint256"
             }
         ],
@@ -217,7 +217,7 @@
         "anonymous": false,
         "inputs": [
             {
-                "indexed": false,
+                "indexed": true,
                 "internalType": "address",
                 "name": "account",
                 "type": "address"
@@ -289,6 +289,19 @@
             {
                 "indexed": false,
                 "internalType": "uint256",
+                "name": "amountLeft",
+                "type": "uint256"
+            }
+        ],
+        "name": "PoolRefilled",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
                 "name": "value",
                 "type": "uint256"
             }
@@ -345,7 +358,7 @@
         "anonymous": false,
         "inputs": [
             {
-                "indexed": false,
+                "indexed": true,
                 "internalType": "address",
                 "name": "account",
                 "type": "address"
@@ -413,12 +426,25 @@
     },
     {
         "inputs": [],
-        "name": "_INTERFACE_ID_ERC20_METADATA",
+        "name": "_MAX_FEE_PERCENTAGE",
         "outputs": [
             {
-                "internalType": "bytes4",
+                "internalType": "uint256",
                 "name": "",
-                "type": "bytes4"
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "_MIN_FEE_PERCENTAGE",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -543,16 +569,6 @@
         "inputs": [],
         "name": "feeInfo",
         "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "maxFeePercentage",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "minFeePercentage",
-                "type": "uint256"
-            },
             {
                 "internalType": "uint256",
                 "name": "feePercentage",
@@ -790,6 +806,11 @@
                 "internalType": "bool",
                 "name": "dismissed",
                 "type": "bool"
+            },
+            {
+                "internalType": "uint256",
+                "name": "lastComputedEra",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",

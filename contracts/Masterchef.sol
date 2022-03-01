@@ -52,7 +52,7 @@ contract Masterchef is ERC721Holder, Ownable, ReentrancyGuard {
     }
 
     /**
-        Deploy the Pseudo Random Number Generator using the create2 method,
+        Deploy the Pseudo Random Number Generator using the new method,
         this gives the possibility for other generated smart contract to compute the
         PRNG address and call it
      */
@@ -61,7 +61,7 @@ contract Masterchef is ERC721Holder, Ownable, ReentrancyGuard {
     }
 
     /**
-        Deploy the Marketplace using the create2 method,
+        Deploy the Marketplace using the new method,
         this gives the possibility for other generated smart contract to compute the
         PRNG address and call it
      */
@@ -81,7 +81,7 @@ contract Masterchef is ERC721Holder, Ownable, ReentrancyGuard {
         as the minted NFT will be given to the Masterchef contract.
      */
     function mintStackingPanda() public nonReentrant returns (address) {
-        prng.rotate();
+        prng.seedRotate();
 
         // check that a new panda can be minted
         require(
@@ -101,20 +101,23 @@ contract Masterchef is ERC721Holder, Ownable, ReentrancyGuard {
         uint256 toMeldBonus = prng.rotate() % 3.5 ether;
 
         // mint the panda using its name-url from the stored pair and randomly compute the bonuses
-        uint256 pandaId = stackingPanda.mint(
-            pandas[uint256(lastPandaId +1)].name,
-            pandas[uint256(lastPandaId +1)].url,
-            StackingPanda.StackingBonus({
-                decimals: 18,
-                meldToMeld: meld2meldBonus,
-                toMeld: toMeldBonus
-            })
-        );
-		lastPandaId = int256(pandaId);
+        if(pandas.length > uint256(lastPandaId +1)) {
+            uint256 pandaId = stackingPanda.mint(
+                pandas[uint256(lastPandaId +1)].name,
+                pandas[uint256(lastPandaId +1)].url,
+                StackingPanda.StackingBonus({
+                    decimals: 18,
+                    meldToMeld: meld2meldBonus,
+                    toMeld: toMeldBonus
+                })
+            );
+            lastPandaId = int256(pandaId);
 
-        emit StackingPandaMinted(pandaId);
+            emit StackingPandaMinted(pandaId);
 
-        return _listForSale(pandaId);
+            return _listForSale(pandaId);
+        }
+        revert("Pandas definition missing");
     }
 
     function _listForSale(uint256 _pandaId) private returns (address) {

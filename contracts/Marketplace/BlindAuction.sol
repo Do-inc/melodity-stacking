@@ -65,7 +65,7 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
         address _prng
     ) {
         prng = PRNG(_prng);
-        prng.rotate();
+        prng.seedRotate();
 
         beneficiary = _beneficiaryAddress;
         biddingEnd = block.timestamp + _biddingTime;
@@ -90,7 +90,7 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
 		The same address can place multiple bids.
 	*/
     function bid(bytes32 blindedBid) public payable nonReentrant onlyBefore(biddingEnd) {
-        prng.rotate();
+        prng.seedRotate();
 
         bids[msg.sender].push(
             Bid({blindedBid: blindedBid, deposit: msg.value})
@@ -109,7 +109,7 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
         bool[] calldata fakes,
         bytes32[] calldata secrets
     ) public nonReentrant onlyAfter(biddingEnd) onlyBefore(revealEnd) {
-        prng.rotate();
+        prng.seedRotate();
 
 		// check that the list of provided bids has the same length of
 		// the list saved in the contract
@@ -156,11 +156,59 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
         Address.sendValue(payable(msg.sender), refund);
     }
 
+    /**
+
+     */
+    function reap(
+        uint256[] calldata values,
+        bool[] calldata fakes,
+        bytes32[] calldata secrets
+    ) public nonReentrant onlyAfter(revealEnd) {
+        prng.seedRotate();
+
+		// check that the list of provided bids has the same length of
+		// the list saved in the contract
+        uint256 length = bids[msg.sender].length;
+		require(values.length == length, "You're not reaping all your bids");
+		require(fakes.length == length, "You're not reaping all your bids");
+		require(secrets.length == length, "You're not reaping all your bids");
+
+        uint256 refund;
+		// loop through each bid
+        for (uint256 i = 0; i < length; i++) {
+            Bid storage bidToCheck = bids[msg.sender][i];
+
+            (uint256 value, bool fake, bytes32 secret) = (
+                values[i],
+                fakes[i],
+                secrets[i]
+            );
+
+			// if the bid do not match the original value it is skipped
+            if (
+                bidToCheck.blindedBid !=
+                keccak256(abi.encode(value, fake, secret))
+            ) {
+                continue;
+            }
+            
+            // Make it impossible for the sender to re-claim
+            // the same deposit.
+            bidToCheck.blindedBid = bytes32(0);
+
+            // as this is an emergency exit call, all bids that matches gets refunded
+            refund += bidToCheck.deposit;
+        }
+
+		// refund fake or stale bids
+        Address.sendValue(payable(msg.sender), refund);
+    }
+
     /** 
 		Withdraw a bid that was overbid.
 	*/
     function withdraw() public nonReentrant {
-        prng.rotate();
+        prng.seedRotate();
 
         uint256 amount = pendingReturns[msg.sender];
         if (amount > 0) {
@@ -176,7 +224,7 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
     	to the beneficiary.
 	*/
     function endAuction() public nonReentrant onlyAfter(revealEnd) {
-        prng.rotate();
+        prng.seedRotate();
 
         // check that the auction end call have not already been called
         require(!ended, "Auction already ended");
@@ -193,16 +241,19 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
             // send the NFT to the bidder
             ERC721(nftContract).safeTransferFrom(address(this), highestBidder, nftId);
 
+            // the royalty percentage has 18 decimals + 2 per percentage
+            uint256 royalty = highestBid * royaltyPercent / 10 ** 20;
+
             // check if the royalty receiver and the payee are the same address
             // if they are make a transfer only, otherwhise split the bid based on
             // the royalty percentage and send the values
             if (beneficiary == royaltyReceiver) {
                 // send the highest bid to the beneficiary
                 Address.sendValue(beneficiary, highestBid);
+                emit RoyaltyPaid(royaltyReceiver, royalty, royaltyPercent);
             }
             else {
                 // the royalty percentage has 18 decimals + 2 percentage positions
-                uint256 royalty = highestBid * royaltyPercent / 10 ** 20;
                 uint256 beneficiaryEarning = highestBid - royalty;
 
                 // send the royalty funds

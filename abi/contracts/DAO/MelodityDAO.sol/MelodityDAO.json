@@ -10,6 +10,11 @@
                 "internalType": "contract TimelockController",
                 "name": "_timelock",
                 "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "initialVotingPeriod",
+                "type": "uint256"
             }
         ],
         "stateMutability": "nonpayable",

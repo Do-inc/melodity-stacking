@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MelodityGovernance is
@@ -91,14 +90,6 @@ contract MelodityGovernance is
         isBlacklisted(recipient)
         returns (bool)
     {
-        return ERC20.transferFrom(sender, recipient, amount);
-    }
-
-    function safeTransferFrom(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) public isWhitelisted(recipient) isBlacklisted(recipient) returns (bool) {
         return ERC20.transferFrom(sender, recipient, amount);
     }
 

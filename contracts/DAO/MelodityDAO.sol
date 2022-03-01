@@ -9,15 +9,15 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFractio
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 
 contract MelodityDAO is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, GovernorTimelockControl {
-    constructor(ERC20Votes _token, TimelockController _timelock)
+    constructor(ERC20Votes _token, TimelockController _timelock, uint256 initialVotingPeriod)
         Governor("Melodity DAO")
         GovernorSettings(
-			1,					// vote starts after 1 block  
-			45818, 				// voting period lasts 1 week
-			0					// minium gMELD to run a proposal
+			1,					 // vote starts after 1 block  
+			initialVotingPeriod, // voting period lasts 1 week, should be around 45818 but may vary depending on deployment chain
+			0					 // minium gMELD to run a proposal
 		)
         GovernorVotes(_token)
-        GovernorVotesQuorumFraction(4)
+        GovernorVotesQuorumFraction(33)
         GovernorTimelockControl(_timelock)
     {}
 

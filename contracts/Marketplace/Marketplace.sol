@@ -54,7 +54,7 @@ contract Marketplace is ReentrancyGuard {
      *     => 0x70a08231 ^ 0x6352211e ^ 0x095ea7b3 ^ 0x081812fc ^
      *        0xa22cb465 ^ 0xe985e9c5 ^ 0x23b872dd ^ 0x42842e0e ^ 0xb88d4fde == 0x80ac58cd
      */
-    bytes4 private constant _INTERFACE_ID_ERC721 = 0x80ac58cd;
+    bytes4 private constant _INTERFACE_ID_ERC721 = type(IERC721).interfaceId;
 
     /*
      *     bytes4(keccak256("name()")) == 0x06fdde03
@@ -63,7 +63,7 @@ contract Marketplace is ReentrancyGuard {
      *
      *     => 0x06fdde03 ^ 0x95d89b41 ^ 0xc87b56dd == 0x5b5e139f
      */
-    bytes4 private constant _INTERFACE_ID_ERC721_METADATA = 0x5b5e139f;
+    bytes4 private constant _INTERFACE_ID_ERC721_METADATA = type(IERC721Metadata).interfaceId;
 
     event AuctionCreated(address auction, uint256 nftId, address nftContract);
     event BlindAuctionCreated(
@@ -80,7 +80,7 @@ contract Marketplace is ReentrancyGuard {
     );
 
     modifier onlyERC721(address _contract) {
-        prng.rotate();
+        prng.seedRotate();
 
         require(
             // check the SC doesn't supports the ERC721 openzeppelin interface
@@ -133,7 +133,7 @@ contract Marketplace is ReentrancyGuard {
         uint256 _royaltyPercentage,
         bool _blind
     ) private returns (address) {
-        prng.rotate();
+        prng.seedRotate();
 
         // do not run any check on the contract as the checks are already performed by the
         // parent call
@@ -208,7 +208,7 @@ contract Marketplace is ReentrancyGuard {
         address _royaltyReceiver,
         address _royaltyInitializer
     ) private returns (Royalty memory) {
-        prng.rotate();
+        prng.seedRotate();
 
         bytes32 royaltyIdentifier = keccak256(abi.encode(_nftContract, _nftId));
 
@@ -231,12 +231,14 @@ contract Marketplace is ReentrancyGuard {
                 _royaltyInitializer = msg.sender;
             }
 
-            royalties[royaltyIdentifier] = Royalty({
+            Royalty memory cachedRoyalty = Royalty({
                 decimals: 18,
                 royaltyPercent: _royaltyPercent, // the provided value *MUST* be padded to 18 decimal positions
                 royaltyReceiver: _royaltyReceiver,
                 royaltyInitializer: _royaltyInitializer
             });
+
+            royalties[royaltyIdentifier] = cachedRoyalty;
 
             emit RoyaltyUpdated(
                 _nftId,
@@ -246,7 +248,7 @@ contract Marketplace is ReentrancyGuard {
                 _royaltyInitializer
             );
 
-            return royalties[royaltyIdentifier];
+            return cachedRoyalty;
         }
 
         return royalty;

@@ -65,4 +65,18 @@ contract PRNG {
                 )
             );
     }
+
+    function seedRotate() public returns(bool) {
+        // Allow overflow of the seed, what we want here is the possibility for
+        // the seed to rotate indiscriminately over all the number in range without
+        // ever throwing an error.
+        // This give the possibility to call this function every time possible.
+        // The seed presence gives also the possibility to call this function subsequently even in
+        // the same transaction and receive 2 different outputs
+        unchecked {
+            seed++;
+        }
+
+        return true;
+    }
 }

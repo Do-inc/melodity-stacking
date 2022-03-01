@@ -18,24 +18,24 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 	or yield optimizer.
  */
 contract StackingReceipt is ERC20, ERC20Burnable, Ownable, ERC20Permit {
-    constructor(string memory _name, string memory _ticker)
-        ERC20(_name, _ticker)
-        ERC20Permit(_name)
-    {}
+  constructor(string memory _name, string memory _ticker)
+    ERC20(_name, _ticker)
+    ERC20Permit(_name)
+  {}
 
-    function mint(address _to, uint256 _amount) public onlyOwner {
-        _mint(_to, _amount);
-    }
+  function mint(address _to, uint256 _amount) public onlyOwner {
+    _mint(_to, _amount);
+  }
 
-    function burn(uint256 _amount) public override onlyOwner {
-        _burn(msg.sender, _amount);
-    }
+  function burn(uint256 _amount) public override onlyOwner {
+    _burn(msg.sender, _amount);
+  }
 
-    function burnFrom(address _account, uint256 _amount)
-        public
-        override
-        onlyOwner
-    {
-        ERC20Burnable.burnFrom(_account, _amount);
-    }
+  function burnFrom(address _account, uint256 _amount)
+    public
+    override
+    onlyOwner
+  {
+    ERC20Burnable.burnFrom(_account, _amount);
+  }
 }

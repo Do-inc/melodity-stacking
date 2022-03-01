@@ -16,10 +16,14 @@ import "./StackingReceipt.sol";
 	@custom:security-contact security@melodity.org
  */
 contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
-	bytes4 constant public _INTERFACE_ID_ERC20_METADATA = 0x942e8b22;
 	address constant public _DO_INC_MULTISIG_WALLET = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
 	uint256 constant public _PERCENTAGE_SCALE = 10 ** 20;
 	uint256 constant public _EPOCH_DURATION = 1 hours;
+
+	/// Max fee if withdraw occurr before withdrawFeePeriod days
+	uint256 constant public _MAX_FEE_PERCENTAGE = 10 ether;
+	/// Min fee if withdraw occurr before withdrawFeePeriod days
+	uint256 constant public _MIN_FEE_PERCENTAGE = 0.1 ether;
 
 	/**
 		@param startingTime Era starting time
@@ -45,6 +49,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param genesisEraDuration Contract genesis timestamp, used to start eras calculation
 		@param genesisRewardScaleFactor Contract genesis reward scaling factor
 		@param genesisEraScaleFactor Contract genesis era scaling factor
+		@param lastComputedEra Index of the last computed era in the eraInfos array
 	 */
 	struct PoolInfo {
 		uint256 rewardPool;
@@ -57,11 +62,10 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		uint256 genesisRewardFactorPerEpoch;
 		bool exhausting;
 		bool dismissed;
+		uint256 lastComputedEra;
 	}
 
 	/**
-		@param maxFeePercentage Max fee if withdraw occurr before withdrawFeePeriod days
-		@param minFeePercentage Min fee if withdraw occurr before withdrawFeePeriod days
 		@param feePercentage Currently applied fee percentage for early withdraw
 		@param feeReceiver Address where the fees gets sent
 		@param withdrawFeePeriod Number of days or hours that a deposit is considered to 
@@ -72,8 +76,6 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param feeMaintainerMinPercent Minimum percentage that can be given to the _DO_INC_MULTISIG_WALLET
 	 */
 	struct FeeInfo {
-		uint256 maxFeePercentage;
-		uint256 minFeePercentage;
 		uint256 feePercentage;
 		address feeReceiver;
 		uint256 withdrawFeePeriod;
@@ -111,6 +113,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 	FeeInfo public feeInfo;
 	EraInfo[] public eraInfos;
 	mapping(address => uint256) private stackersLastDeposit;
+	mapping(address => uint256) private stackersHigherDeposit;
 	mapping(address => StackedNFT[]) public stackedNFTs;
 	mapping(uint256 => address) public depositorNFT;
 
@@ -119,14 +122,15 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
     PRNG public prng;
 	StackingPanda public stackingPanda;
 
-	event Deposit(address account, uint256 amount, uint256 receiptAmount, uint256 depositTime);
-	event NFTDeposit(address account, uint256 nftId);
+	event Deposit(address indexed account, uint256 amount, uint256 receiptAmount);
+	event NFTDeposit(address indexed account, uint256 nftId, uint256 nftPositionIndex);
 	event ReceiptValueUpdate(uint256 value);
-	event Withdraw(address account, uint256 amount, uint256 receiptAmount);
-	event NFTWithdraw(address account, uint256 nftId);
+	event Withdraw(address indexed account, uint256 amount, uint256 receiptAmount);
+	event NFTWithdraw(address indexed account, uint256 nftId);
 	event FeePaid(uint256 amount, uint256 receiptAmount);
 	event RewardPoolIncreased(uint256 insertedAmount);
 	event PoolExhausting(uint256 amountLeft);
+	event PoolRefilled(uint256 amountLeft);
 	event EraDurationUpdate(uint256 oldDuration, uint256 newDuration);
 	event RewardScalingFactorUpdate(uint256 oldFactor, uint256 newFactor);
 	event EraScalingFactorUpdate(uint256 oldFactor, uint256 newFactor);
@@ -160,12 +164,11 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 			genesisEraScaleFactor: 107 ether,
 			genesisRewardFactorPerEpoch: 0.001 ether,
 			exhausting: false,
-			dismissed: false
+			dismissed: false,
+			lastComputedEra: 0
 		});
 
 		feeInfo = FeeInfo({
-			maxFeePercentage: 10 ether,
-			minFeePercentage: 0.1 ether,
 			feePercentage: 10 ether,
 			feeReceiver: _dao,
 			withdrawFeePeriod: 7 days,
@@ -182,6 +185,29 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		return eraInfos.length;
 	}
 
+	function getNewEraInfo(uint256 k) private returns(EraInfo memory) {
+		// get the genesis value or the last one available.
+		// NOTE: as this is a modification of existing values the last available value before
+		// 		the curren one is stored as the (k-1)-th element of the eraInfos array
+		uint256 lastTimestamp = k == 0 ? poolInfo.genesisTime : eraInfos[k - 1].startingTime + eraInfos[k - 1].eraDuration;
+		uint256 lastEraDuration = k == 0 ? poolInfo.genesisEraDuration : eraInfos[k - 1].eraDuration;
+		uint256 lastEraScalingFactor = k == 0 ? poolInfo.genesisEraScaleFactor : eraInfos[k - 1].eraScaleFactor;
+		uint256 lastRewardScalingFactor = k == 0 ? poolInfo.genesisRewardScaleFactor : eraInfos[k - 1].rewardScaleFactor;
+		uint256 lastEpochRewardFactor = k == 0 ? poolInfo.genesisRewardFactorPerEpoch : eraInfos[k - 1].rewardFactorPerEpoch;
+
+		uint256 newEraDuration = k != 0 ? lastEraDuration * lastEraScalingFactor / _PERCENTAGE_SCALE : poolInfo.genesisEraDuration;
+
+		return EraInfo({
+			// new eras starts always the second after the ending of the previous
+			// if era-1 ends at sec 1234 era-2 will start at sec 1235
+			startingTime: lastTimestamp + 1,
+			eraDuration: newEraDuration,
+			rewardScaleFactor: lastRewardScalingFactor,
+			eraScaleFactor: lastEraScalingFactor,
+			rewardFactorPerEpoch: k != 0 ? lastEpochRewardFactor * lastRewardScalingFactor / _PERCENTAGE_SCALE : poolInfo.genesisRewardFactorPerEpoch
+		});
+	}
+
 	/**
 		Trigger the regeneration of _erasToGenerate (at most 128) eras from the current
 		one.
@@ -195,7 +221,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _erasToGenerate Number of eras to (re-)generate
 	 */
 	function _triggerErasInfoRefresh(uint8 _erasToGenerate) private {
-		uint256 existingErasInfos = eraInfos.length;
+		uint256 existingEraInfoCount = eraInfos.length;
 		uint256 i;
 		uint256 k;
 
@@ -203,30 +229,12 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 			// check if exists some era infos, if they exists check if the k-th era is already started
 			// if it is already started it cannot be edited and we won't consider it actually increasing 
 			// k
-			if(existingErasInfos > k && eraInfos[k].startingTime <= block.timestamp) {
+			if(existingEraInfoCount > k && eraInfos[k].startingTime <= block.timestamp) {
 				k++;
 			}
 			// if the era is not yet started we can modify its values
-			else if(existingErasInfos > k && eraInfos[k].startingTime > block.timestamp) {
-				// get the genesis value or the last one available.
-				// NOTE: as this is a modification of existing values the last available value before
-				// 		the curren one is stored as the (k-1)-th element of the eraInfos array
-				uint256 lastTimestamp = k == 0 ? poolInfo.genesisTime : eraInfos[k - 1].startingTime + eraInfos[k - 1].eraDuration;
-				uint256 lastEraDuration = k == 0 ? poolInfo.genesisEraDuration : eraInfos[k - 1].eraDuration;
-				uint256 lastEraScalingFactor = k == 0 ? poolInfo.genesisEraScaleFactor : eraInfos[k - 1].eraScaleFactor;
-				uint256 lastRewardScalingFactor = k == 0 ? poolInfo.genesisRewardScaleFactor : eraInfos[k - 1].rewardScaleFactor;
-				uint256 lastEpochRewardFactor = k == 0 ? poolInfo.genesisRewardFactorPerEpoch : eraInfos[k - 1].rewardFactorPerEpoch;
-
-				uint256 newEraDuration = k != 0 ? lastEraDuration * lastEraScalingFactor / _PERCENTAGE_SCALE : poolInfo.genesisEraDuration;
-				eraInfos[k] = EraInfo({
-					// new eras starts always the second after the ending of the previous
-					// if era-1 ends at sec 1234 era-2 will start at sec 1235
-					startingTime: lastTimestamp + 1,
-					eraDuration: newEraDuration,
-					rewardScaleFactor: lastRewardScalingFactor,
-					eraScaleFactor: lastEraScalingFactor,
-					rewardFactorPerEpoch: k != 0 ? lastEpochRewardFactor * lastRewardScalingFactor / _PERCENTAGE_SCALE : poolInfo.genesisRewardFactorPerEpoch
-				});
+			else if(existingEraInfoCount > k && eraInfos[k].startingTime > block.timestamp) {
+				eraInfos[k] = getNewEraInfo(k);
 
 				// as an era was just updated increase the i counter
 				i++;
@@ -235,30 +243,14 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 				k++;
 			}
 			// start generating new eras info if the number of existing eras is equal to the last computed
-			else if(existingErasInfos == k) {
-				// get the genesis value or the last one available
-				uint256 lastTimestamp = k == 0 ? poolInfo.genesisTime : eraInfos[k - 1].startingTime + eraInfos[k - 1].eraDuration;
-				uint256 lastEraDuration = k == 0 ? poolInfo.genesisEraDuration : eraInfos[k - 1].eraDuration;
-				uint256 lastEraScalingFactor = k == 0 ? poolInfo.genesisEraScaleFactor : eraInfos[k - 1].eraScaleFactor;
-				uint256 lastRewardScalingFactor = k == 0 ? poolInfo.genesisRewardScaleFactor : eraInfos[k - 1].rewardScaleFactor;
-				uint256 lastEpochRewardFactor = k == 0 ? poolInfo.genesisRewardFactorPerEpoch : eraInfos[k - 1].rewardFactorPerEpoch;
-
-				uint256 newEraDuration = k != 0 ? lastEraDuration * lastEraScalingFactor / _PERCENTAGE_SCALE : poolInfo.genesisEraDuration;
-				eraInfos.push(EraInfo({
-					// new eras starts always the second after the ending of the previous
-					// if era-1 ends at sec 1234 era-2 will start at sec 1235
-					startingTime: lastTimestamp + 1,
-					eraDuration: newEraDuration,
-					rewardScaleFactor: lastRewardScalingFactor,
-					eraScaleFactor: lastEraScalingFactor,
-					rewardFactorPerEpoch: k != 0 ? lastEpochRewardFactor * lastRewardScalingFactor / _PERCENTAGE_SCALE : poolInfo.genesisRewardFactorPerEpoch
-				}));
+			else if(existingEraInfoCount == k) {
+				eraInfos.push(getNewEraInfo(k));
 
 				// as an era was just created increase the i counter
 				i++;
 				// in order to move to the next era and start creating a new one we also need to increase
 				// k counter and the existingErasInfos counter
-				existingErasInfos = eraInfos.length;
+				existingEraInfoCount = eraInfos.length;
 				k++;
 			}
 		}
@@ -281,11 +273,9 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _amount Amount of MELD that will be stacked
 	 */
 	function _deposit(uint256 _amount) private returns(uint256) {
-		prng.rotate();
+		prng.seedRotate();
 
 		require(_amount > 0, "Unable to deposit null amount");
-		require(melodity.balanceOf(msg.sender) >= _amount, "Not enough balance to stake");
-		require(melodity.allowance(msg.sender, address(this)) >= _amount, "Allowance too low");
 
 		refreshReceiptValue();
 
@@ -293,14 +283,35 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		// increase but the reward pool will not
 		melodity.transferFrom(msg.sender, address(this), _amount);
 
-		// update the last deposit time, reset the withdraw fee timer
-		stackersLastDeposit[msg.sender] = block.timestamp;
+		// if this is the first deposit use the full withdraw fee period (full period)
+		if(stackersLastDeposit[msg.sender] == 0) {
+			stackersLastDeposit[msg.sender] = block.timestamp;
+		}
+		// if previous deposits exists reduce the withdraw fee period up to 80% of the fee period
+		else {
+			// use the higher deposit ever to compute the weight of the current deposit
+			uint256 restake_amount_weight = _amount / stackersHigherDeposit[msg.sender];
+			uint256 deducted_fee_period = feeInfo.withdrawFeePeriod * restake_amount_weight / _PERCENTAGE_SCALE;
+			uint256 max_deducted_period = feeInfo.withdrawFeePeriod * 80 ether / _PERCENTAGE_SCALE;
+
+			if(deducted_fee_period > max_deducted_period) {
+				deducted_fee_period = max_deducted_period;
+			}
+
+			// set the last deposit time reducing it of a value up to 80% of feeInfo.withdrawFeePeriod
+			stackersLastDeposit[msg.sender] = block.timestamp - deducted_fee_period;
+		}
+		
+		// update the stackersHigherDeposit if needed
+		if(_amount > stackersHigherDeposit[msg.sender]) {
+			stackersHigherDeposit[msg.sender] = _amount;
+		}
 
 		// mint the stacking receipt to the depositor
 		uint256 receiptAmount = _amount * 1 ether / poolInfo.receiptValue ;
 		stackingReceipt.mint(msg.sender, receiptAmount);
 
-		emit Deposit(msg.sender, _amount, receiptAmount, block.timestamp);
+		emit Deposit(msg.sender, _amount, receiptAmount);
 
 		return receiptAmount;
 	}
@@ -314,10 +325,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _nftId NFT identifier that will be stacked with the funds
 	 */
 	function depositWithNFT(uint256 _amount, uint256 _nftId) public nonReentrant whenNotPaused {
-		prng.rotate();
-
-		require(stackingPanda.ownerOf(_nftId) == msg.sender, "You're not the owner of the provided NFT");
-		require(stackingPanda.getApproved(_nftId) == address(this), "Stacking pool not allowed to withdraw your NFT");
+		prng.seedRotate();
 
 		// withdraw the nft from the sender
 		stackingPanda.safeTransferFrom(msg.sender, address(this), _nftId);
@@ -338,7 +346,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		}));
 		depositorNFT[_nftId] = msg.sender;
 
-		emit NFTDeposit(msg.sender, _nftId);
+		emit NFTDeposit(msg.sender, _nftId, stackedNFTs[msg.sender].length -1);
 	}
 
 	/**
@@ -358,17 +366,9 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _amount Receipt amount to reconvert to MELD
 	 */
 	function _withdraw(uint256 _amount) private {
-		prng.rotate();
+		prng.seedRotate();
 
         require(_amount > 0, "Nothing to withdraw");
-		require(
-			stackingReceipt.balanceOf(msg.sender) >= _amount,
-			"Not enought receipt to widthdraw"
-		);
-		require(
-			stackingReceipt.allowance(msg.sender, address(this)) >= _amount,
-			"Stacking pool not allowed to withdraw enough of you receipt"
-		);
 
 		refreshReceiptValue();
 
@@ -378,7 +378,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		uint256 meldToWithdraw = _amount * poolInfo.receiptValue / 1 ether;
 
 		// reduce the reward pool
-		poolInfo.rewardPool -= meldToWithdraw;
+		poolInfo.rewardPool -= meldToWithdraw - _amount;
 		_checkIfExhausting();
 
 		uint256 lastAction = stackersLastDeposit[msg.sender];
@@ -422,7 +422,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _index Index of the stackedNFTs array whose NFT will be recovered if possible
 	 */
 	function withdrawWithNFT(uint256 _amount, uint256 _index) public nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
 		require(stackedNFTs[msg.sender].length > _index, "Index out of bound");
 
@@ -475,7 +475,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 				calls itself back after the generation of 2 new era infos
 	 */
 	function refreshReceiptValue() public {
-		prng.rotate();
+		prng.seedRotate();
 
 		uint256 _now = block.timestamp;
 		uint256 lastUpdateTime = poolInfo.lastReceiptUpdateTime;
@@ -485,8 +485,9 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 
 		uint256 eraEndingTime;
 		bool validEraFound;
+		uint256 length = eraInfos.length;
 
-		for(uint256 i; i < eraInfos.length; i++) {
+		for(uint256 i = poolInfo.lastComputedEra; i < length; i++) {
 			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
 
 			// check if the lastUpdateTime is inside the currently checking era
@@ -502,25 +503,18 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
-
-					uint256 diffFromEraEnd = eraEndingTime - _now;
-					uint256 diffFromEpochEndAlignment = diffFromEraEnd % _EPOCH_DURATION;
-					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - diffFromEpochEndAlignment;
-					uint256 realEpochStartTime = _now - diffFromEpochStartAlignment;
-					uint256 realPassedEpochs = realEpochStartTime / _EPOCH_DURATION;
-
-					uint256 realPassedEpochsAtLastUpdate = lastUpdateTime / _EPOCH_DURATION;
-					uint256 diff = realPassedEpochs - realPassedEpochsAtLastUpdate;
+					uint256 diff = (_now - lastUpdateTime) / _EPOCH_DURATION;
 
 					// recompute the receipt value missingFullEpochs times
 					while(diff > 0) {
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
 						diff--;
 					}
-					poolInfo.lastReceiptUpdateTime = realEpochStartTime;
+					poolInfo.lastReceiptUpdateTime = lastUpdateTime + diff * _EPOCH_DURATION;
+					poolInfo.lastComputedEra = i;
 
 					// as _now was into the given era, we can stop the current loop here
-					i = eraInfos.length;
+					break;
 				}
 				// if it is in a different era then proceed using the eraEndingTime to compute the number of epochs left to
 				// include in the current era and then proceed with the next value
@@ -529,22 +523,26 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
-					uint256 diffFromEraEnd = eraEndingTime;
-					uint256 diffFromEpochEndAlignment = diffFromEraEnd % _EPOCH_DURATION;
-					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - diffFromEpochEndAlignment;
-					uint256 realEpochStartTime = _now - diffFromEpochStartAlignment;
-					uint256 realPassedEpochs = realEpochStartTime / _EPOCH_DURATION;
-
-					uint256 realPassedEpochsAtLastUpdate = lastUpdateTime / _EPOCH_DURATION;
-					uint256 diff = realPassedEpochs - realPassedEpochsAtLastUpdate;
+					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - (eraEndingTime % _EPOCH_DURATION);
+					uint256 realEpochStartTime = eraEndingTime - diffFromEpochStartAlignment;
+					uint256 diff = (eraEndingTime - lastUpdateTime) / _EPOCH_DURATION;
 
 					// recompute the receipt value missingFullEpochs times
 					while(diff > 0) {
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
 						diff--;
 					}
+					poolInfo.lastReceiptUpdateTime = realEpochStartTime;
 				}
 			}
+		}
+
+		// In case _now exceeds the last era info ending time validEraFound would be true this will avoid the creation
+		// of new era infos leading to pool locking and price not updating anymore
+		uint256 last_index = eraInfos.length - 1;
+		uint256 last_era_ending_time = eraInfos[last_index].startingTime + eraInfos[last_index].eraDuration;
+		if(_now > last_era_ending_time) {
+			validEraFound = false;
 		}
 
 		// No valid era exists this mean that the following era data were not generated yet, simply trigger the generation of the
@@ -627,16 +625,18 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _amount MELD to insert into the reward pool
 	 */
 	function increaseRewardPool(uint256 _amount) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 
 		require(_amount > 0, "Unable to deposit null amount");
-		require(melodity.balanceOf(msg.sender) >= _amount, "Not enough balance to stake");
-		require(melodity.allowance(msg.sender, address(this)) >= _amount, "Allowance too low");
 
 		melodity.transferFrom(msg.sender, address(this), _amount);
 		poolInfo.rewardPool += _amount;
 
-		_checkIfExhausting();
+		if(poolInfo.rewardPool >= 1_000_000 ether) {
+			poolInfo.exhausting = false;
+			emit PoolRefilled(poolInfo.rewardPool);
+		}
+
 		emit RewardPoolIncreased(_amount);
 	}
 
@@ -646,7 +646,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _eraAmount Number of eras to refresh
 	 */
 	function refreshErasInfo(uint8 _eraAmount) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
 		_triggerErasInfoRefresh(_eraAmount);
 	}
@@ -661,7 +661,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _erasToRefresh Number of eras to refresh immediately starting from the next one
 	 */
 	function updateRewardScaleFactor(uint256 _factor, uint8 _erasToRefresh) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 
 		uint256 eraIndex = getCurrentEraIndex();
 		EraInfo storage eraInfo = eraInfos[eraIndex];
@@ -681,7 +681,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _erasToRefresh Number of eras to refresh immediately starting from the next one
 	 */
 	function updateEraScaleFactor(uint256 _factor, uint8 _erasToRefresh) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 
 		uint256 eraIndex = getCurrentEraIndex();
 		EraInfo storage eraInfo = eraInfos[eraIndex];
@@ -701,10 +701,10 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _percent Percentage of the fee
 	 */
 	function updateEarlyWithdrawFeePercent(uint256 _percent) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
-		require(_percent >= feeInfo.minFeePercentage, "Early withdraw fee too low");
-		require(_percent <= feeInfo.maxFeePercentage, "Early withdraw fee too high");
+		require(_percent >= _MIN_FEE_PERCENTAGE, "Early withdraw fee too low");
+		require(_percent <= _MAX_FEE_PERCENTAGE, "Early withdraw fee too high");
 
 		uint256 old = feeInfo.feePercentage;
 		feeInfo.feePercentage = _percent;
@@ -719,7 +719,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _dao Address of the fee receiver
 	 */
 	function updateFeeReceiverAddress(address _dao) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
 		require(_dao != address(0), "Provided address is invalid");
 
@@ -737,7 +737,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _isDay Whether the provided period is in hours or in days
 	 */
 	function updateWithdrawFeePeriod(uint256 _period, bool _isDay) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
 		if(_isDay) {
 			// days (max 7 days, min 1 day)
@@ -770,7 +770,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _percent Percentage of the fee to send to the dao
 	 */
 	function updateDaoFeePercentage(uint256 _percent) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
 		require(_percent >= feeInfo.feeReceiverMinPercent, "Dao's fee share too low");
 		require(_percent <= 100 ether - feeInfo.feeMaintainerMinPercent, "Dao's fee share too high");
@@ -793,7 +793,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _percent Percentage of the fee to send to the maintainers
 	 */
 	function updateMaintainerFeePercentage(uint256 _percent) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
 		require(_percent >= feeInfo.feeMaintainerMinPercent, "Maintainer's fee share too low");
 		require(_percent <= 100 ether - feeInfo.feeReceiverMinPercent, "Maintainer's fee share too high");
@@ -809,7 +809,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		Pause the stacking pool
 	 */
 	function pause() public whenNotPaused nonReentrant onlyOwner {
-		prng.rotate();
+		prng.seedRotate();
 		
 		_pause();
 	}
@@ -818,7 +818,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		Resume the stacking pool
 	 */
 	function resume() public whenPaused nonReentrant onlyOwner {
-		prng.rotate();
+		prng.seedRotate();
 		
 		_unpause();
 	}
@@ -833,7 +833,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 				any reward for newer eras.
 	 */
 	function dismissionWithdraw() public whenPaused nonReentrant onlyOwner {
-		prng.rotate();
+		prng.seedRotate();
 		
 		require(!poolInfo.dismissed, "Pool already dismissed");
 		require(poolInfo.exhausting, "Dismission enabled only once the stacking pool is exhausting");

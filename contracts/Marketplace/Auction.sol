@@ -64,7 +64,7 @@ contract Auction is ERC721Holder, ReentrancyGuard {
 		address _prng
     ) {
         prng = PRNG(_prng);
-        prng.rotate();
+        prng.seedRotate();
 
         beneficiary = _beneficiaryAddress;
         auctionEndTime = block.timestamp + _biddingTime;
@@ -80,7 +80,7 @@ contract Auction is ERC721Holder, ReentrancyGuard {
         The value will only be refunded if the auction is not won.
     */
     function bid() public nonReentrant payable {
-        prng.rotate();
+        prng.seedRotate();
 
         // check that the auction is still in its bidding period
         require(block.timestamp <= auctionEndTime, "Auction already ended");
@@ -107,7 +107,7 @@ contract Auction is ERC721Holder, ReentrancyGuard {
        Withdraw bids that were overbid.
     */
     function withdraw() public nonReentrant {
-        prng.rotate();
+        prng.seedRotate();
 
         uint256 amount = pendingReturns[msg.sender];
         if (amount > 0) {
@@ -123,7 +123,7 @@ contract Auction is ERC721Holder, ReentrancyGuard {
         If defined split the bid with the royalty receiver
     */
     function endAuction() public nonReentrant {
-        prng.rotate();
+        prng.seedRotate();
 
         // check that the auction is ended
         require(block.timestamp >= auctionEndTime, "Auction not ended yet");
@@ -146,13 +146,15 @@ contract Auction is ERC721Holder, ReentrancyGuard {
             // if they are make a transfer only, otherwhise split the bid based on
             // the royalty percentage and send the values
 
+            // the royalty percentage has 18 decimals + 2 per percentage
+            uint256 royalty = highestBid * royaltyPercent / 10 ** 20;
+
             if (beneficiary == royaltyReceiver) {
                 // send the highest bid to the beneficiary
                 Address.sendValue(beneficiary, highestBid);
+                emit RoyaltyPaid(royaltyReceiver, royalty, royaltyPercent);
             }
             else {
-                // the royalty percentage has 18 decimals + 2 per percentage
-                uint256 royalty = highestBid * royaltyPercent / 10 ** 20;
                 uint256 beneficiaryEarning = highestBid - royalty;
 
                 // send the royalty funds

@@ -58,7 +58,7 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
         string calldata _picUrl,
         StackingBonus calldata _stackingBonus
     ) public nonReentrant onlyOwner returns (uint256) {
-        prng.rotate();
+        prng.seedRotate();
 
         // Only 100 NFTs will be mintable
         require(_tokenIds.current() < 100, "All pandas minted");
@@ -72,7 +72,7 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
         metadata.push(
             Metadata({name: _name, picUrl: _picUrl, bonus: _stackingBonus})
         );
-        _mint(owner(), newItemId);
+        _safeMint(owner(), newItemId);
 
         emit NewPandaMinted(newItemId, _name);
 
