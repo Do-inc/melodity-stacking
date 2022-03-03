@@ -185,7 +185,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		return eraInfos.length;
 	}
 
-	function getNewEraInfo(uint256 k) private returns(EraInfo memory) {
+	function getNewEraInfo(uint256 k) private view returns(EraInfo memory) {
 		// get the genesis value or the last one available.
 		// NOTE: as this is a modification of existing values the last available value before
 		// 		the curren one is stored as the (k-1)-th element of the eraInfos array
@@ -283,32 +283,16 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		// increase but the reward pool will not
 		melodity.transferFrom(msg.sender, address(this), _amount);
 
-		// if this is the first deposit use the full withdraw fee period (full period)
-		if(stackersLastDeposit[msg.sender] == 0) {
-			stackersLastDeposit[msg.sender] = block.timestamp;
-		}
-		// if previous deposits exists reduce the withdraw fee period up to 80% of the fee period
-		else {
-			// use the higher deposit ever to compute the weight of the current deposit
-			uint256 restake_amount_weight = _amount / stackersHigherDeposit[msg.sender];
-			uint256 deducted_fee_period = feeInfo.withdrawFeePeriod * restake_amount_weight / _PERCENTAGE_SCALE;
-			uint256 max_deducted_period = feeInfo.withdrawFeePeriod * 80 ether / _PERCENTAGE_SCALE;
-
-			if(deducted_fee_period > max_deducted_period) {
-				deducted_fee_period = max_deducted_period;
-			}
-
-			// set the last deposit time reducing it of a value up to 80% of feeInfo.withdrawFeePeriod
-			stackersLastDeposit[msg.sender] = block.timestamp - deducted_fee_period;
-		}
-		
-		// update the stackersHigherDeposit if needed
-		if(_amount > stackersHigherDeposit[msg.sender]) {
-			stackersHigherDeposit[msg.sender] = _amount;
-		}
+		// weighted stake last time
+		// NOTE: prev_date = 0 => balance = 0, equation reduces to block.timestamp
+		uint256 prev_date = stackersLastDeposit[msg.sender];
+		uint256 balance = stackingReceipt.balanceOf(msg.sender);
+		stackersLastDeposit[msg.sender] = (balance + _amount) > 0 ?
+			prev_date + (block.timestamp - prev_date) * (_amount / (balance + _amount)) :
+			prev_date;
 
 		// mint the stacking receipt to the depositor
-		uint256 receiptAmount = _amount * 1 ether / poolInfo.receiptValue ;
+		uint256 receiptAmount = _amount * 1 ether / poolInfo.receiptValue;
 		stackingReceipt.mint(msg.sender, receiptAmount);
 
 		emit Deposit(msg.sender, _amount, receiptAmount);
@@ -533,6 +517,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 						diff--;
 					}
 					poolInfo.lastReceiptUpdateTime = realEpochStartTime;
+					poolInfo.lastComputedEra = i;
 				}
 			}
 		}
@@ -553,6 +538,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 			poolInfo.lastReceiptUpdateTime--;
 
 			_triggerErasInfoRefresh(2);
+			poolInfo.lastComputedEra++;
 			refreshReceiptValue();
 		}
 
