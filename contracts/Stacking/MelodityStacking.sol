@@ -518,6 +518,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 					}
 					poolInfo.lastReceiptUpdateTime = realEpochStartTime;
 					poolInfo.lastComputedEra = i;
+					lastUpdateTime = eraInfos[i].startingTime;
 				}
 			}
 		}
