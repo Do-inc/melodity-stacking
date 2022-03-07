@@ -8,6 +8,10 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../PRNG.sol";
 
 contract BlindAuction is ERC721Holder, ReentrancyGuard {
+    address payable constant public __Do_INC_MULTISIG_WALLET =
+        payable(0x01Af10f1343C05855955418bb99302A6CF71aCB8);
+    uint256 constant public __USAGE_FEE = 5 ether;
+
     PRNG public prng;
 
     struct Bid {
@@ -35,10 +39,11 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
     // Allowed withdrawals of previous bids that were overbid
     mapping(address => uint256) public pendingReturns;
 
-    event BidPlaced(address bidder);
-    event AuctionEnded(address winner, uint256 highestBid);
-    event AuctionNotFullfilled(uint256 nftId, address nftContract, uint256 minimumBid);
-    event RoyaltyPaid(address receiver, uint256 amount, uint256 royaltyPercentage);
+    event BidPlaced(address indexed bidder);
+    event AuctionEnded(address indexed winner, uint256 highestBid);
+    event AuctionNotFullfilled(uint256 indexed nftId, address indexed nftContract, uint256 minimumBid);
+    event RoyaltyPaid(address indexed receiver, uint256 amount, uint256 royaltyPercentage);
+    event UsageFeePaid(uint256 amount);
 
     // Modifiers are a convenient way to validate inputs to
     // functions. `onlyBefore` is applied to `bid` below:
@@ -242,19 +247,24 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
             ERC721(nftContract).safeTransferFrom(address(this), highestBidder, nftId);
 
             // the royalty percentage has 18 decimals + 2 per percentage
-            uint256 royalty = highestBid * royaltyPercent / 10 ** 20;
+            uint256 royalty = highestBid * royaltyPercent / 100 ether;
+            uint256 usage_fee = highestBid * __USAGE_FEE / 100 ether;
 
             // check if the royalty receiver and the payee are the same address
             // if they are make a transfer only, otherwhise split the bid based on
             // the royalty percentage and send the values
             if (beneficiary == royaltyReceiver) {
                 // send the highest bid to the beneficiary
+                highestBid -= usage_fee;
                 Address.sendValue(beneficiary, highestBid);
                 emit RoyaltyPaid(royaltyReceiver, royalty, royaltyPercent);
+
+                Address.sendValue(__Do_INC_MULTISIG_WALLET, usage_fee);
+                emit UsageFeePaid(usage_fee);
             }
             else {
                 // the royalty percentage has 18 decimals + 2 percentage positions
-                uint256 beneficiaryEarning = highestBid - royalty;
+                uint256 beneficiaryEarning = highestBid - royalty - usage_fee;
 
                 // send the royalty funds
                 Address.sendValue(payable(royaltyReceiver), royalty);
@@ -262,6 +272,9 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
 
                 // send the beneficiary earnings
                 Address.sendValue(beneficiary, beneficiaryEarning);
+
+                Address.sendValue(__Do_INC_MULTISIG_WALLET, usage_fee);
+                emit UsageFeePaid(usage_fee);
             }
 
             emit AuctionEnded(highestBidder, highestBid);

@@ -8,6 +8,10 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../PRNG.sol";
 
 contract Auction is ERC721Holder, ReentrancyGuard {
+    address payable constant public __Do_INC_MULTISIG_WALLET =
+        payable(0x01Af10f1343C05855955418bb99302A6CF71aCB8);
+    uint256 constant public __USAGE_FEE = 5 ether;
+
     PRNG public prng;
 
     address payable public beneficiary;
@@ -31,10 +35,11 @@ contract Auction is ERC721Holder, ReentrancyGuard {
     address public royaltyReceiver;
     uint256 public royaltyPercent;
 
-    event HighestBidIncreased(address bidder, uint256 amount);
-    event AuctionEnded(address winner, uint256 amount);
-    event AuctionNotFullfilled(uint256 nftId, address nftContract, uint256 minimumBid);
-    event RoyaltyPaid(address receiver, uint256 amount, uint256 royaltyPercentage);
+    event HighestBidIncreased(address indexed bidder, uint256 amount);
+    event AuctionEnded(address indexed winner, uint256 amount);
+    event AuctionNotFullfilled(uint256 indexed nftId, address indexed nftContract, uint256 minimumBid);
+    event RoyaltyPaid(address indexed receiver, uint256 amount, uint256 royaltyPercentage);
+    event UsageFeePaid(uint256 amount);
 
     /**
         Create an auction with `biddingTime` seconds bidding time on behalf of the
@@ -147,15 +152,20 @@ contract Auction is ERC721Holder, ReentrancyGuard {
             // the royalty percentage and send the values
 
             // the royalty percentage has 18 decimals + 2 per percentage
-            uint256 royalty = highestBid * royaltyPercent / 10 ** 20;
+            uint256 royalty = highestBid * royaltyPercent / 100 ether;
+            uint256 usage_fee = highestBid * __USAGE_FEE / 100 ether;
 
             if (beneficiary == royaltyReceiver) {
                 // send the highest bid to the beneficiary
+                highestBid -= usage_fee;
                 Address.sendValue(beneficiary, highestBid);
                 emit RoyaltyPaid(royaltyReceiver, royalty, royaltyPercent);
+
+                Address.sendValue(__Do_INC_MULTISIG_WALLET, usage_fee);
+                emit UsageFeePaid(usage_fee);
             }
             else {
-                uint256 beneficiaryEarning = highestBid - royalty;
+                uint256 beneficiaryEarning = highestBid - royalty - usage_fee;
 
                 // send the royalty funds
                 Address.sendValue(payable(royaltyReceiver), royalty);
@@ -163,6 +173,9 @@ contract Auction is ERC721Holder, ReentrancyGuard {
 
                 // send the beneficiary earnings
                 Address.sendValue(beneficiary, beneficiaryEarning);
+
+                Address.sendValue(__Do_INC_MULTISIG_WALLET, usage_fee);
+                emit UsageFeePaid(usage_fee);
             }
 
             emit AuctionEnded(highestBidder, highestBid);
