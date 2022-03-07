@@ -817,6 +817,11 @@
                 "type": "uint256"
             },
             {
+                "internalType": "uint256",
+                "name": "lastComputedEra",
+                "type": "uint256"
+            },
+            {
                 "internalType": "bool",
                 "name": "exhausting",
                 "type": "bool"

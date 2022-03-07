@@ -55,6 +55,7 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 		uint256 genesisRewardScaleFactor;
 		uint256 genesisEraScaleFactor;
 		uint256 genesisRewardFactorPerEpoch;
+		uint256 lastComputedEra;
 		bool exhausting;
 		bool dismissed;
 	}
@@ -173,7 +174,8 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 			genesisEraScaleFactor: _genesisEraScaleFactor,
 			genesisRewardFactorPerEpoch: 0.001 ether,
 			exhausting: _exhausting,
-			dismissed: _dismissed
+			dismissed: _dismissed,
+			lastComputedEra: 0
 		});
 
 		feeInfo = FeeInfo({
@@ -498,8 +500,9 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 
 		uint256 eraEndingTime;
 		bool validEraFound;
+		uint256 length = eraInfos.length;
 
-		for(uint256 i; i < eraInfos.length; i++) {
+		for(uint256 i = poolInfo.lastComputedEra; i < length; i++) {
 			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
 
 			// check if the lastUpdateTime is inside the currently checking era
@@ -515,25 +518,18 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
-
-					uint256 diffFromEraEnd = eraEndingTime - _now;
-					uint256 diffFromEpochEndAlignment = diffFromEraEnd % _EPOCH_DURATION;
-					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - diffFromEpochEndAlignment;
-					uint256 realEpochStartTime = _now - diffFromEpochStartAlignment;
-					uint256 realPassedEpochs = realEpochStartTime / _EPOCH_DURATION;
-
-					uint256 realPassedEpochsAtLastUpdate = lastUpdateTime / _EPOCH_DURATION;
-					uint256 diff = realPassedEpochs - realPassedEpochsAtLastUpdate;
+					uint256 diff = (_now - lastUpdateTime) / _EPOCH_DURATION;
 
 					// recompute the receipt value missingFullEpochs times
 					while(diff > 0) {
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
 						diff--;
 					}
-					poolInfo.lastReceiptUpdateTime = realEpochStartTime;
+					poolInfo.lastReceiptUpdateTime = lastUpdateTime + diff * _EPOCH_DURATION;
+					poolInfo.lastComputedEra = i;
 
 					// as _now was into the given era, we can stop the current loop here
-					i = eraInfos.length;
+					break;
 				}
 				// if it is in a different era then proceed using the eraEndingTime to compute the number of epochs left to
 				// include in the current era and then proceed with the next value
@@ -542,22 +538,31 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
-					uint256 diffFromEraEnd = eraEndingTime;
-					uint256 diffFromEpochEndAlignment = diffFromEraEnd % _EPOCH_DURATION;
-					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - diffFromEpochEndAlignment;
-					uint256 realEpochStartTime = _now - diffFromEpochStartAlignment;
-					uint256 realPassedEpochs = realEpochStartTime / _EPOCH_DURATION;
-
-					uint256 realPassedEpochsAtLastUpdate = lastUpdateTime / _EPOCH_DURATION;
-					uint256 diff = realPassedEpochs - realPassedEpochsAtLastUpdate;
+					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - (eraEndingTime % _EPOCH_DURATION);
+					uint256 realEpochStartTime = eraEndingTime - diffFromEpochStartAlignment;
+					uint256 diff = (eraEndingTime - lastUpdateTime) / _EPOCH_DURATION;
 
 					// recompute the receipt value missingFullEpochs times
 					while(diff > 0) {
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
 						diff--;
 					}
+					poolInfo.lastReceiptUpdateTime = realEpochStartTime;
+					poolInfo.lastComputedEra = i;
+
+					// as accessing the next era info using index+1 can throw an index out of bound the
+					// next era starting time is computed based on the curren era
+					lastUpdateTime = eraInfos[i].startingTime + eraInfos[i].eraDuration + 1;
 				}
 			}
+		}
+
+		// In case _now exceeds the last era info ending time validEraFound would be true this will avoid the creation
+		// of new era infos leading to pool locking and price not updating anymore
+		uint256 last_index = eraInfos.length - 1;
+		uint256 last_era_ending_time = eraInfos[last_index].startingTime + eraInfos[last_index].eraDuration;
+		if(_now > last_era_ending_time) {
+			validEraFound = false;
 		}
 
 		// No valid era exists this mean that the following era data were not generated yet, simply trigger the generation of the
@@ -568,6 +573,7 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 			poolInfo.lastReceiptUpdateTime--;
 
 			_triggerErasInfoRefresh(2);
+			poolInfo.lastComputedEra++;
 			refreshReceiptValue();
 		}
 
