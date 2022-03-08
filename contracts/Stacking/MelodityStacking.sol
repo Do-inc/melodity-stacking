@@ -471,16 +471,34 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		bool validEraFound;
 		uint256 length = eraInfos.length;
 
+		// In case _now exceeds the last era info ending time validEraFound would be true this will avoid the creation
+		// of new era infos leading to pool locking and price not updating anymore
+		uint256 last_index = eraInfos.length - 1;
+		uint256 last_era_ending_time = eraInfos[last_index].startingTime + eraInfos[last_index].eraDuration;
+		if(_now > last_era_ending_time) {
+			validEraFound = false;
+		}
+
+		// No valid era exists this mean that the following era data were not generated yet, 
+		// estimate the number of required eras then generate them
+		if(!validEraFound) {
+			// estimate needed era infos and always add 1
+			uint256 eras_to_generate = 1;
+			while(_now > last_era_ending_time) {
+				EraInfo ei = getNewEraInfo(last_index);
+				last_era_ending_time = ei.startingTime + ei.eraDuration;
+				last_index++;
+			}
+			eras_to_generate += last_index - eraInfos.length;
+			
+			_triggerErasInfoRefresh(eras_to_generate);
+		}
+
 		for(uint256 i = poolInfo.lastComputedEra; i < length; i++) {
 			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
 
 			// check if the lastUpdateTime is inside the currently checking era
 			if(eraInfos[i].startingTime <= lastUpdateTime && lastUpdateTime <= eraEndingTime) {
-				// As there may be the case no valid era was still created and this branch will never enter
-				// we use a boolean value to indicate if it was ever entered or not. as we're into the branch
-				// we set is to true here
-				validEraFound = true;
-
 				// check if _now is in the same era of the lastUpdateTime, if it is then use _now to recompute the receipt value
 				if(eraInfos[i].startingTime <= _now && _now <= eraEndingTime) {
 					// NOTE: here some epochs may get lost as lastUpdateTime will almost never be equal to the exact epoch
@@ -524,26 +542,6 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 					lastUpdateTime = eraInfos[i].startingTime + eraInfos[i].eraDuration + 1;
 				}
 			}
-		}
-
-		// In case _now exceeds the last era info ending time validEraFound would be true this will avoid the creation
-		// of new era infos leading to pool locking and price not updating anymore
-		uint256 last_index = eraInfos.length - 1;
-		uint256 last_era_ending_time = eraInfos[last_index].startingTime + eraInfos[last_index].eraDuration;
-		if(_now > last_era_ending_time) {
-			validEraFound = false;
-		}
-
-		// No valid era exists this mean that the following era data were not generated yet, simply trigger the generation of the
-		// next 2 eras and recall this method
-		if(!validEraFound) {
-			// in order to avoid the triggering of the error check at the begin of this method here we reduce the last receipt time by 1
-			// this is an easy hack around the error check
-			poolInfo.lastReceiptUpdateTime--;
-
-			_triggerErasInfoRefresh(2);
-			poolInfo.lastComputedEra++;
-			refreshReceiptValue();
 		}
 
 		emit ReceiptValueUpdate(poolInfo.receiptValue);
