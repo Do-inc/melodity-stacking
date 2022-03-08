@@ -458,7 +458,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@notice This method *MUST* never be marked as nonReentrant as if no valid era was found it
 				calls itself back after the generation of 2 new era infos
 	 */
-	function refreshReceiptValue() public {
+	function refreshReceiptValuePaginated(uint256 max_cicles) public {
 		prng.seedRotate();
 
 		uint256 _now = block.timestamp;
@@ -493,6 +493,10 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 			
 			_triggerErasInfoRefresh(eras_to_generate);
 		}
+
+		// set a max cap of cicles to do, if the cap exceeds the eras computed than use length as max cap
+		uint256 proposed_length = poolInfo.lastComputedEra + max_cicles;
+		length = proposed_length > length ? length : proposed_length;
 
 		for(uint256 i = poolInfo.lastComputedEra; i < length; i++) {
 			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
@@ -545,6 +549,16 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		}
 
 		emit ReceiptValueUpdate(poolInfo.receiptValue);
+	}
+
+	/**
+		Update the receipt value if necessary
+
+		@notice This method *MUST* never be marked as nonReentrant as if no valid era was found it
+				calls itself back after the generation of 2 new era infos
+	 */
+	function refreshReceiptValue() public {
+		refreshReceiptValuePaginated(2);
 	}
 
 	/**
