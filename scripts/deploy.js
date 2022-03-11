@@ -78,6 +78,7 @@ async function main() {
 	melodityDAO = await MelodityDAO.deploy(
 		melodityGovernance.address,
 		melodityDAOTimelock.address,
+		45818,
 		{
 			gasLimit: 10_000_000,
 			gasPrice: 10_000_000_000,
