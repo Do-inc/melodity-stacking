@@ -485,13 +485,13 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 			// estimate needed era infos and always add 1
 			uint256 eras_to_generate = 1;
 			while(_now > last_era_ending_time) {
-				EraInfo ei = getNewEraInfo(last_index);
+				EraInfo memory ei = getNewEraInfo(last_index);
 				last_era_ending_time = ei.startingTime + ei.eraDuration;
 				last_index++;
 			}
 			eras_to_generate += last_index - eraInfos.length;
 			
-			_triggerErasInfoRefresh(eras_to_generate);
+			_triggerErasInfoRefresh(uint8(eras_to_generate));
 		}
 
 		// set a max cap of cicles to do, if the cap exceeds the eras computed than use length as max cap
