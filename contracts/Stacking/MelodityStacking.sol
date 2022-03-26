@@ -221,19 +221,32 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _erasToGenerate Number of eras to (re-)generate
 	 */
 	function _triggerErasInfoRefresh(uint8 _erasToGenerate) private {
+		// 9
 		uint256 existingEraInfoCount = eraInfos.length;
 		uint256 i;
 		uint256 k;
 
+		// - 0: 0 < 1 ? true
+		// - 1: 1 < 1 ? false
 		while(i < _erasToGenerate) {
 			// check if exists some era infos, if they exists check if the k-th era is already started
 			// if it is already started it cannot be edited and we won't consider it actually increasing 
 			// k
+			// - 0: 9 > 0 ? true & 1646996113 < 1648269466 ? true => pass
+			// - 0: 9 > 1 ? true & 1649588114 < 1648269466 ? false
 			if(existingEraInfoCount > k && eraInfos[k].startingTime <= block.timestamp) {
 				k++;
 			}
 			// if the era is not yet started we can modify its values
+			// - 0: 9 > 1 ? true & 1649588114 > 1648269466 ? true => pass
 			else if(existingEraInfoCount > k && eraInfos[k].startingTime > block.timestamp) {
+				// - 0: k = 1 & {
+					// 	startingTime: 1649588114,
+					// 	eraDuration: 2047680,
+					// 	rewardScaleFactor: 79000000000000000000,
+					// 	eraScaleFactor: 107000000000000000000,
+					// 	rewardFactorPerEpoch: 790000000000000
+				// }
 				eraInfos[k] = getNewEraInfo(k);
 
 				// as an era was just updated increase the i counter
@@ -461,26 +474,34 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 	function refreshReceiptValuePaginated(uint256 max_cicles) public {
 		prng.seedRotate();
 
+		// 1648268987
 		uint256 _now = block.timestamp;
+		// 1646996112
 		uint256 lastUpdateTime = poolInfo.lastReceiptUpdateTime;
+		// pass
 		require(lastUpdateTime < _now, "Receipt value already update in this transaction");
 
 		poolInfo.lastReceiptUpdateTime = block.timestamp;
 
 		uint256 eraEndingTime;
-		bool validEraFound;
+		bool validEraFound = true;
+		// 10
 		uint256 length = eraInfos.length;
 
 		// In case _now exceeds the last era info ending time validEraFound would be true this will avoid the creation
 		// of new era infos leading to pool locking and price not updating anymore
+		// 9
 		uint256 last_index = eraInfos.length - 1;
+		// 1678043047 + 4765280
 		uint256 last_era_ending_time = eraInfos[last_index].startingTime + eraInfos[last_index].eraDuration;
+		// false
 		if(_now > last_era_ending_time) {
 			validEraFound = false;
 		}
 
 		// No valid era exists this mean that the following era data were not generated yet, 
 		// estimate the number of required eras then generate them
+		// always enters as the default value will always be false, at least an era will always be generated
 		if(!validEraFound) {
 			// estimate needed era infos and always add 1
 			uint256 eras_to_generate = 1;
@@ -491,17 +512,23 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 			}
 			eras_to_generate += last_index - eraInfos.length;
 			
+			// to check
 			_triggerErasInfoRefresh(uint8(eras_to_generate));
 		}
 
 		// set a max cap of cicles to do, if the cap exceeds the eras computed than use length as max cap
+		// 2
 		uint256 proposed_length = poolInfo.lastComputedEra + max_cicles;
+		// 2
 		length = proposed_length > length ? length : proposed_length;
 
+		// i = 0
 		for(uint256 i = poolInfo.lastComputedEra; i < length; i++) {
+			// - 0: 1646996113 + 2592000
 			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
 
 			// check if the lastUpdateTime is inside the currently checking era
+			// - 0: 1646996113 < 1646996112 ? false & ...
 			if(eraInfos[i].startingTime <= lastUpdateTime && lastUpdateTime <= eraEndingTime) {
 				// check if _now is in the same era of the lastUpdateTime, if it is then use _now to recompute the receipt value
 				if(eraInfos[i].startingTime <= _now && _now <= eraEndingTime) {

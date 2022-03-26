@@ -1,9 +1,9 @@
-// Sources flattened with hardhat v2.8.3 https://hardhat.org
+// Sources flattened with hardhat v2.9.1 https://hardhat.org
 
-// File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.5.0
 
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts v4.4.1 (token/ERC20/IERC20.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/IERC20.sol)
 
 pragma solidity ^0.8.0;
 
@@ -22,13 +22,13 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 
     /**
-     * @dev Moves `amount` tokens from the caller's account to `recipient`.
+     * @dev Moves `amount` tokens from the caller's account to `to`.
      *
      * Returns a boolean value indicating whether the operation succeeded.
      *
      * Emits a {Transfer} event.
      */
-    function transfer(address recipient, uint256 amount) external returns (bool);
+    function transfer(address to, uint256 amount) external returns (bool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -56,7 +56,7 @@ interface IERC20 {
     function approve(address spender, uint256 amount) external returns (bool);
 
     /**
-     * @dev Moves `amount` tokens from `sender` to `recipient` using the
+     * @dev Moves `amount` tokens from `from` to `to` using the
      * allowance mechanism. `amount` is then deducted from the caller's
      * allowance.
      *
@@ -65,8 +65,8 @@ interface IERC20 {
      * Emits a {Transfer} event.
      */
     function transferFrom(
-        address sender,
-        address recipient,
+        address from,
+        address to,
         uint256 amount
     ) external returns (bool);
 
@@ -86,7 +86,7 @@ interface IERC20 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
@@ -116,7 +116,7 @@ interface IERC20Metadata is IERC20 {
 }
 
 
-// File @openzeppelin/contracts/utils/Context.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Context.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
@@ -144,10 +144,10 @@ abstract contract Context {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/ERC20.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/ERC20.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (token/ERC20/ERC20.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/ERC20.sol)
 
 pragma solidity ^0.8.0;
 
@@ -253,11 +253,12 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      *
      * Requirements:
      *
-     * - `recipient` cannot be the zero address.
+     * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-        _transfer(_msgSender(), recipient, amount);
+    function transfer(address to, uint256 amount) public virtual override returns (bool) {
+        address owner = _msgSender();
+        _transfer(owner, to, amount);
         return true;
     }
 
@@ -271,12 +272,16 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     /**
      * @dev See {IERC20-approve}.
      *
+     * NOTE: If `amount` is the maximum `uint256`, the allowance is not updated on
+     * `transferFrom`. This is semantically equivalent to an infinite approval.
+     *
      * Requirements:
      *
      * - `spender` cannot be the zero address.
      */
     function approve(address spender, uint256 amount) public virtual override returns (bool) {
-        _approve(_msgSender(), spender, amount);
+        address owner = _msgSender();
+        _approve(owner, spender, amount);
         return true;
     }
 
@@ -286,26 +291,24 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * Emits an {Approval} event indicating the updated allowance. This is not
      * required by the EIP. See the note at the beginning of {ERC20}.
      *
+     * NOTE: Does not update the allowance if the current allowance
+     * is the maximum `uint256`.
+     *
      * Requirements:
      *
-     * - `sender` and `recipient` cannot be the zero address.
-     * - `sender` must have a balance of at least `amount`.
-     * - the caller must have allowance for ``sender``'s tokens of at least
+     * - `from` and `to` cannot be the zero address.
+     * - `from` must have a balance of at least `amount`.
+     * - the caller must have allowance for ``from``'s tokens of at least
      * `amount`.
      */
     function transferFrom(
-        address sender,
-        address recipient,
+        address from,
+        address to,
         uint256 amount
     ) public virtual override returns (bool) {
-        _transfer(sender, recipient, amount);
-
-        uint256 currentAllowance = _allowances[sender][_msgSender()];
-        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
-        unchecked {
-            _approve(sender, _msgSender(), currentAllowance - amount);
-        }
-
+        address spender = _msgSender();
+        _spendAllowance(from, spender, amount);
+        _transfer(from, to, amount);
         return true;
     }
 
@@ -322,7 +325,8 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * - `spender` cannot be the zero address.
      */
     function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender] + addedValue);
+        address owner = _msgSender();
+        _approve(owner, spender, _allowances[owner][spender] + addedValue);
         return true;
     }
 
@@ -341,10 +345,11 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * `subtractedValue`.
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        uint256 currentAllowance = _allowances[_msgSender()][spender];
+        address owner = _msgSender();
+        uint256 currentAllowance = _allowances[owner][spender];
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
         unchecked {
-            _approve(_msgSender(), spender, currentAllowance - subtractedValue);
+            _approve(owner, spender, currentAllowance - subtractedValue);
         }
 
         return true;
@@ -360,30 +365,30 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      *
      * Requirements:
      *
-     * - `sender` cannot be the zero address.
-     * - `recipient` cannot be the zero address.
-     * - `sender` must have a balance of at least `amount`.
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `from` must have a balance of at least `amount`.
      */
     function _transfer(
-        address sender,
-        address recipient,
+        address from,
+        address to,
         uint256 amount
     ) internal virtual {
-        require(sender != address(0), "ERC20: transfer from the zero address");
-        require(recipient != address(0), "ERC20: transfer to the zero address");
+        require(from != address(0), "ERC20: transfer from the zero address");
+        require(to != address(0), "ERC20: transfer to the zero address");
 
-        _beforeTokenTransfer(sender, recipient, amount);
+        _beforeTokenTransfer(from, to, amount);
 
-        uint256 senderBalance = _balances[sender];
-        require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
+        uint256 fromBalance = _balances[from];
+        require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
         unchecked {
-            _balances[sender] = senderBalance - amount;
+            _balances[from] = fromBalance - amount;
         }
-        _balances[recipient] += amount;
+        _balances[to] += amount;
 
-        emit Transfer(sender, recipient, amount);
+        emit Transfer(from, to, amount);
 
-        _afterTokenTransfer(sender, recipient, amount);
+        _afterTokenTransfer(from, to, amount);
     }
 
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
@@ -461,6 +466,28 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     }
 
     /**
+     * @dev Spend `amount` form the allowance of `owner` toward `spender`.
+     *
+     * Does not update the allowance amount in case of infinite allowance.
+     * Revert if not enough allowance is available.
+     *
+     * Might emit an {Approval} event.
+     */
+    function _spendAllowance(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal virtual {
+        uint256 currentAllowance = allowance(owner, spender);
+        if (currentAllowance != type(uint256).max) {
+            require(currentAllowance >= amount, "ERC20: insufficient allowance");
+            unchecked {
+                _approve(owner, spender, currentAllowance - amount);
+            }
+        }
+    }
+
+    /**
      * @dev Hook that is called before any transfer of tokens. This includes
      * minting and burning.
      *
@@ -502,7 +529,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-IERC20Permit.sol)
@@ -566,7 +593,7 @@ interface IERC20Permit {
 }
 
 
-// File @openzeppelin/contracts/utils/Strings.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Strings.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Strings.sol)
@@ -637,10 +664,10 @@ library Strings {
 }
 
 
-// File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.4.2
+// File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (utils/cryptography/ECDSA.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (utils/cryptography/ECDSA.sol)
 
 pragma solidity ^0.8.0;
 
@@ -756,12 +783,8 @@ library ECDSA {
         bytes32 r,
         bytes32 vs
     ) internal pure returns (address, RecoverError) {
-        bytes32 s;
-        uint8 v;
-        assembly {
-            s := and(vs, 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
-            v := add(shr(255, vs), 27)
-        }
+        bytes32 s = vs & bytes32(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+        uint8 v = uint8((uint256(vs) >> 255) + 27);
         return tryRecover(hash, v, r, s);
     }
 
@@ -873,7 +896,7 @@ library ECDSA {
 }
 
 
-// File @openzeppelin/contracts/utils/cryptography/draft-EIP712.sol@v4.4.2
+// File @openzeppelin/contracts/utils/cryptography/draft-EIP712.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/cryptography/draft-EIP712.sol)
@@ -979,7 +1002,7 @@ abstract contract EIP712 {
 }
 
 
-// File @openzeppelin/contracts/utils/Counters.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Counters.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Counters.sol)
@@ -1026,7 +1049,7 @@ library Counters {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-ERC20Permit.sol)
@@ -1115,10 +1138,10 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
 }
 
 
-// File @openzeppelin/contracts/utils/math/Math.sol@v4.4.2
+// File @openzeppelin/contracts/utils/math/Math.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (utils/math/Math.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (utils/math/Math.sol)
 
 pragma solidity ^0.8.0;
 
@@ -1162,7 +1185,72 @@ library Math {
 }
 
 
-// File @openzeppelin/contracts/utils/math/SafeCast.sol@v4.4.2
+// File @openzeppelin/contracts/governance/utils/IVotes.sol@v4.5.0
+
+
+// OpenZeppelin Contracts (last updated v4.5.0) (governance/utils/IVotes.sol)
+pragma solidity ^0.8.0;
+
+/**
+ * @dev Common interface for {ERC20Votes}, {ERC721Votes}, and other {Votes}-enabled contracts.
+ *
+ * _Available since v4.5._
+ */
+interface IVotes {
+    /**
+     * @dev Emitted when an account changes their delegate.
+     */
+    event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
+
+    /**
+     * @dev Emitted when a token transfer or delegate change results in changes to a delegate's number of votes.
+     */
+    event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance);
+
+    /**
+     * @dev Returns the current amount of votes that `account` has.
+     */
+    function getVotes(address account) external view returns (uint256);
+
+    /**
+     * @dev Returns the amount of votes that `account` had at the end of a past block (`blockNumber`).
+     */
+    function getPastVotes(address account, uint256 blockNumber) external view returns (uint256);
+
+    /**
+     * @dev Returns the total supply of votes available at the end of a past block (`blockNumber`).
+     *
+     * NOTE: This value is the sum of all available votes, which is not necessarily the sum of all delegated votes.
+     * Votes that have not been delegated are still part of total supply, even though they would not participate in a
+     * vote.
+     */
+    function getPastTotalSupply(uint256 blockNumber) external view returns (uint256);
+
+    /**
+     * @dev Returns the delegate that `account` has chosen.
+     */
+    function delegates(address account) external view returns (address);
+
+    /**
+     * @dev Delegates votes from the sender to `delegatee`.
+     */
+    function delegate(address delegatee) external;
+
+    /**
+     * @dev Delegates votes from signer to `delegatee`.
+     */
+    function delegateBySig(
+        address delegatee,
+        uint256 nonce,
+        uint256 expiry,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+}
+
+
+// File @openzeppelin/contracts/utils/math/SafeCast.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/math/SafeCast.sol)
@@ -1407,12 +1495,13 @@ library SafeCast {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/ERC20Votes.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/extensions/ERC20Votes.sol)
 
 pragma solidity ^0.8.0;
+
 
 
 
@@ -1429,12 +1518,10 @@ pragma solidity ^0.8.0;
  *
  * By default, token balance does not account for voting power. This makes transfers cheaper. The downside is that it
  * requires users to delegate to themselves in order to activate checkpoints and have their voting power tracked.
- * Enabling self-delegation can easily be done by overriding the {delegates} function. Keep in mind however that this
- * will significantly increase the base gas cost of transfers.
  *
  * _Available since v4.2._
  */
-abstract contract ERC20Votes is ERC20Permit {
+abstract contract ERC20Votes is IVotes, ERC20Permit {
     struct Checkpoint {
         uint32 fromBlock;
         uint224 votes;
@@ -1446,16 +1533,6 @@ abstract contract ERC20Votes is ERC20Permit {
     mapping(address => address) private _delegates;
     mapping(address => Checkpoint[]) private _checkpoints;
     Checkpoint[] private _totalSupplyCheckpoints;
-
-    /**
-     * @dev Emitted when an account changes their delegate.
-     */
-    event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
-
-    /**
-     * @dev Emitted when a token transfer or delegate change results in changes to an account's voting power.
-     */
-    event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance);
 
     /**
      * @dev Get the `pos`-th checkpoint for `account`.
@@ -1474,14 +1551,14 @@ abstract contract ERC20Votes is ERC20Permit {
     /**
      * @dev Get the address `account` is currently delegating to.
      */
-    function delegates(address account) public view virtual returns (address) {
+    function delegates(address account) public view virtual override returns (address) {
         return _delegates[account];
     }
 
     /**
      * @dev Gets the current votes balance for `account`
      */
-    function getVotes(address account) public view returns (uint256) {
+    function getVotes(address account) public view virtual override returns (uint256) {
         uint256 pos = _checkpoints[account].length;
         return pos == 0 ? 0 : _checkpoints[account][pos - 1].votes;
     }
@@ -1493,7 +1570,7 @@ abstract contract ERC20Votes is ERC20Permit {
      *
      * - `blockNumber` must have been already mined
      */
-    function getPastVotes(address account, uint256 blockNumber) public view returns (uint256) {
+    function getPastVotes(address account, uint256 blockNumber) public view virtual override returns (uint256) {
         require(blockNumber < block.number, "ERC20Votes: block not yet mined");
         return _checkpointsLookup(_checkpoints[account], blockNumber);
     }
@@ -1506,7 +1583,7 @@ abstract contract ERC20Votes is ERC20Permit {
      *
      * - `blockNumber` must have been already mined
      */
-    function getPastTotalSupply(uint256 blockNumber) public view returns (uint256) {
+    function getPastTotalSupply(uint256 blockNumber) public view virtual override returns (uint256) {
         require(blockNumber < block.number, "ERC20Votes: block not yet mined");
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
@@ -1543,7 +1620,7 @@ abstract contract ERC20Votes is ERC20Permit {
     /**
      * @dev Delegate votes from the sender to `delegatee`.
      */
-    function delegate(address delegatee) public virtual {
+    function delegate(address delegatee) public virtual override {
         _delegate(_msgSender(), delegatee);
     }
 
@@ -1557,7 +1634,7 @@ abstract contract ERC20Votes is ERC20Permit {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) public virtual {
+    ) public virtual override {
         require(block.timestamp <= expiry, "ERC20Votes: signature expired");
         address signer = ECDSA.recover(
             _hashTypedDataV4(keccak256(abi.encode(_DELEGATION_TYPEHASH, delegatee, nonce, expiry))),
@@ -1669,12 +1746,12 @@ abstract contract ERC20Votes is ERC20Permit {
 }
 
 
-// File @openzeppelin/contracts/utils/Address.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Address.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (utils/Address.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (utils/Address.sol)
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.1;
 
 /**
  * @dev Collection of functions related to the address type
@@ -1696,17 +1773,22 @@ library Address {
      *  - an address where a contract will be created
      *  - an address where a contract lived, but was destroyed
      * ====
+     *
+     * [IMPORTANT]
+     * ====
+     * You shouldn't rely on `isContract` to protect against flash loan attacks!
+     *
+     * Preventing calls from contracts is highly discouraged. It breaks composability, breaks support for smart wallets
+     * like Gnosis Safe, and does not provide security since it can be circumvented by calling from a contract
+     * constructor.
+     * ====
      */
     function isContract(address account) internal view returns (bool) {
-        // This method relies on extcodesize, which returns 0 for contracts in
-        // construction, since the code is only stored at the end of the
-        // constructor execution.
+        // This method relies on extcodesize/address.code.length, which returns 0
+        // for contracts in construction, since the code is only stored at the end
+        // of the constructor execution.
 
-        uint256 size;
-        assembly {
-            size := extcodesize(account)
-        }
-        return size > 0;
+        return account.code.length > 0;
     }
 
     /**
@@ -1890,7 +1972,7 @@ library Address {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/utils/SafeERC20.sol)
@@ -1991,7 +2073,7 @@ library SafeERC20 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/ERC20Wrapper.sol)
@@ -2045,7 +2127,7 @@ abstract contract ERC20Wrapper is ERC20 {
 }
 
 
-// File @openzeppelin/contracts/access/Ownable.sol@v4.4.2
+// File @openzeppelin/contracts/access/Ownable.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (access/Ownable.sol)
@@ -2132,152 +2214,154 @@ pragma solidity 0.8.11;
 
 
 
-
 contract MelodityGovernance is
-    ERC20,
-    ERC20Permit,
-    ERC20Votes,
-    ERC20Wrapper,
-    Ownable
+  ERC20,
+  ERC20Permit,
+  ERC20Votes,
+  ERC20Wrapper,
+  Ownable
 {
-    address public _dao;
+  address public _dao;
 
-    // control switch for whitelist and blacklist, this are used *ONLY* to
-    // avoid dex listing prior to the release time
-    bool public isWhitelistEnabled;
-    bool public isBlacklistEnabled;
-    mapping(address => bool) public whitelist;
-    mapping(address => bool) public blacklist;
+  // control switch for whitelist and blacklist, this are used *ONLY* to
+  // avoid dex listing prior to the release time
+  bool public isWhitelistEnabled;
+  bool public isBlacklistEnabled;
+  mapping(address => bool) public whitelist;
+  mapping(address => bool) public blacklist;
 
-    modifier onlyOwnerOrDAO() {
-        require(msg.sender == _dao || msg.sender == owner(), "Unauthorized");
-        _;
+  modifier onlyOwnerOrDAO() {
+    require(msg.sender == _dao || msg.sender == owner(), "Unauthorized");
+    _;
+  }
+
+  modifier isWhitelisted(address recipient) {
+    // whitelist not enabled => everyone pass
+    // address in whitelist has assigned true => pass
+    if (isWhitelistEnabled && !whitelist[recipient]) {
+      revert("Recipient not whitelisted");
     }
+    _;
+  }
 
-    modifier isWhitelisted(address recipient) {
-        // whitelist not enabled => everyone pass
-        // address in whitelist has assigned true => pass
-        if (isWhitelistEnabled && !whitelist[recipient]) {
-            revert("Recipient not whitelisted");
-        }
-        _;
+  modifier isBlacklisted(address recipient) {
+    // blacklist not enabled => everyone pass
+    // address in blacklist has assigned true => block
+    if (isBlacklistEnabled && blacklist[recipient]) {
+      revert("Recipient blacklisted");
     }
+    _;
+  }
 
-    modifier isBlacklisted(address recipient) {
-        // blacklist not enabled => everyone pass
-        // address in blacklist has assigned true => block
-        if (isBlacklistEnabled && blacklist[recipient]) {
-            revert("Recipient blacklisted");
-        }
-        _;
-    }
+  constructor(IERC20 wrappedToken)
+    ERC20("Melodity governance", "gMELD")
+    ERC20Permit("Melodity governance")
+    ERC20Wrapper(wrappedToken)
+  {
+    // enables whitelist by default
+    isWhitelistEnabled = true;
+  }
 
-    constructor(IERC20 wrappedToken)
-        ERC20("Melodity governance", "gMELD")
-        ERC20Permit("Melodity governance")
-        ERC20Wrapper(wrappedToken)
-    {
-        // enables whitelist by default
-        isWhitelistEnabled = true;
-    }
+  // The functions below are overrides required by Solidity.
 
-    // The functions below are overrides required by Solidity.
+  function _afterTokenTransfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal override(ERC20, ERC20Votes) {
+    super._afterTokenTransfer(from, to, amount);
+  }
 
-    function _afterTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override(ERC20, ERC20Votes) {
-        super._afterTokenTransfer(from, to, amount);
-    }
+  function _mint(address to, uint256 amount)
+    internal
+    override(ERC20, ERC20Votes)
+  {
+    super._mint(to, amount);
+  }
 
-    function _mint(address to, uint256 amount)
-        internal
-        override(ERC20, ERC20Votes)
-    {
-        super._mint(to, amount);
-    }
+  function _burn(address account, uint256 amount)
+    internal
+    override(ERC20, ERC20Votes)
+  {
+    super._burn(account, amount);
+  }
 
-    function _burn(address account, uint256 amount)
-        internal
-        override(ERC20, ERC20Votes)
-    {
-        super._burn(account, amount);
-    }
+  function transferFrom(
+    address sender,
+    address recipient,
+    uint256 amount
+  )
+    public
+    override
+    isWhitelisted(recipient)
+    isBlacklisted(recipient)
+    returns (bool)
+  {
+    return ERC20.transferFrom(sender, recipient, amount);
+  }
 
-    function transferFrom(
-        address sender,
-        address recipient,
-        uint256 amount
-    )
-        public
-        override
-        isWhitelisted(recipient)
-        isBlacklisted(recipient)
-        returns (bool)
-    {
-        return ERC20.transferFrom(sender, recipient, amount);
-    }
+  function transfer(address recipient, uint256 amount)
+    public
+    virtual
+    override
+    isWhitelisted(recipient)
+    isBlacklisted(recipient)
+    returns (bool)
+  {
+    return ERC20.transfer(recipient, amount);
+  }
 
-    function safeTransferFrom(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) public isWhitelisted(recipient) isBlacklisted(recipient) returns (bool) {
-        return ERC20.transferFrom(sender, recipient, amount);
-    }
+  function depositFor(address account, uint256 amount)
+    public
+    pure
+    override
+    returns (bool)
+  {
+    revert("Unimplemented method");
+  }
 
-    function depositFor(address account, uint256 amount)
-        public
-        pure
-        override
-        returns (bool)
-    {
-        revert("Unimplemented method");
-    }
+  function withdrawTo(address account, uint256 amount)
+    public
+    pure
+    override
+    returns (bool)
+  {
+    revert("Unimplemented method");
+  }
 
-    function withdrawTo(address account, uint256 amount)
-        public
-        pure
-        override
-        returns (bool)
-    {
-        revert("Unimplemented method");
-    }
+  function wrap(uint256 amount) public returns (bool) {
+    return ERC20Wrapper.depositFor(msg.sender, amount);
+  }
 
-    function wrap(uint256 amount) public returns (bool) {
-        return ERC20Wrapper.depositFor(msg.sender, amount);
-    }
+  function enableWhitelist() public onlyOwnerOrDAO {
+    isWhitelistEnabled = true;
+    isBlacklistEnabled = false;
+  }
 
-    function enableWhitelist() public onlyOwnerOrDAO {
-        isWhitelistEnabled = true;
-        isBlacklistEnabled = false;
-    }
+  function disableWhitelist() public onlyOwnerOrDAO {
+    isWhitelistEnabled = false;
+  }
 
-    function disableWhitelist() public onlyOwnerOrDAO {
-        isWhitelistEnabled = false;
-    }
+  function enableBlacklist() public onlyOwnerOrDAO {
+    isWhitelistEnabled = false;
+    isBlacklistEnabled = true;
+  }
 
-    function enableBlacklist() public onlyOwnerOrDAO {
-        isWhitelistEnabled = false;
-        isBlacklistEnabled = true;
-    }
+  function disableBlacklist() public onlyOwnerOrDAO {
+    isBlacklistEnabled = false;
+  }
 
-    function disableBlacklist() public onlyOwnerOrDAO {
-        isBlacklistEnabled = false;
-    }
+  function addToWhitelist(address _addr, bool whitelisted)
+    public
+    onlyOwnerOrDAO
+  {
+    whitelist[_addr] = whitelisted;
+  }
 
-    function addToWhitelist(address _addr, bool whitelisted)
-        public
-        onlyOwnerOrDAO
-    {
-        whitelist[_addr] = whitelisted;
-    }
-
-    function addToBlacklist(address _addr, bool blacklisted)
-        public
-        onlyOwnerOrDAO
-    {
-        blacklist[_addr] = blacklisted;
-    }
+  function addToBlacklist(address _addr, bool blacklisted)
+    public
+    onlyOwnerOrDAO
+  {
+    blacklist[_addr] = blacklisted;
+  }
 }

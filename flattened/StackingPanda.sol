@@ -1,6 +1,6 @@
-// Sources flattened with hardhat v2.8.3 https://hardhat.org
+// Sources flattened with hardhat v2.9.1 https://hardhat.org
 
-// File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.4.2
+// File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.5.0
 
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/IERC165.sol)
@@ -29,7 +29,7 @@ interface IERC165 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/IERC721.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/IERC721.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/IERC721.sol)
@@ -174,7 +174,7 @@ interface IERC721 is IERC165 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/IERC721Receiver.sol)
@@ -205,7 +205,7 @@ interface IERC721Receiver {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/extensions/IERC721Metadata.sol)
@@ -234,12 +234,12 @@ interface IERC721Metadata is IERC721 {
 }
 
 
-// File @openzeppelin/contracts/utils/Address.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Address.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (utils/Address.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (utils/Address.sol)
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.1;
 
 /**
  * @dev Collection of functions related to the address type
@@ -261,17 +261,22 @@ library Address {
      *  - an address where a contract will be created
      *  - an address where a contract lived, but was destroyed
      * ====
+     *
+     * [IMPORTANT]
+     * ====
+     * You shouldn't rely on `isContract` to protect against flash loan attacks!
+     *
+     * Preventing calls from contracts is highly discouraged. It breaks composability, breaks support for smart wallets
+     * like Gnosis Safe, and does not provide security since it can be circumvented by calling from a contract
+     * constructor.
+     * ====
      */
     function isContract(address account) internal view returns (bool) {
-        // This method relies on extcodesize, which returns 0 for contracts in
-        // construction, since the code is only stored at the end of the
-        // constructor execution.
+        // This method relies on extcodesize/address.code.length, which returns 0
+        // for contracts in construction, since the code is only stored at the end
+        // of the constructor execution.
 
-        uint256 size;
-        assembly {
-            size := extcodesize(account)
-        }
-        return size > 0;
+        return account.code.length > 0;
     }
 
     /**
@@ -455,7 +460,7 @@ library Address {
 }
 
 
-// File @openzeppelin/contracts/utils/Context.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Context.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
@@ -483,7 +488,7 @@ abstract contract Context {
 }
 
 
-// File @openzeppelin/contracts/utils/Strings.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Strings.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Strings.sol)
@@ -554,7 +559,7 @@ library Strings {
 }
 
 
-// File @openzeppelin/contracts/utils/introspection/ERC165.sol@v4.4.2
+// File @openzeppelin/contracts/utils/introspection/ERC165.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/ERC165.sol)
@@ -585,10 +590,10 @@ abstract contract ERC165 is IERC165 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/ERC721.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/ERC721.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (token/ERC721/ERC721.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC721/ERC721.sol)
 
 pragma solidity ^0.8.0;
 
@@ -874,6 +879,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         _owners[tokenId] = to;
 
         emit Transfer(address(0), to, tokenId);
+
+        _afterTokenTransfer(address(0), to, tokenId);
     }
 
     /**
@@ -898,6 +905,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         delete _owners[tokenId];
 
         emit Transfer(owner, address(0), tokenId);
+
+        _afterTokenTransfer(owner, address(0), tokenId);
     }
 
     /**
@@ -916,7 +925,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         address to,
         uint256 tokenId
     ) internal virtual {
-        require(ERC721.ownerOf(tokenId) == from, "ERC721: transfer of token that is not own");
+        require(ERC721.ownerOf(tokenId) == from, "ERC721: transfer from incorrect owner");
         require(to != address(0), "ERC721: transfer to the zero address");
 
         _beforeTokenTransfer(from, to, tokenId);
@@ -929,6 +938,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         _owners[tokenId] = to;
 
         emit Transfer(from, to, tokenId);
+
+        _afterTokenTransfer(from, to, tokenId);
     }
 
     /**
@@ -1008,10 +1019,27 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         address to,
         uint256 tokenId
     ) internal virtual {}
+
+    /**
+     * @dev Hook that is called after any transfer of tokens. This includes
+     * minting and burning.
+     *
+     * Calling conditions:
+     *
+     * - when `from` and `to` are both non-zero.
+     * - `from` and `to` are never both zero.
+     *
+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     */
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual {}
 }
 
 
-// File @openzeppelin/contracts/utils/Counters.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Counters.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Counters.sol)
@@ -1058,7 +1086,7 @@ library Counters {
 }
 
 
-// File @openzeppelin/contracts/access/Ownable.sol@v4.4.2
+// File @openzeppelin/contracts/access/Ownable.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (access/Ownable.sol)
@@ -1136,7 +1164,7 @@ abstract contract Ownable is Context {
 }
 
 
-// File @openzeppelin/contracts/security/ReentrancyGuard.sol@v4.4.2
+// File @openzeppelin/contracts/security/ReentrancyGuard.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (security/ReentrancyGuard.sol)
@@ -1257,9 +1285,9 @@ contract PRNG {
                         block.gaslimit,                         // defined by the network (cannot be manipulated)
                         block.number,                           // can be manipulated by miners
                         block.timestamp,                        // can be at least partially manipulated by miners (+-15s allowed on eth for block acceptance)
-                        // blockhash(block.number - 1),         // defined by the network (cannot be manipulated)
+                        blockhash(block.number - 1),         	// defined by the network (cannot be manipulated)
                         // blockhash(block.number - 2),         // defined by the network (cannot be manipulated)
-                        block.basefee,                          // can be at least partially manipulated by miners
+                        // block.basefee,                       // can be at least partially manipulated by miners [ALERT OPCODE 0x48 NOT DEFINED ON BSC]
                         block.chainid,                          // defined by the network (cannot be manipulated)
                         gasleft(),                              // can be at least partially manipulated by users
                         // msg.data,                            // not allowed as strongly controlled by users, this can help forging a partially predictable hash
@@ -1271,6 +1299,20 @@ contract PRNG {
                     )
                 )
             );
+    }
+
+    function seedRotate() public returns(bool) {
+        // Allow overflow of the seed, what we want here is the possibility for
+        // the seed to rotate indiscriminately over all the number in range without
+        // ever throwing an error.
+        // This give the possibility to call this function every time possible.
+        // The seed presence gives also the possibility to call this function subsequently even in
+        // the same transaction and receive 2 different outputs
+        unchecked {
+            seed++;
+        }
+
+        return true;
     }
 }
 
@@ -1335,7 +1377,7 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
         string calldata _picUrl,
         StackingBonus calldata _stackingBonus
     ) public nonReentrant onlyOwner returns (uint256) {
-        prng.rotate();
+        prng.seedRotate();
 
         // Only 100 NFTs will be mintable
         require(_tokenIds.current() < 100, "All pandas minted");
@@ -1349,7 +1391,7 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
         metadata.push(
             Metadata({name: _name, picUrl: _picUrl, bonus: _stackingBonus})
         );
-        _mint(owner(), newItemId);
+        _safeMint(owner(), newItemId);
 
         emit NewPandaMinted(newItemId, _name);
 

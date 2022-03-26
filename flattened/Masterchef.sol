@@ -1,6 +1,6 @@
-// Sources flattened with hardhat v2.8.3 https://hardhat.org
+// Sources flattened with hardhat v2.9.1 https://hardhat.org
 
-// File @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol@v4.5.0
 
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/IERC721Receiver.sol)
@@ -31,7 +31,7 @@ interface IERC721Receiver {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/utils/ERC721Holder.sol)
@@ -61,7 +61,7 @@ contract ERC721Holder is IERC721Receiver {
 }
 
 
-// File @openzeppelin/contracts/security/ReentrancyGuard.sol@v4.4.2
+// File @openzeppelin/contracts/security/ReentrancyGuard.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (security/ReentrancyGuard.sol)
@@ -128,7 +128,113 @@ abstract contract ReentrancyGuard {
 }
 
 
-// File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Context.sol@v4.5.0
+
+
+// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
+
+pragma solidity ^0.8.0;
+
+/**
+ * @dev Provides information about the current execution context, including the
+ * sender of the transaction and its data. While these are generally available
+ * via msg.sender and msg.data, they should not be accessed in such a direct
+ * manner, since when dealing with meta-transactions the account sending and
+ * paying for execution may not be the actual sender (as far as an application
+ * is concerned).
+ *
+ * This contract is only required for intermediate, library-like contracts.
+ */
+abstract contract Context {
+    function _msgSender() internal view virtual returns (address) {
+        return msg.sender;
+    }
+
+    function _msgData() internal view virtual returns (bytes calldata) {
+        return msg.data;
+    }
+}
+
+
+// File @openzeppelin/contracts/access/Ownable.sol@v4.5.0
+
+
+// OpenZeppelin Contracts v4.4.1 (access/Ownable.sol)
+
+pragma solidity ^0.8.0;
+
+/**
+ * @dev Contract module which provides a basic access control mechanism, where
+ * there is an account (an owner) that can be granted exclusive access to
+ * specific functions.
+ *
+ * By default, the owner account will be the one that deploys the contract. This
+ * can later be changed with {transferOwnership}.
+ *
+ * This module is used through inheritance. It will make available the modifier
+ * `onlyOwner`, which can be applied to your functions to restrict their use to
+ * the owner.
+ */
+abstract contract Ownable is Context {
+    address private _owner;
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+    /**
+     * @dev Initializes the contract setting the deployer as the initial owner.
+     */
+    constructor() {
+        _transferOwnership(_msgSender());
+    }
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view virtual returns (address) {
+        return _owner;
+    }
+
+    /**
+     * @dev Throws if called by any account other than the owner.
+     */
+    modifier onlyOwner() {
+        require(owner() == _msgSender(), "Ownable: caller is not the owner");
+        _;
+    }
+
+    /**
+     * @dev Leaves the contract without owner. It will not be possible to call
+     * `onlyOwner` functions anymore. Can only be called by the current owner.
+     *
+     * NOTE: Renouncing ownership will leave the contract without an owner,
+     * thereby removing any functionality that is only available to the owner.
+     */
+    function renounceOwnership() public virtual onlyOwner {
+        _transferOwnership(address(0));
+    }
+
+    /**
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Can only be called by the current owner.
+     */
+    function transferOwnership(address newOwner) public virtual onlyOwner {
+        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        _transferOwnership(newOwner);
+    }
+
+    /**
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Internal function without access restriction.
+     */
+    function _transferOwnership(address newOwner) internal virtual {
+        address oldOwner = _owner;
+        _owner = newOwner;
+        emit OwnershipTransferred(oldOwner, newOwner);
+    }
+}
+
+
+// File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/IERC165.sol)
@@ -157,7 +263,7 @@ interface IERC165 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/IERC721.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/IERC721.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/IERC721.sol)
@@ -302,7 +408,7 @@ interface IERC721 is IERC165 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/extensions/IERC721Metadata.sol)
@@ -331,12 +437,12 @@ interface IERC721Metadata is IERC721 {
 }
 
 
-// File @openzeppelin/contracts/utils/Address.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Address.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (utils/Address.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (utils/Address.sol)
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.1;
 
 /**
  * @dev Collection of functions related to the address type
@@ -358,17 +464,22 @@ library Address {
      *  - an address where a contract will be created
      *  - an address where a contract lived, but was destroyed
      * ====
+     *
+     * [IMPORTANT]
+     * ====
+     * You shouldn't rely on `isContract` to protect against flash loan attacks!
+     *
+     * Preventing calls from contracts is highly discouraged. It breaks composability, breaks support for smart wallets
+     * like Gnosis Safe, and does not provide security since it can be circumvented by calling from a contract
+     * constructor.
+     * ====
      */
     function isContract(address account) internal view returns (bool) {
-        // This method relies on extcodesize, which returns 0 for contracts in
-        // construction, since the code is only stored at the end of the
-        // constructor execution.
+        // This method relies on extcodesize/address.code.length, which returns 0
+        // for contracts in construction, since the code is only stored at the end
+        // of the constructor execution.
 
-        uint256 size;
-        assembly {
-            size := extcodesize(account)
-        }
-        return size > 0;
+        return account.code.length > 0;
     }
 
     /**
@@ -552,35 +663,7 @@ library Address {
 }
 
 
-// File @openzeppelin/contracts/utils/Context.sol@v4.4.2
-
-
-// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
-
-pragma solidity ^0.8.0;
-
-/**
- * @dev Provides information about the current execution context, including the
- * sender of the transaction and its data. While these are generally available
- * via msg.sender and msg.data, they should not be accessed in such a direct
- * manner, since when dealing with meta-transactions the account sending and
- * paying for execution may not be the actual sender (as far as an application
- * is concerned).
- *
- * This contract is only required for intermediate, library-like contracts.
- */
-abstract contract Context {
-    function _msgSender() internal view virtual returns (address) {
-        return msg.sender;
-    }
-
-    function _msgData() internal view virtual returns (bytes calldata) {
-        return msg.data;
-    }
-}
-
-
-// File @openzeppelin/contracts/utils/Strings.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Strings.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Strings.sol)
@@ -651,7 +734,7 @@ library Strings {
 }
 
 
-// File @openzeppelin/contracts/utils/introspection/ERC165.sol@v4.4.2
+// File @openzeppelin/contracts/utils/introspection/ERC165.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/ERC165.sol)
@@ -682,10 +765,10 @@ abstract contract ERC165 is IERC165 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/ERC721.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/ERC721.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (token/ERC721/ERC721.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC721/ERC721.sol)
 
 pragma solidity ^0.8.0;
 
@@ -971,6 +1054,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         _owners[tokenId] = to;
 
         emit Transfer(address(0), to, tokenId);
+
+        _afterTokenTransfer(address(0), to, tokenId);
     }
 
     /**
@@ -995,6 +1080,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         delete _owners[tokenId];
 
         emit Transfer(owner, address(0), tokenId);
+
+        _afterTokenTransfer(owner, address(0), tokenId);
     }
 
     /**
@@ -1013,7 +1100,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         address to,
         uint256 tokenId
     ) internal virtual {
-        require(ERC721.ownerOf(tokenId) == from, "ERC721: transfer of token that is not own");
+        require(ERC721.ownerOf(tokenId) == from, "ERC721: transfer from incorrect owner");
         require(to != address(0), "ERC721: transfer to the zero address");
 
         _beforeTokenTransfer(from, to, tokenId);
@@ -1026,6 +1113,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         _owners[tokenId] = to;
 
         emit Transfer(from, to, tokenId);
+
+        _afterTokenTransfer(from, to, tokenId);
     }
 
     /**
@@ -1105,10 +1194,27 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         address to,
         uint256 tokenId
     ) internal virtual {}
+
+    /**
+     * @dev Hook that is called after any transfer of tokens. This includes
+     * minting and burning.
+     *
+     * Calling conditions:
+     *
+     * - when `from` and `to` are both non-zero.
+     * - `from` and `to` are never both zero.
+     *
+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     */
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual {}
 }
 
 
-// File @openzeppelin/contracts/utils/Counters.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Counters.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Counters.sol)
@@ -1151,84 +1257,6 @@ library Counters {
 
     function reset(Counter storage counter) internal {
         counter._value = 0;
-    }
-}
-
-
-// File @openzeppelin/contracts/access/Ownable.sol@v4.4.2
-
-
-// OpenZeppelin Contracts v4.4.1 (access/Ownable.sol)
-
-pragma solidity ^0.8.0;
-
-/**
- * @dev Contract module which provides a basic access control mechanism, where
- * there is an account (an owner) that can be granted exclusive access to
- * specific functions.
- *
- * By default, the owner account will be the one that deploys the contract. This
- * can later be changed with {transferOwnership}.
- *
- * This module is used through inheritance. It will make available the modifier
- * `onlyOwner`, which can be applied to your functions to restrict their use to
- * the owner.
- */
-abstract contract Ownable is Context {
-    address private _owner;
-
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-    /**
-     * @dev Initializes the contract setting the deployer as the initial owner.
-     */
-    constructor() {
-        _transferOwnership(_msgSender());
-    }
-
-    /**
-     * @dev Returns the address of the current owner.
-     */
-    function owner() public view virtual returns (address) {
-        return _owner;
-    }
-
-    /**
-     * @dev Throws if called by any account other than the owner.
-     */
-    modifier onlyOwner() {
-        require(owner() == _msgSender(), "Ownable: caller is not the owner");
-        _;
-    }
-
-    /**
-     * @dev Leaves the contract without owner. It will not be possible to call
-     * `onlyOwner` functions anymore. Can only be called by the current owner.
-     *
-     * NOTE: Renouncing ownership will leave the contract without an owner,
-     * thereby removing any functionality that is only available to the owner.
-     */
-    function renounceOwnership() public virtual onlyOwner {
-        _transferOwnership(address(0));
-    }
-
-    /**
-     * @dev Transfers ownership of the contract to a new account (`newOwner`).
-     * Can only be called by the current owner.
-     */
-    function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
-        _transferOwnership(newOwner);
-    }
-
-    /**
-     * @dev Transfers ownership of the contract to a new account (`newOwner`).
-     * Internal function without access restriction.
-     */
-    function _transferOwnership(address newOwner) internal virtual {
-        address oldOwner = _owner;
-        _owner = newOwner;
-        emit OwnershipTransferred(oldOwner, newOwner);
     }
 }
 
@@ -1287,9 +1315,9 @@ contract PRNG {
                         block.gaslimit,                         // defined by the network (cannot be manipulated)
                         block.number,                           // can be manipulated by miners
                         block.timestamp,                        // can be at least partially manipulated by miners (+-15s allowed on eth for block acceptance)
-                        // blockhash(block.number - 1),         // defined by the network (cannot be manipulated)
+                        blockhash(block.number - 1),         	// defined by the network (cannot be manipulated)
                         // blockhash(block.number - 2),         // defined by the network (cannot be manipulated)
-                        block.basefee,                          // can be at least partially manipulated by miners
+                        // block.basefee,                       // can be at least partially manipulated by miners [ALERT OPCODE 0x48 NOT DEFINED ON BSC]
                         block.chainid,                          // defined by the network (cannot be manipulated)
                         gasleft(),                              // can be at least partially manipulated by users
                         // msg.data,                            // not allowed as strongly controlled by users, this can help forging a partially predictable hash
@@ -1301,6 +1329,20 @@ contract PRNG {
                     )
                 )
             );
+    }
+
+    function seedRotate() public returns(bool) {
+        // Allow overflow of the seed, what we want here is the possibility for
+        // the seed to rotate indiscriminately over all the number in range without
+        // ever throwing an error.
+        // This give the possibility to call this function every time possible.
+        // The seed presence gives also the possibility to call this function subsequently even in
+        // the same transaction and receive 2 different outputs
+        unchecked {
+            seed++;
+        }
+
+        return true;
     }
 }
 
@@ -1365,7 +1407,7 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
         string calldata _picUrl,
         StackingBonus calldata _stackingBonus
     ) public nonReentrant onlyOwner returns (uint256) {
-        prng.rotate();
+        prng.seedRotate();
 
         // Only 100 NFTs will be mintable
         require(_tokenIds.current() < 100, "All pandas minted");
@@ -1379,7 +1421,7 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
         metadata.push(
             Metadata({name: _name, picUrl: _picUrl, bonus: _stackingBonus})
         );
-        _mint(owner(), newItemId);
+        _safeMint(owner(), newItemId);
 
         emit NewPandaMinted(newItemId, _name);
 
@@ -1397,7 +1439,7 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
 }
 
 
-// File @openzeppelin/contracts/utils/Create2.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Create2.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Create2.sol)
@@ -1466,7 +1508,7 @@ library Create2 {
 }
 
 
-// File @openzeppelin/contracts/utils/introspection/ERC165Checker.sol@v4.4.2
+// File @openzeppelin/contracts/utils/introspection/ERC165Checker.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/ERC165Checker.sol)
@@ -1591,6 +1633,10 @@ pragma solidity 0.8.11;
 
 
 contract Auction is ERC721Holder, ReentrancyGuard {
+    address payable constant public __Do_INC_MULTISIG_WALLET =
+        payable(0x01Af10f1343C05855955418bb99302A6CF71aCB8);
+    uint256 constant public __USAGE_FEE = 5 ether;
+
     PRNG public prng;
 
     address payable public beneficiary;
@@ -1614,10 +1660,11 @@ contract Auction is ERC721Holder, ReentrancyGuard {
     address public royaltyReceiver;
     uint256 public royaltyPercent;
 
-    event HighestBidIncreased(address bidder, uint256 amount);
-    event AuctionEnded(address winner, uint256 amount);
-    event AuctionNotFullfilled(uint256 nftId, address nftContract, uint256 minimumBid);
-    event RoyaltyPaid(address receiver, uint256 amount, uint256 royaltyPercentage);
+    event HighestBidIncreased(address indexed bidder, uint256 amount);
+    event AuctionEnded(address indexed winner, uint256 amount);
+    event AuctionNotFullfilled(uint256 indexed nftId, address indexed nftContract, uint256 minimumBid);
+    event RoyaltyPaid(address indexed receiver, uint256 amount, uint256 royaltyPercentage);
+    event UsageFeePaid(uint256 amount);
 
     /**
         Create an auction with `biddingTime` seconds bidding time on behalf of the
@@ -1647,7 +1694,7 @@ contract Auction is ERC721Holder, ReentrancyGuard {
 		address _prng
     ) {
         prng = PRNG(_prng);
-        prng.rotate();
+        prng.seedRotate();
 
         beneficiary = _beneficiaryAddress;
         auctionEndTime = block.timestamp + _biddingTime;
@@ -1663,7 +1710,7 @@ contract Auction is ERC721Holder, ReentrancyGuard {
         The value will only be refunded if the auction is not won.
     */
     function bid() public nonReentrant payable {
-        prng.rotate();
+        prng.seedRotate();
 
         // check that the auction is still in its bidding period
         require(block.timestamp <= auctionEndTime, "Auction already ended");
@@ -1690,7 +1737,7 @@ contract Auction is ERC721Holder, ReentrancyGuard {
        Withdraw bids that were overbid.
     */
     function withdraw() public nonReentrant {
-        prng.rotate();
+        prng.seedRotate();
 
         uint256 amount = pendingReturns[msg.sender];
         if (amount > 0) {
@@ -1706,7 +1753,7 @@ contract Auction is ERC721Holder, ReentrancyGuard {
         If defined split the bid with the royalty receiver
     */
     function endAuction() public nonReentrant {
-        prng.rotate();
+        prng.seedRotate();
 
         // check that the auction is ended
         require(block.timestamp >= auctionEndTime, "Auction not ended yet");
@@ -1729,14 +1776,21 @@ contract Auction is ERC721Holder, ReentrancyGuard {
             // if they are make a transfer only, otherwhise split the bid based on
             // the royalty percentage and send the values
 
+            // the royalty percentage has 18 decimals + 2 per percentage
+            uint256 royalty = highestBid * royaltyPercent / 100 ether;
+            uint256 usage_fee = highestBid * __USAGE_FEE / 100 ether;
+
             if (beneficiary == royaltyReceiver) {
                 // send the highest bid to the beneficiary
+                highestBid -= usage_fee;
                 Address.sendValue(beneficiary, highestBid);
+                emit RoyaltyPaid(royaltyReceiver, royalty, royaltyPercent);
+
+                Address.sendValue(__Do_INC_MULTISIG_WALLET, usage_fee);
+                emit UsageFeePaid(usage_fee);
             }
             else {
-                // the royalty percentage has 18 decimals + 2 per percentage
-                uint256 royalty = highestBid * royaltyPercent / 10 ** 20;
-                uint256 beneficiaryEarning = highestBid - royalty;
+                uint256 beneficiaryEarning = highestBid - royalty - usage_fee;
 
                 // send the royalty funds
                 Address.sendValue(payable(royaltyReceiver), royalty);
@@ -1744,6 +1798,9 @@ contract Auction is ERC721Holder, ReentrancyGuard {
 
                 // send the beneficiary earnings
                 Address.sendValue(beneficiary, beneficiaryEarning);
+
+                Address.sendValue(__Do_INC_MULTISIG_WALLET, usage_fee);
+                emit UsageFeePaid(usage_fee);
             }
 
             emit AuctionEnded(highestBidder, highestBid);
@@ -1762,6 +1819,10 @@ pragma solidity 0.8.11;
 
 
 contract BlindAuction is ERC721Holder, ReentrancyGuard {
+    address payable constant public __Do_INC_MULTISIG_WALLET =
+        payable(0x01Af10f1343C05855955418bb99302A6CF71aCB8);
+    uint256 constant public __USAGE_FEE = 5 ether;
+
     PRNG public prng;
 
     struct Bid {
@@ -1789,10 +1850,11 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
     // Allowed withdrawals of previous bids that were overbid
     mapping(address => uint256) public pendingReturns;
 
-    event BidPlaced(address bidder);
-    event AuctionEnded(address winner, uint256 highestBid);
-    event AuctionNotFullfilled(uint256 nftId, address nftContract, uint256 minimumBid);
-    event RoyaltyPaid(address receiver, uint256 amount, uint256 royaltyPercentage);
+    event BidPlaced(address indexed bidder);
+    event AuctionEnded(address indexed winner, uint256 highestBid);
+    event AuctionNotFullfilled(uint256 indexed nftId, address indexed nftContract, uint256 minimumBid);
+    event RoyaltyPaid(address indexed receiver, uint256 amount, uint256 royaltyPercentage);
+    event UsageFeePaid(uint256 amount);
 
     // Modifiers are a convenient way to validate inputs to
     // functions. `onlyBefore` is applied to `bid` below:
@@ -1819,7 +1881,7 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
         address _prng
     ) {
         prng = PRNG(_prng);
-        prng.rotate();
+        prng.seedRotate();
 
         beneficiary = _beneficiaryAddress;
         biddingEnd = block.timestamp + _biddingTime;
@@ -1844,7 +1906,7 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
 		The same address can place multiple bids.
 	*/
     function bid(bytes32 blindedBid) public payable nonReentrant onlyBefore(biddingEnd) {
-        prng.rotate();
+        prng.seedRotate();
 
         bids[msg.sender].push(
             Bid({blindedBid: blindedBid, deposit: msg.value})
@@ -1863,7 +1925,7 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
         bool[] calldata fakes,
         bytes32[] calldata secrets
     ) public nonReentrant onlyAfter(biddingEnd) onlyBefore(revealEnd) {
-        prng.rotate();
+        prng.seedRotate();
 
 		// check that the list of provided bids has the same length of
 		// the list saved in the contract
@@ -1910,11 +1972,59 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
         Address.sendValue(payable(msg.sender), refund);
     }
 
+    /**
+
+     */
+    function reap(
+        uint256[] calldata values,
+        bool[] calldata fakes,
+        bytes32[] calldata secrets
+    ) public nonReentrant onlyAfter(revealEnd) {
+        prng.seedRotate();
+
+		// check that the list of provided bids has the same length of
+		// the list saved in the contract
+        uint256 length = bids[msg.sender].length;
+		require(values.length == length, "You're not reaping all your bids");
+		require(fakes.length == length, "You're not reaping all your bids");
+		require(secrets.length == length, "You're not reaping all your bids");
+
+        uint256 refund;
+		// loop through each bid
+        for (uint256 i = 0; i < length; i++) {
+            Bid storage bidToCheck = bids[msg.sender][i];
+
+            (uint256 value, bool fake, bytes32 secret) = (
+                values[i],
+                fakes[i],
+                secrets[i]
+            );
+
+			// if the bid do not match the original value it is skipped
+            if (
+                bidToCheck.blindedBid !=
+                keccak256(abi.encode(value, fake, secret))
+            ) {
+                continue;
+            }
+            
+            // Make it impossible for the sender to re-claim
+            // the same deposit.
+            bidToCheck.blindedBid = bytes32(0);
+
+            // as this is an emergency exit call, all bids that matches gets refunded
+            refund += bidToCheck.deposit;
+        }
+
+		// refund fake or stale bids
+        Address.sendValue(payable(msg.sender), refund);
+    }
+
     /** 
 		Withdraw a bid that was overbid.
 	*/
     function withdraw() public nonReentrant {
-        prng.rotate();
+        prng.seedRotate();
 
         uint256 amount = pendingReturns[msg.sender];
         if (amount > 0) {
@@ -1930,7 +2040,7 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
     	to the beneficiary.
 	*/
     function endAuction() public nonReentrant onlyAfter(revealEnd) {
-        prng.rotate();
+        prng.seedRotate();
 
         // check that the auction end call have not already been called
         require(!ended, "Auction already ended");
@@ -1947,17 +2057,25 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
             // send the NFT to the bidder
             ERC721(nftContract).safeTransferFrom(address(this), highestBidder, nftId);
 
+            // the royalty percentage has 18 decimals + 2 per percentage
+            uint256 royalty = highestBid * royaltyPercent / 100 ether;
+            uint256 usage_fee = highestBid * __USAGE_FEE / 100 ether;
+
             // check if the royalty receiver and the payee are the same address
             // if they are make a transfer only, otherwhise split the bid based on
             // the royalty percentage and send the values
             if (beneficiary == royaltyReceiver) {
                 // send the highest bid to the beneficiary
+                highestBid -= usage_fee;
                 Address.sendValue(beneficiary, highestBid);
+                emit RoyaltyPaid(royaltyReceiver, royalty, royaltyPercent);
+
+                Address.sendValue(__Do_INC_MULTISIG_WALLET, usage_fee);
+                emit UsageFeePaid(usage_fee);
             }
             else {
                 // the royalty percentage has 18 decimals + 2 percentage positions
-                uint256 royalty = highestBid * royaltyPercent / 10 ** 20;
-                uint256 beneficiaryEarning = highestBid - royalty;
+                uint256 beneficiaryEarning = highestBid - royalty - usage_fee;
 
                 // send the royalty funds
                 Address.sendValue(payable(royaltyReceiver), royalty);
@@ -1965,6 +2083,9 @@ contract BlindAuction is ERC721Holder, ReentrancyGuard {
 
                 // send the beneficiary earnings
                 Address.sendValue(beneficiary, beneficiaryEarning);
+
+                Address.sendValue(__Do_INC_MULTISIG_WALLET, usage_fee);
+                emit UsageFeePaid(usage_fee);
             }
 
             emit AuctionEnded(highestBidder, highestBid);
@@ -2056,7 +2177,7 @@ contract Marketplace is ReentrancyGuard {
      *     => 0x70a08231 ^ 0x6352211e ^ 0x095ea7b3 ^ 0x081812fc ^
      *        0xa22cb465 ^ 0xe985e9c5 ^ 0x23b872dd ^ 0x42842e0e ^ 0xb88d4fde == 0x80ac58cd
      */
-    bytes4 private constant _INTERFACE_ID_ERC721 = 0x80ac58cd;
+    bytes4 private constant _INTERFACE_ID_ERC721 = type(IERC721).interfaceId;
 
     /*
      *     bytes4(keccak256("name()")) == 0x06fdde03
@@ -2065,7 +2186,7 @@ contract Marketplace is ReentrancyGuard {
      *
      *     => 0x06fdde03 ^ 0x95d89b41 ^ 0xc87b56dd == 0x5b5e139f
      */
-    bytes4 private constant _INTERFACE_ID_ERC721_METADATA = 0x5b5e139f;
+    bytes4 private constant _INTERFACE_ID_ERC721_METADATA = type(IERC721Metadata).interfaceId;
 
     event AuctionCreated(address auction, uint256 nftId, address nftContract);
     event BlindAuctionCreated(
@@ -2082,7 +2203,7 @@ contract Marketplace is ReentrancyGuard {
     );
 
     modifier onlyERC721(address _contract) {
-        prng.rotate();
+        prng.seedRotate();
 
         require(
             // check the SC doesn't supports the ERC721 openzeppelin interface
@@ -2135,7 +2256,7 @@ contract Marketplace is ReentrancyGuard {
         uint256 _royaltyPercentage,
         bool _blind
     ) private returns (address) {
-        prng.rotate();
+        prng.seedRotate();
 
         // do not run any check on the contract as the checks are already performed by the
         // parent call
@@ -2210,7 +2331,7 @@ contract Marketplace is ReentrancyGuard {
         address _royaltyReceiver,
         address _royaltyInitializer
     ) private returns (Royalty memory) {
-        prng.rotate();
+        prng.seedRotate();
 
         bytes32 royaltyIdentifier = keccak256(abi.encode(_nftContract, _nftId));
 
@@ -2233,12 +2354,14 @@ contract Marketplace is ReentrancyGuard {
                 _royaltyInitializer = msg.sender;
             }
 
-            royalties[royaltyIdentifier] = Royalty({
+            Royalty memory cachedRoyalty = Royalty({
                 decimals: 18,
                 royaltyPercent: _royaltyPercent, // the provided value *MUST* be padded to 18 decimal positions
                 royaltyReceiver: _royaltyReceiver,
                 royaltyInitializer: _royaltyInitializer
             });
+
+            royalties[royaltyIdentifier] = cachedRoyalty;
 
             emit RoyaltyUpdated(
                 _nftId,
@@ -2248,7 +2371,7 @@ contract Marketplace is ReentrancyGuard {
                 _royaltyInitializer
             );
 
-            return royalties[royaltyIdentifier];
+            return cachedRoyalty;
         }
 
         return royalty;
@@ -2452,7 +2575,8 @@ pragma solidity 0.8.11;
 
 
 
-contract Masterchef is ERC721Holder, ReentrancyGuard {
+
+contract Masterchef is ERC721Holder, Ownable, ReentrancyGuard {
     StackingPanda public stackingPanda;
     PRNG public prng;
     Marketplace public marketplace;
@@ -2469,6 +2593,7 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
     }
 
     PandaIdentification[] public pandas;
+	int256 public lastPandaId = -1;
 
     event StackingPandaMinted(uint256 id);
     event StackingPandaForSale(address auction, uint256 id);
@@ -2495,7 +2620,7 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
     }
 
     /**
-        Deploy the Pseudo Random Number Generator using the create2 method,
+        Deploy the Pseudo Random Number Generator using the new method,
         this gives the possibility for other generated smart contract to compute the
         PRNG address and call it
      */
@@ -2504,7 +2629,7 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
     }
 
     /**
-        Deploy the Marketplace using the create2 method,
+        Deploy the Marketplace using the new method,
         this gives the possibility for other generated smart contract to compute the
         PRNG address and call it
      */
@@ -2512,12 +2637,19 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
         marketplace = new Marketplace(_prng);
     }
 
+	function addPandaIdentificationInfo(string calldata name, string calldata url) public nonReentrant onlyOwner {
+		pandas.push(PandaIdentification({
+			name: name,
+			url: url
+		}));
+	}
+
     /**
         Trigger the minting of a new stacking panda, this function is publicly callable
         as the minted NFT will be given to the Masterchef contract.
      */
     function mintStackingPanda() public nonReentrant returns (address) {
-        prng.rotate();
+        prng.seedRotate();
 
         // check that a new panda can be minted
         require(
@@ -2533,23 +2665,27 @@ contract Masterchef is ERC721Holder, ReentrancyGuard {
         uint256 meld2meldBonus = prng.rotate() % 7.5 ether;
 
         // retrieve the random number and set the bonus percentage using 18 decimals.
-        // NOTE: the maximum percentage here is 3.999999999999999999%
-        uint256 toMeldBonus = prng.rotate() % 4 ether;
+        // NOTE: the maximum percentage here is 3.499999999999999999%
+        uint256 toMeldBonus = prng.rotate() % 3.5 ether;
 
         // mint the panda using its name-url from the stored pair and randomly compute the bonuses
-        uint256 pandaId = stackingPanda.mint(
-            "test",
-            "url",
-            StackingPanda.StackingBonus({
-                decimals: 18,
-                meldToMeld: meld2meldBonus,
-                toMeld: toMeldBonus
-            })
-        );
+        if(pandas.length > uint256(lastPandaId +1)) {
+            uint256 pandaId = stackingPanda.mint(
+                pandas[uint256(lastPandaId +1)].name,
+                pandas[uint256(lastPandaId +1)].url,
+                StackingPanda.StackingBonus({
+                    decimals: 18,
+                    meldToMeld: meld2meldBonus,
+                    toMeld: toMeldBonus
+                })
+            );
+            lastPandaId = int256(pandaId);
 
-        emit StackingPandaMinted(pandaId);
+            emit StackingPandaMinted(pandaId);
 
-        return _listForSale(pandaId);
+            return _listForSale(pandaId);
+        }
+        revert("Pandas definition missing");
     }
 
     function _listForSale(uint256 _pandaId) private returns (address) {

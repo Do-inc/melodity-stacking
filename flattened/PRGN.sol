@@ -1,4 +1,4 @@
-// Sources flattened with hardhat v2.8.3 https://hardhat.org
+// Sources flattened with hardhat v2.9.1 https://hardhat.org
 
 // File contracts/PRNG.sol
 
@@ -54,9 +54,9 @@ contract PRNG {
                         block.gaslimit,                         // defined by the network (cannot be manipulated)
                         block.number,                           // can be manipulated by miners
                         block.timestamp,                        // can be at least partially manipulated by miners (+-15s allowed on eth for block acceptance)
-                        // blockhash(block.number - 1),         // defined by the network (cannot be manipulated)
+                        blockhash(block.number - 1),         	// defined by the network (cannot be manipulated)
                         // blockhash(block.number - 2),         // defined by the network (cannot be manipulated)
-                        block.basefee,                          // can be at least partially manipulated by miners
+                        // block.basefee,                       // can be at least partially manipulated by miners [ALERT OPCODE 0x48 NOT DEFINED ON BSC]
                         block.chainid,                          // defined by the network (cannot be manipulated)
                         gasleft(),                              // can be at least partially manipulated by users
                         // msg.data,                            // not allowed as strongly controlled by users, this can help forging a partially predictable hash
@@ -68,5 +68,19 @@ contract PRNG {
                     )
                 )
             );
+    }
+
+    function seedRotate() public returns(bool) {
+        // Allow overflow of the seed, what we want here is the possibility for
+        // the seed to rotate indiscriminately over all the number in range without
+        // ever throwing an error.
+        // This give the possibility to call this function every time possible.
+        // The seed presence gives also the possibility to call this function subsequently even in
+        // the same transaction and receive 2 different outputs
+        unchecked {
+            seed++;
+        }
+
+        return true;
     }
 }

@@ -1,6 +1,6 @@
-// Sources flattened with hardhat v2.8.3 https://hardhat.org
+// Sources flattened with hardhat v2.9.1 https://hardhat.org
 
-// File @openzeppelin/contracts/access/IAccessControl.sol@v4.4.2
+// File @openzeppelin/contracts/access/IAccessControl.sol@v4.5.0
 
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts v4.4.1 (access/IAccessControl.sol)
@@ -92,7 +92,7 @@ interface IAccessControl {
 }
 
 
-// File @openzeppelin/contracts/utils/Context.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Context.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
@@ -120,7 +120,7 @@ abstract contract Context {
 }
 
 
-// File @openzeppelin/contracts/utils/Strings.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Strings.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Strings.sol)
@@ -191,7 +191,7 @@ library Strings {
 }
 
 
-// File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.4.2
+// File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/IERC165.sol)
@@ -220,7 +220,7 @@ interface IERC165 {
 }
 
 
-// File @openzeppelin/contracts/utils/introspection/ERC165.sol@v4.4.2
+// File @openzeppelin/contracts/utils/introspection/ERC165.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/ERC165.sol)
@@ -251,10 +251,10 @@ abstract contract ERC165 is IERC165 {
 }
 
 
-// File @openzeppelin/contracts/access/AccessControl.sol@v4.4.2
+// File @openzeppelin/contracts/access/AccessControl.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (access/AccessControl.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (access/AccessControl.sol)
 
 pragma solidity ^0.8.0;
 
@@ -334,7 +334,7 @@ abstract contract AccessControl is Context, IAccessControl, ERC165 {
     /**
      * @dev Returns `true` if `account` has been granted `role`.
      */
-    function hasRole(bytes32 role, address account) public view override returns (bool) {
+    function hasRole(bytes32 role, address account) public view virtual override returns (bool) {
         return _roles[role].members[account];
     }
 
@@ -345,7 +345,7 @@ abstract contract AccessControl is Context, IAccessControl, ERC165 {
      *
      *  /^AccessControl: account (0x[0-9a-f]{40}) is missing role (0x[0-9a-f]{64})$/
      */
-    function _checkRole(bytes32 role, address account) internal view {
+    function _checkRole(bytes32 role, address account) internal view virtual {
         if (!hasRole(role, account)) {
             revert(
                 string(
@@ -366,7 +366,7 @@ abstract contract AccessControl is Context, IAccessControl, ERC165 {
      *
      * To change a role's admin, use {_setRoleAdmin}.
      */
-    function getRoleAdmin(bytes32 role) public view override returns (bytes32) {
+    function getRoleAdmin(bytes32 role) public view virtual override returns (bytes32) {
         return _roles[role].adminRole;
     }
 
@@ -476,7 +476,7 @@ abstract contract AccessControl is Context, IAccessControl, ERC165 {
 }
 
 
-// File @openzeppelin/contracts/governance/TimelockController.sol@v4.4.2
+// File @openzeppelin/contracts/governance/TimelockController.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (governance/TimelockController.sol)

@@ -24,7 +24,7 @@ async function main() {
 		melodityStacking,
 		melodityStackingReceipt,
 		tx,
-		meld = "0x5EaA8Be0ebe73C0B6AdA8946f136B86b92128c55",
+		meld = "0x13E971De9181eeF7A4aEAEAA67552A6a4cc54f43",
 		proposerRole =
 			"0xb09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc1",
 		adminRole =
@@ -37,45 +37,55 @@ async function main() {
 	// manually to make sure everything is compiled
 	await hre.run("compile");
 
+	console.log("meld", meld)
+	console.log("proposerRole", proposerRole)
+	console.log("adminRole", adminRole)
+
 	console.log("[ ] Deploying Masterchef ...");
 	const Masterchef = await hre.ethers.getContractFactory("Masterchef");
-	masterchef = await Masterchef.deploy({
+	/* masterchef = await Masterchef.deploy({
 		gasLimit: 10_000_000,
 		gasPrice: 10_000_000_000,
-	});
-	await masterchef.deployed();
+	}); */
+	masterchef = await Masterchef.attach("0x46303b92A45445F51529c6DD705FcF1A9F68E592");
 	console.log("[+] Deploying Masterchef");
+	console.log("masterchef", masterchef.address)
 
 	console.log("[ ] Deploying Melodity Governance ...");
 	const MelodityGovernance = await hre.ethers.getContractFactory(
 		"MelodityGovernance"
 	);
-	melodityGovernance = await MelodityGovernance.deploy(meld, {
+	/* melodityGovernance = await MelodityGovernance.deploy(meld, {
 		gasLimit: 10_000_000,
 		gasPrice: 10_000_000_000,
-	});
-	await melodityGovernance.deployed();
+	}); */
+	melodityGovernance = await MelodityGovernance.attach("0xfCFE6E40B47FE7879Cf30180df157Df9e9e8AE33");
 	console.log("[+] Deploying Melodity Governance");
+	console.log("melodityGovernance", melodityGovernance.address)
 
 	// deploy dao timelock
+	// 0xeCEBB0572439F7B9D97EF31dc42efa6937385383
 	console.log("[ ] Deploying Melodity DAO Timelock ...");
 	const MelodityDAOTimelock = await hre.ethers.getContractFactory(
 		"MelodityDAOTimelock"
 	);
-	melodityDAOTimelock = await MelodityDAOTimelock.deploy(
+	/* melodityDAOTimelock = await MelodityDAOTimelock.deploy(
 		[],
 		[`0x${"0".repeat(40)}`],
 		{
 			gasLimit: 10_000_000,
 			gasPrice: 10_000_000_000,
 		}
-	);
+	); */
+	melodityDAOTimelock = await MelodityDAOTimelock.attach("0xeCEBB0572439F7B9D97EF31dc42efa6937385383");
 	await melodityDAOTimelock.deployed();
 	console.log("[+] Deploying Melodity DAO Timelock");
+	console.log("melodityDAOTimelock", melodityDAOTimelock.address)
 
 	console.log("[ ] Deploying Melodity DAO ...");
+	// 0x7e0923D9483475B3Cf5aA926796ECa87CED9653c
 	const MelodityDAO = await hre.ethers.getContractFactory("MelodityDAO");
-	melodityDAO = await MelodityDAO.deploy(
+	/* melodityDAO = await MelodityDAO.deploy(
 		melodityGovernance.address,
 		melodityDAOTimelock.address,
 		45818,
@@ -83,15 +93,17 @@ async function main() {
 			gasLimit: 10_000_000,
 			gasPrice: 10_000_000_000,
 		}
-	);
-	await melodityDAO.deployed();
+	); */
+	melodityDAO = await MelodityDAO.attach("0x7e0923D9483475B3Cf5aA926796ECa87CED9653c");
 	console.log("[+] Deploying Melodity DAO");
+	console.log("MelodityDAO", melodityDAO.address)
 
 	console.log("[ ] Deploying Melodity Stacking ...");
+	// 0xBBC7f6990BD35BbB2d6970f69616998790cA5614
 	const MelodityStacking = await hre.ethers.getContractFactory(
 		"MelodityStacking"
 	);
-	melodityStacking = await MelodityStacking.deploy(
+	/* melodityStacking = await MelodityStacking.deploy(
 		await masterchef.prng(),
 		await masterchef.stackingPanda(),
 		melodityGovernance.address,
@@ -101,13 +113,16 @@ async function main() {
 			gasLimit: 10_000_000,
 			gasPrice: 10_000_000_000,
 		}
-	);
-	await melodityStacking.deployed();
+	); */
+	melodityStacking = await MelodityStacking.attach("0xBBC7f6990BD35BbB2d6970f69616998790cA5614");
 	console.log("[+] Deploying Melodity Stacking");
+	console.log("melodityStacking", melodityStacking.address)
+	console.log("await masterchef.prng()", await masterchef.prng())
+	console.log("await masterchef.stackingPanda()", await masterchef.stackingPanda())
 
 	console.log("[ ] Completing contracts setup ...");
 	// retrieve masterchef addresses
-	prng = await masterchef.prng();
+	/* prng = await masterchef.prng();
 	stackingPanda = await masterchef.stackingPanda();
 	marketplace = await masterchef.marketplace();
 	masterchef = masterchef.address;
@@ -153,19 +168,28 @@ async function main() {
 	await tx;
 	melodityStackingReceipt = await melodityStacking.stackingReceipt();
 	melodityStacking = melodityStacking.address;
-	console.log("[+] Completing contracts setup\n\n");
+	console.log("[+] Completing contracts setup\n\n");*/
+
+	stackingPanda = await masterchef.stackingPanda();
+	marketplace = await masterchef.marketplace();
+	masterchef = masterchef.address;
+	melodityDAO = melodityDAO.address;
+	melodityDAOTimelock = melodityDAOTimelock.address
+	melodityGovernance = melodityGovernance.address
+	melodityStackingReceipt = await melodityStacking.stackingReceipt()
+	melodityStacking = melodityStacking.address;
 
 	console.group("Published contract addresses:");
 	console.log("masterchef:", masterchef);
 	console.log("melodityGovernance:", melodityGovernance);
-	console.log("prng:", prng);
+	console.log("prng:", "0x256C62804B4D76758a1b6b9A01879BCCA3f42Bd3");
 	console.log("stackingPanda:", stackingPanda);
 	console.log("marketplace:", marketplace);
 	console.log("melodityDAOTimelock:", melodityDAOTimelock);
 	console.log("melodityDAO:", melodityDAO);
 	console.log("melodityStacking:", melodityStacking);
 	console.log("melodityStackingReceipt:", melodityStackingReceipt);
-	console.groupEnd();
+	console.groupEnd(); 
 }
 
 // We recommend this pattern to be able to use async/await everywhere

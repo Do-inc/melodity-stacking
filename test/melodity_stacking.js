@@ -220,7 +220,7 @@ describe("Melodity stacking", function () {
 		} catch (e) {
 			expect(e.message).to.equals(
 				"VM Exception while processing transaction: reverted with reason string " +
-					"'Allowance too low'"
+					"'ERC20: insufficient allowance'"
 			);
 		}
 	});
@@ -258,7 +258,7 @@ describe("Melodity stacking", function () {
 		} catch (e) {
 			expect(e.message).to.equals(
 				"VM Exception while processing transaction: reverted with reason string " +
-					"'Not enough balance to stake'"
+					"'ERC20: transfer amount exceeds balance'"
 			);
 		}
 	});
@@ -363,7 +363,7 @@ describe("Melodity stacking", function () {
 		} catch (e) {
 			expect(e.message).to.equals(
 				"VM Exception while processing transaction: reverted with reason string " +
-					"'You're not the owner of the provided NFT'"
+					"'ERC721: transfer caller is not owner nor approved'"
 			);
 		}
 	});
@@ -383,7 +383,7 @@ describe("Melodity stacking", function () {
 		} catch (e) {
 			expect(e.message).to.equals(
 				"VM Exception while processing transaction: reverted with reason string " +
-					"'Stacking pool not allowed to withdraw your NFT'"
+					"'ERC721: transfer caller is not owner nor approved'"
 			);
 		}
 	});
@@ -456,7 +456,7 @@ describe("Melodity stacking", function () {
 		} catch (e) {
 			expect(e.message).to.equals(
 				"VM Exception while processing transaction: reverted with reason string " +
-					"'Not enought receipt to widthdraw'"
+					"'ERC20: insufficient allowance'"
 			);
 		}
 	});
@@ -530,10 +530,10 @@ describe("Melodity stacking", function () {
 		expect(melodity_balance).to.equals("990009000405010800000"); // 990.004500090000900000
 
 		melodity_balance = await melodity.balanceOf(_DO_INC_MULTISIG_WALLET);
-		expect(melodity_balance).to.equals("5000500022500600000"); // 5.000250005000050000
+		expect(melodity_balance).to.equals("9500950042751140000"); // 9.500950042751140000
 
 		melodity_balance = await melodity.balanceOf(dao.address);
-		expect(melodity_balance).to.equals("5000500022500600000"); // 5.000250005000050000
+		expect(melodity_balance).to.equals("500050002250060000"); // 0.500050002250060000
 	});
 	it("can withdraw with NFT", async function () {
 		tx = await melodity.approve(
@@ -906,17 +906,15 @@ describe("Melodity stacking", function () {
 		let old_maintainer = BigInt((await melodity_stacking.feeInfo())["feeMaintainerPercentage"].toString()).toString()
 
 		tx = await melodity_stacking.updateDaoFeePercentage(
-			ethers.utils.parseEther("5.0")
+			ethers.utils.parseEther("10.0")
 		);
 		await tx;
 
 		let after = BigInt((await melodity_stacking.feeInfo())["feeReceiverPercentage"].toString()).toString()
 		let after_maintainer = BigInt((await melodity_stacking.feeInfo())["feeMaintainerPercentage"].toString()).toString()
 
-		expect(after).to.be.bignumber.lessThan(old)
-		expect(after_maintainer).to.be.bignumber.greaterThan(old_maintainer)
-		expect(after).to.equal(ethers.utils.parseEther("5.0"))
-		expect(after_maintainer).to.equal(ethers.utils.parseEther("95.0"))
+		expect(after).to.equal(ethers.utils.parseEther("10.0"))
+		expect(after_maintainer).to.equal(ethers.utils.parseEther("90.0"))
 
 		try {
 			tx = await await melodity_stacking.updateDaoFeePercentage(
@@ -1176,7 +1174,19 @@ describe("Melodity stacking", function () {
 		let old_receipt_value = (await melodity_stacking.poolInfo())["receiptValue"],
 			new_receipt_value
 
-		await timetravel(90*60*60*24)
+		await timetravel(31*60*60*24)
+		tx = await melodity_stacking.refreshReceiptValue();
+		await tx.wait();
+
+		new_receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+
+		expect((await melodity_stacking.poolInfo())["lastComputedEra"]).to.equal(1)
+
+		expect(new_receipt_value.toString()).to.be.bignumber.greaterThan(old_receipt_value.toString())
+		expect(new_receipt_value.toString()).to.be.bignumber.greaterThan("1007200000000000000")
+		expect(new_receipt_value.toString()).to.be.bignumber.lessThan("1018250000000000000")
+
+		await timetravel(40*60*60*24)
 		tx = await melodity_stacking.refreshReceiptValue();
 		await tx.wait();
 

@@ -1,9 +1,9 @@
-// Sources flattened with hardhat v2.8.3 https://hardhat.org
+// Sources flattened with hardhat v2.9.1 https://hardhat.org
 
-// File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.5.0
 
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts v4.4.1 (token/ERC20/IERC20.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/IERC20.sol)
 
 pragma solidity ^0.8.0;
 
@@ -22,13 +22,13 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 
     /**
-     * @dev Moves `amount` tokens from the caller's account to `recipient`.
+     * @dev Moves `amount` tokens from the caller's account to `to`.
      *
      * Returns a boolean value indicating whether the operation succeeded.
      *
      * Emits a {Transfer} event.
      */
-    function transfer(address recipient, uint256 amount) external returns (bool);
+    function transfer(address to, uint256 amount) external returns (bool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -56,7 +56,7 @@ interface IERC20 {
     function approve(address spender, uint256 amount) external returns (bool);
 
     /**
-     * @dev Moves `amount` tokens from `sender` to `recipient` using the
+     * @dev Moves `amount` tokens from `from` to `to` using the
      * allowance mechanism. `amount` is then deducted from the caller's
      * allowance.
      *
@@ -65,8 +65,8 @@ interface IERC20 {
      * Emits a {Transfer} event.
      */
     function transferFrom(
-        address sender,
-        address recipient,
+        address from,
+        address to,
         uint256 amount
     ) external returns (bool);
 
@@ -86,7 +86,7 @@ interface IERC20 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
@@ -116,7 +116,7 @@ interface IERC20Metadata is IERC20 {
 }
 
 
-// File @openzeppelin/contracts/utils/Context.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Context.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
@@ -144,10 +144,10 @@ abstract contract Context {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/ERC20.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/ERC20.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (token/ERC20/ERC20.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/ERC20.sol)
 
 pragma solidity ^0.8.0;
 
@@ -253,11 +253,12 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      *
      * Requirements:
      *
-     * - `recipient` cannot be the zero address.
+     * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-        _transfer(_msgSender(), recipient, amount);
+    function transfer(address to, uint256 amount) public virtual override returns (bool) {
+        address owner = _msgSender();
+        _transfer(owner, to, amount);
         return true;
     }
 
@@ -271,12 +272,16 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     /**
      * @dev See {IERC20-approve}.
      *
+     * NOTE: If `amount` is the maximum `uint256`, the allowance is not updated on
+     * `transferFrom`. This is semantically equivalent to an infinite approval.
+     *
      * Requirements:
      *
      * - `spender` cannot be the zero address.
      */
     function approve(address spender, uint256 amount) public virtual override returns (bool) {
-        _approve(_msgSender(), spender, amount);
+        address owner = _msgSender();
+        _approve(owner, spender, amount);
         return true;
     }
 
@@ -286,26 +291,24 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * Emits an {Approval} event indicating the updated allowance. This is not
      * required by the EIP. See the note at the beginning of {ERC20}.
      *
+     * NOTE: Does not update the allowance if the current allowance
+     * is the maximum `uint256`.
+     *
      * Requirements:
      *
-     * - `sender` and `recipient` cannot be the zero address.
-     * - `sender` must have a balance of at least `amount`.
-     * - the caller must have allowance for ``sender``'s tokens of at least
+     * - `from` and `to` cannot be the zero address.
+     * - `from` must have a balance of at least `amount`.
+     * - the caller must have allowance for ``from``'s tokens of at least
      * `amount`.
      */
     function transferFrom(
-        address sender,
-        address recipient,
+        address from,
+        address to,
         uint256 amount
     ) public virtual override returns (bool) {
-        _transfer(sender, recipient, amount);
-
-        uint256 currentAllowance = _allowances[sender][_msgSender()];
-        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
-        unchecked {
-            _approve(sender, _msgSender(), currentAllowance - amount);
-        }
-
+        address spender = _msgSender();
+        _spendAllowance(from, spender, amount);
+        _transfer(from, to, amount);
         return true;
     }
 
@@ -322,7 +325,8 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * - `spender` cannot be the zero address.
      */
     function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender] + addedValue);
+        address owner = _msgSender();
+        _approve(owner, spender, _allowances[owner][spender] + addedValue);
         return true;
     }
 
@@ -341,10 +345,11 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * `subtractedValue`.
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        uint256 currentAllowance = _allowances[_msgSender()][spender];
+        address owner = _msgSender();
+        uint256 currentAllowance = _allowances[owner][spender];
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
         unchecked {
-            _approve(_msgSender(), spender, currentAllowance - subtractedValue);
+            _approve(owner, spender, currentAllowance - subtractedValue);
         }
 
         return true;
@@ -360,30 +365,30 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      *
      * Requirements:
      *
-     * - `sender` cannot be the zero address.
-     * - `recipient` cannot be the zero address.
-     * - `sender` must have a balance of at least `amount`.
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `from` must have a balance of at least `amount`.
      */
     function _transfer(
-        address sender,
-        address recipient,
+        address from,
+        address to,
         uint256 amount
     ) internal virtual {
-        require(sender != address(0), "ERC20: transfer from the zero address");
-        require(recipient != address(0), "ERC20: transfer to the zero address");
+        require(from != address(0), "ERC20: transfer from the zero address");
+        require(to != address(0), "ERC20: transfer to the zero address");
 
-        _beforeTokenTransfer(sender, recipient, amount);
+        _beforeTokenTransfer(from, to, amount);
 
-        uint256 senderBalance = _balances[sender];
-        require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
+        uint256 fromBalance = _balances[from];
+        require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
         unchecked {
-            _balances[sender] = senderBalance - amount;
+            _balances[from] = fromBalance - amount;
         }
-        _balances[recipient] += amount;
+        _balances[to] += amount;
 
-        emit Transfer(sender, recipient, amount);
+        emit Transfer(from, to, amount);
 
-        _afterTokenTransfer(sender, recipient, amount);
+        _afterTokenTransfer(from, to, amount);
     }
 
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
@@ -461,6 +466,28 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     }
 
     /**
+     * @dev Spend `amount` form the allowance of `owner` toward `spender`.
+     *
+     * Does not update the allowance amount in case of infinite allowance.
+     * Revert if not enough allowance is available.
+     *
+     * Might emit an {Approval} event.
+     */
+    function _spendAllowance(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal virtual {
+        uint256 currentAllowance = allowance(owner, spender);
+        if (currentAllowance != type(uint256).max) {
+            require(currentAllowance >= amount, "ERC20: insufficient allowance");
+            unchecked {
+                _approve(owner, spender, currentAllowance - amount);
+            }
+        }
+    }
+
+    /**
      * @dev Hook that is called before any transfer of tokens. This includes
      * minting and burning.
      *
@@ -502,7 +529,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 }
 
 
-// File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.4.2
+// File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/IERC165.sol)
@@ -531,7 +558,7 @@ interface IERC165 {
 }
 
 
-// File @openzeppelin/contracts/utils/introspection/ERC165Checker.sol@v4.4.2
+// File @openzeppelin/contracts/utils/introspection/ERC165Checker.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/ERC165Checker.sol)
@@ -646,7 +673,7 @@ library ERC165Checker {
 }
 
 
-// File @openzeppelin/contracts/security/ReentrancyGuard.sol@v4.4.2
+// File @openzeppelin/contracts/security/ReentrancyGuard.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (security/ReentrancyGuard.sol)
@@ -713,7 +740,7 @@ abstract contract ReentrancyGuard {
 }
 
 
-// File @openzeppelin/contracts/access/Ownable.sol@v4.4.2
+// File @openzeppelin/contracts/access/Ownable.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (access/Ownable.sol)
@@ -791,7 +818,7 @@ abstract contract Ownable is Context {
 }
 
 
-// File @openzeppelin/contracts/security/Pausable.sol@v4.4.2
+// File @openzeppelin/contracts/security/Pausable.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (security/Pausable.sol)
@@ -884,7 +911,7 @@ abstract contract Pausable is Context {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/IERC721Receiver.sol)
@@ -915,7 +942,7 @@ interface IERC721Receiver {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/utils/ERC721Holder.sol)
@@ -945,7 +972,7 @@ contract ERC721Holder is IERC721Receiver {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/IERC721.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/IERC721.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/IERC721.sol)
@@ -1090,7 +1117,7 @@ interface IERC721 is IERC165 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/extensions/IERC721Metadata.sol)
@@ -1119,12 +1146,12 @@ interface IERC721Metadata is IERC721 {
 }
 
 
-// File @openzeppelin/contracts/utils/Address.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Address.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (utils/Address.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (utils/Address.sol)
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.1;
 
 /**
  * @dev Collection of functions related to the address type
@@ -1146,17 +1173,22 @@ library Address {
      *  - an address where a contract will be created
      *  - an address where a contract lived, but was destroyed
      * ====
+     *
+     * [IMPORTANT]
+     * ====
+     * You shouldn't rely on `isContract` to protect against flash loan attacks!
+     *
+     * Preventing calls from contracts is highly discouraged. It breaks composability, breaks support for smart wallets
+     * like Gnosis Safe, and does not provide security since it can be circumvented by calling from a contract
+     * constructor.
+     * ====
      */
     function isContract(address account) internal view returns (bool) {
-        // This method relies on extcodesize, which returns 0 for contracts in
-        // construction, since the code is only stored at the end of the
-        // constructor execution.
+        // This method relies on extcodesize/address.code.length, which returns 0
+        // for contracts in construction, since the code is only stored at the end
+        // of the constructor execution.
 
-        uint256 size;
-        assembly {
-            size := extcodesize(account)
-        }
-        return size > 0;
+        return account.code.length > 0;
     }
 
     /**
@@ -1340,7 +1372,7 @@ library Address {
 }
 
 
-// File @openzeppelin/contracts/utils/Strings.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Strings.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Strings.sol)
@@ -1411,7 +1443,7 @@ library Strings {
 }
 
 
-// File @openzeppelin/contracts/utils/introspection/ERC165.sol@v4.4.2
+// File @openzeppelin/contracts/utils/introspection/ERC165.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/ERC165.sol)
@@ -1442,10 +1474,10 @@ abstract contract ERC165 is IERC165 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC721/ERC721.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC721/ERC721.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (token/ERC721/ERC721.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC721/ERC721.sol)
 
 pragma solidity ^0.8.0;
 
@@ -1731,6 +1763,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         _owners[tokenId] = to;
 
         emit Transfer(address(0), to, tokenId);
+
+        _afterTokenTransfer(address(0), to, tokenId);
     }
 
     /**
@@ -1755,6 +1789,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         delete _owners[tokenId];
 
         emit Transfer(owner, address(0), tokenId);
+
+        _afterTokenTransfer(owner, address(0), tokenId);
     }
 
     /**
@@ -1773,7 +1809,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         address to,
         uint256 tokenId
     ) internal virtual {
-        require(ERC721.ownerOf(tokenId) == from, "ERC721: transfer of token that is not own");
+        require(ERC721.ownerOf(tokenId) == from, "ERC721: transfer from incorrect owner");
         require(to != address(0), "ERC721: transfer to the zero address");
 
         _beforeTokenTransfer(from, to, tokenId);
@@ -1786,6 +1822,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         _owners[tokenId] = to;
 
         emit Transfer(from, to, tokenId);
+
+        _afterTokenTransfer(from, to, tokenId);
     }
 
     /**
@@ -1865,10 +1903,27 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         address to,
         uint256 tokenId
     ) internal virtual {}
+
+    /**
+     * @dev Hook that is called after any transfer of tokens. This includes
+     * minting and burning.
+     *
+     * Calling conditions:
+     *
+     * - when `from` and `to` are both non-zero.
+     * - `from` and `to` are never both zero.
+     *
+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     */
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual {}
 }
 
 
-// File @openzeppelin/contracts/utils/Counters.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Counters.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Counters.sol)
@@ -1984,6 +2039,20 @@ contract PRNG {
                 )
             );
     }
+
+    function seedRotate() public returns(bool) {
+        // Allow overflow of the seed, what we want here is the possibility for
+        // the seed to rotate indiscriminately over all the number in range without
+        // ever throwing an error.
+        // This give the possibility to call this function every time possible.
+        // The seed presence gives also the possibility to call this function subsequently even in
+        // the same transaction and receive 2 different outputs
+        unchecked {
+            seed++;
+        }
+
+        return true;
+    }
 }
 
 
@@ -2047,7 +2116,7 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
         string calldata _picUrl,
         StackingBonus calldata _stackingBonus
     ) public nonReentrant onlyOwner returns (uint256) {
-        prng.rotate();
+        prng.seedRotate();
 
         // Only 100 NFTs will be mintable
         require(_tokenIds.current() < 100, "All pandas minted");
@@ -2061,7 +2130,7 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
         metadata.push(
             Metadata({name: _name, picUrl: _picUrl, bonus: _stackingBonus})
         );
-        _mint(owner(), newItemId);
+        _safeMint(owner(), newItemId);
 
         emit NewPandaMinted(newItemId, _name);
 
@@ -2079,10 +2148,10 @@ contract StackingPanda is ERC721, Ownable, ReentrancyGuard {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/ERC20Burnable.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/extensions/ERC20Burnable.sol)
 
 pragma solidity ^0.8.0;
 
@@ -2114,17 +2183,13 @@ abstract contract ERC20Burnable is Context, ERC20 {
      * `amount`.
      */
     function burnFrom(address account, uint256 amount) public virtual {
-        uint256 currentAllowance = allowance(account, _msgSender());
-        require(currentAllowance >= amount, "ERC20: burn amount exceeds allowance");
-        unchecked {
-            _approve(account, _msgSender(), currentAllowance - amount);
-        }
+        _spendAllowance(account, _msgSender(), amount);
         _burn(account, amount);
     }
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-IERC20Permit.sol)
@@ -2188,10 +2253,10 @@ interface IERC20Permit {
 }
 
 
-// File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.4.2
+// File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (utils/cryptography/ECDSA.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (utils/cryptography/ECDSA.sol)
 
 pragma solidity ^0.8.0;
 
@@ -2307,12 +2372,8 @@ library ECDSA {
         bytes32 r,
         bytes32 vs
     ) internal pure returns (address, RecoverError) {
-        bytes32 s;
-        uint8 v;
-        assembly {
-            s := and(vs, 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
-            v := add(shr(255, vs), 27)
-        }
+        bytes32 s = vs & bytes32(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+        uint8 v = uint8((uint256(vs) >> 255) + 27);
         return tryRecover(hash, v, r, s);
     }
 
@@ -2424,7 +2485,7 @@ library ECDSA {
 }
 
 
-// File @openzeppelin/contracts/utils/cryptography/draft-EIP712.sol@v4.4.2
+// File @openzeppelin/contracts/utils/cryptography/draft-EIP712.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/cryptography/draft-EIP712.sol)
@@ -2530,7 +2591,7 @@ abstract contract EIP712 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-ERC20Permit.sol)
@@ -2639,26 +2700,26 @@ pragma solidity ^0.8.2;
 	or yield optimizer.
  */
 contract StackingReceipt is ERC20, ERC20Burnable, Ownable, ERC20Permit {
-    constructor(string memory _name, string memory _ticker)
-        ERC20(_name, _ticker)
-        ERC20Permit(_name)
-    {}
+  constructor(string memory _name, string memory _ticker)
+    ERC20(_name, _ticker)
+    ERC20Permit(_name)
+  {}
 
-    function mint(address _to, uint256 _amount) public onlyOwner {
-        _mint(_to, _amount);
-    }
+  function mint(address _to, uint256 _amount) public onlyOwner {
+    _mint(_to, _amount);
+  }
 
-    function burn(uint256 _amount) public override onlyOwner {
-        _burn(msg.sender, _amount);
-    }
+  function burn(uint256 _amount) public override onlyOwner {
+    _burn(msg.sender, _amount);
+  }
 
-    function burnFrom(address _account, uint256 _amount)
-        public
-        override
-        onlyOwner
-    {
-        ERC20Burnable.burnFrom(_account, _amount);
-    }
+  function burnFrom(address _account, uint256 _amount)
+    public
+    override
+    onlyOwner
+  {
+    ERC20Burnable.burnFrom(_account, _amount);
+  }
 }
 
 
@@ -2680,10 +2741,14 @@ pragma solidity 0.8.11;
 	@custom:security-contact security@melodity.org
  */
 contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
-	bytes4 constant public _INTERFACE_ID_ERC20_METADATA = 0x942e8b22;
 	address constant public _DO_INC_MULTISIG_WALLET = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
 	uint256 constant public _PERCENTAGE_SCALE = 10 ** 20;
 	uint256 constant public _EPOCH_DURATION = 1 hours;
+
+	/// Max fee if withdraw occurr before withdrawFeePeriod days
+	uint256 constant public _MAX_FEE_PERCENTAGE = 10 ether;
+	/// Min fee if withdraw occurr before withdrawFeePeriod days
+	uint256 constant public _MIN_FEE_PERCENTAGE = 0.1 ether;
 
 	/**
 		@param startingTime Era starting time
@@ -2709,6 +2774,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param genesisEraDuration Contract genesis timestamp, used to start eras calculation
 		@param genesisRewardScaleFactor Contract genesis reward scaling factor
 		@param genesisEraScaleFactor Contract genesis era scaling factor
+		@param lastComputedEra Index of the last computed era in the eraInfos array
 	 */
 	struct PoolInfo {
 		uint256 rewardPool;
@@ -2721,11 +2787,10 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		uint256 genesisRewardFactorPerEpoch;
 		bool exhausting;
 		bool dismissed;
+		uint256 lastComputedEra;
 	}
 
 	/**
-		@param maxFeePercentage Max fee if withdraw occurr before withdrawFeePeriod days
-		@param minFeePercentage Min fee if withdraw occurr before withdrawFeePeriod days
 		@param feePercentage Currently applied fee percentage for early withdraw
 		@param feeReceiver Address where the fees gets sent
 		@param withdrawFeePeriod Number of days or hours that a deposit is considered to 
@@ -2736,8 +2801,6 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param feeMaintainerMinPercent Minimum percentage that can be given to the _DO_INC_MULTISIG_WALLET
 	 */
 	struct FeeInfo {
-		uint256 maxFeePercentage;
-		uint256 minFeePercentage;
 		uint256 feePercentage;
 		address feeReceiver;
 		uint256 withdrawFeePeriod;
@@ -2775,6 +2838,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 	FeeInfo public feeInfo;
 	EraInfo[] public eraInfos;
 	mapping(address => uint256) private stackersLastDeposit;
+	mapping(address => uint256) private stackersHigherDeposit;
 	mapping(address => StackedNFT[]) public stackedNFTs;
 	mapping(uint256 => address) public depositorNFT;
 
@@ -2783,14 +2847,15 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
     PRNG public prng;
 	StackingPanda public stackingPanda;
 
-	event Deposit(address account, uint256 amount, uint256 receiptAmount, uint256 depositTime);
-	event NFTDeposit(address account, uint256 nftId);
+	event Deposit(address indexed account, uint256 amount, uint256 receiptAmount);
+	event NFTDeposit(address indexed account, uint256 nftId, uint256 nftPositionIndex);
 	event ReceiptValueUpdate(uint256 value);
-	event Withdraw(address account, uint256 amount, uint256 receiptAmount);
-	event NFTWithdraw(address account, uint256 nftId);
+	event Withdraw(address indexed account, uint256 amount, uint256 receiptAmount);
+	event NFTWithdraw(address indexed account, uint256 nftId);
 	event FeePaid(uint256 amount, uint256 receiptAmount);
 	event RewardPoolIncreased(uint256 insertedAmount);
 	event PoolExhausting(uint256 amountLeft);
+	event PoolRefilled(uint256 amountLeft);
 	event EraDurationUpdate(uint256 oldDuration, uint256 newDuration);
 	event RewardScalingFactorUpdate(uint256 oldFactor, uint256 newFactor);
 	event EraScalingFactorUpdate(uint256 oldFactor, uint256 newFactor);
@@ -2824,12 +2889,11 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 			genesisEraScaleFactor: 107 ether,
 			genesisRewardFactorPerEpoch: 0.001 ether,
 			exhausting: false,
-			dismissed: false
+			dismissed: false,
+			lastComputedEra: 0
 		});
 
 		feeInfo = FeeInfo({
-			maxFeePercentage: 10 ether,
-			minFeePercentage: 0.1 ether,
 			feePercentage: 10 ether,
 			feeReceiver: _dao,
 			withdrawFeePeriod: 7 days,
@@ -2846,6 +2910,29 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		return eraInfos.length;
 	}
 
+	function getNewEraInfo(uint256 k) private view returns(EraInfo memory) {
+		// get the genesis value or the last one available.
+		// NOTE: as this is a modification of existing values the last available value before
+		// 		the curren one is stored as the (k-1)-th element of the eraInfos array
+		uint256 lastTimestamp = k == 0 ? poolInfo.genesisTime : eraInfos[k - 1].startingTime + eraInfos[k - 1].eraDuration;
+		uint256 lastEraDuration = k == 0 ? poolInfo.genesisEraDuration : eraInfos[k - 1].eraDuration;
+		uint256 lastEraScalingFactor = k == 0 ? poolInfo.genesisEraScaleFactor : eraInfos[k - 1].eraScaleFactor;
+		uint256 lastRewardScalingFactor = k == 0 ? poolInfo.genesisRewardScaleFactor : eraInfos[k - 1].rewardScaleFactor;
+		uint256 lastEpochRewardFactor = k == 0 ? poolInfo.genesisRewardFactorPerEpoch : eraInfos[k - 1].rewardFactorPerEpoch;
+
+		uint256 newEraDuration = k != 0 ? lastEraDuration * lastEraScalingFactor / _PERCENTAGE_SCALE : poolInfo.genesisEraDuration;
+
+		return EraInfo({
+			// new eras starts always the second after the ending of the previous
+			// if era-1 ends at sec 1234 era-2 will start at sec 1235
+			startingTime: lastTimestamp + 1,
+			eraDuration: newEraDuration,
+			rewardScaleFactor: lastRewardScalingFactor,
+			eraScaleFactor: lastEraScalingFactor,
+			rewardFactorPerEpoch: k != 0 ? lastEpochRewardFactor * lastRewardScalingFactor / _PERCENTAGE_SCALE : poolInfo.genesisRewardFactorPerEpoch
+		});
+	}
+
 	/**
 		Trigger the regeneration of _erasToGenerate (at most 128) eras from the current
 		one.
@@ -2859,38 +2946,33 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _erasToGenerate Number of eras to (re-)generate
 	 */
 	function _triggerErasInfoRefresh(uint8 _erasToGenerate) private {
-		uint256 existingErasInfos = eraInfos.length;
+		// 9
+		uint256 existingEraInfoCount = eraInfos.length;
 		uint256 i;
 		uint256 k;
 
+		// - 0: 0 < 1 ? true
+		// - 1: 1 < 1 ? false
 		while(i < _erasToGenerate) {
 			// check if exists some era infos, if they exists check if the k-th era is already started
 			// if it is already started it cannot be edited and we won't consider it actually increasing 
 			// k
-			if(existingErasInfos > k && eraInfos[k].startingTime <= block.timestamp) {
+			// - 0: 9 > 0 ? true & 1646996113 < 1648269466 ? true => pass
+			// - 0: 9 > 1 ? true & 1649588114 < 1648269466 ? false
+			if(existingEraInfoCount > k && eraInfos[k].startingTime <= block.timestamp) {
 				k++;
 			}
 			// if the era is not yet started we can modify its values
-			else if(existingErasInfos > k && eraInfos[k].startingTime > block.timestamp) {
-				// get the genesis value or the last one available.
-				// NOTE: as this is a modification of existing values the last available value before
-				// 		the curren one is stored as the (k-1)-th element of the eraInfos array
-				uint256 lastTimestamp = k == 0 ? poolInfo.genesisTime : eraInfos[k - 1].startingTime + eraInfos[k - 1].eraDuration;
-				uint256 lastEraDuration = k == 0 ? poolInfo.genesisEraDuration : eraInfos[k - 1].eraDuration;
-				uint256 lastEraScalingFactor = k == 0 ? poolInfo.genesisEraScaleFactor : eraInfos[k - 1].eraScaleFactor;
-				uint256 lastRewardScalingFactor = k == 0 ? poolInfo.genesisRewardScaleFactor : eraInfos[k - 1].rewardScaleFactor;
-				uint256 lastEpochRewardFactor = k == 0 ? poolInfo.genesisRewardFactorPerEpoch : eraInfos[k - 1].rewardFactorPerEpoch;
-
-				uint256 newEraDuration = k != 0 ? lastEraDuration * lastEraScalingFactor / _PERCENTAGE_SCALE : poolInfo.genesisEraDuration;
-				eraInfos[k] = EraInfo({
-					// new eras starts always the second after the ending of the previous
-					// if era-1 ends at sec 1234 era-2 will start at sec 1235
-					startingTime: lastTimestamp + 1,
-					eraDuration: newEraDuration,
-					rewardScaleFactor: lastRewardScalingFactor,
-					eraScaleFactor: lastEraScalingFactor,
-					rewardFactorPerEpoch: k != 0 ? lastEpochRewardFactor * lastRewardScalingFactor / _PERCENTAGE_SCALE : poolInfo.genesisRewardFactorPerEpoch
-				});
+			// - 0: 9 > 1 ? true & 1649588114 > 1648269466 ? true => pass
+			else if(existingEraInfoCount > k && eraInfos[k].startingTime > block.timestamp) {
+				// - 0: k = 1 & {
+					// 	startingTime: 1649588114,
+					// 	eraDuration: 2047680,
+					// 	rewardScaleFactor: 79000000000000000000,
+					// 	eraScaleFactor: 107000000000000000000,
+					// 	rewardFactorPerEpoch: 790000000000000
+				// }
+				eraInfos[k] = getNewEraInfo(k);
 
 				// as an era was just updated increase the i counter
 				i++;
@@ -2899,30 +2981,14 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 				k++;
 			}
 			// start generating new eras info if the number of existing eras is equal to the last computed
-			else if(existingErasInfos == k) {
-				// get the genesis value or the last one available
-				uint256 lastTimestamp = k == 0 ? poolInfo.genesisTime : eraInfos[k - 1].startingTime + eraInfos[k - 1].eraDuration;
-				uint256 lastEraDuration = k == 0 ? poolInfo.genesisEraDuration : eraInfos[k - 1].eraDuration;
-				uint256 lastEraScalingFactor = k == 0 ? poolInfo.genesisEraScaleFactor : eraInfos[k - 1].eraScaleFactor;
-				uint256 lastRewardScalingFactor = k == 0 ? poolInfo.genesisRewardScaleFactor : eraInfos[k - 1].rewardScaleFactor;
-				uint256 lastEpochRewardFactor = k == 0 ? poolInfo.genesisRewardFactorPerEpoch : eraInfos[k - 1].rewardFactorPerEpoch;
-
-				uint256 newEraDuration = k != 0 ? lastEraDuration * lastEraScalingFactor / _PERCENTAGE_SCALE : poolInfo.genesisEraDuration;
-				eraInfos.push(EraInfo({
-					// new eras starts always the second after the ending of the previous
-					// if era-1 ends at sec 1234 era-2 will start at sec 1235
-					startingTime: lastTimestamp + 1,
-					eraDuration: newEraDuration,
-					rewardScaleFactor: lastRewardScalingFactor,
-					eraScaleFactor: lastEraScalingFactor,
-					rewardFactorPerEpoch: k != 0 ? lastEpochRewardFactor * lastRewardScalingFactor / _PERCENTAGE_SCALE : poolInfo.genesisRewardFactorPerEpoch
-				}));
+			else if(existingEraInfoCount == k) {
+				eraInfos.push(getNewEraInfo(k));
 
 				// as an era was just created increase the i counter
 				i++;
 				// in order to move to the next era and start creating a new one we also need to increase
 				// k counter and the existingErasInfos counter
-				existingErasInfos = eraInfos.length;
+				existingEraInfoCount = eraInfos.length;
 				k++;
 			}
 		}
@@ -2945,11 +3011,9 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _amount Amount of MELD that will be stacked
 	 */
 	function _deposit(uint256 _amount) private returns(uint256) {
-		prng.rotate();
+		prng.seedRotate();
 
 		require(_amount > 0, "Unable to deposit null amount");
-		require(melodity.balanceOf(msg.sender) >= _amount, "Not enough balance to stake");
-		require(melodity.allowance(msg.sender, address(this)) >= _amount, "Allowance too low");
 
 		refreshReceiptValue();
 
@@ -2957,14 +3021,19 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		// increase but the reward pool will not
 		melodity.transferFrom(msg.sender, address(this), _amount);
 
-		// update the last deposit time, reset the withdraw fee timer
-		stackersLastDeposit[msg.sender] = block.timestamp;
+		// weighted stake last time
+		// NOTE: prev_date = 0 => balance = 0, equation reduces to block.timestamp
+		uint256 prev_date = stackersLastDeposit[msg.sender];
+		uint256 balance = stackingReceipt.balanceOf(msg.sender);
+		stackersLastDeposit[msg.sender] = (balance + _amount) > 0 ?
+			prev_date + (block.timestamp - prev_date) * (_amount / (balance + _amount)) :
+			prev_date;
 
 		// mint the stacking receipt to the depositor
-		uint256 receiptAmount = _amount * 1 ether / poolInfo.receiptValue ;
+		uint256 receiptAmount = _amount * 1 ether / poolInfo.receiptValue;
 		stackingReceipt.mint(msg.sender, receiptAmount);
 
-		emit Deposit(msg.sender, _amount, receiptAmount, block.timestamp);
+		emit Deposit(msg.sender, _amount, receiptAmount);
 
 		return receiptAmount;
 	}
@@ -2978,10 +3047,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _nftId NFT identifier that will be stacked with the funds
 	 */
 	function depositWithNFT(uint256 _amount, uint256 _nftId) public nonReentrant whenNotPaused {
-		prng.rotate();
-
-		require(stackingPanda.ownerOf(_nftId) == msg.sender, "You're not the owner of the provided NFT");
-		require(stackingPanda.getApproved(_nftId) == address(this), "Stacking pool not allowed to withdraw your NFT");
+		prng.seedRotate();
 
 		// withdraw the nft from the sender
 		stackingPanda.safeTransferFrom(msg.sender, address(this), _nftId);
@@ -3002,7 +3068,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		}));
 		depositorNFT[_nftId] = msg.sender;
 
-		emit NFTDeposit(msg.sender, _nftId);
+		emit NFTDeposit(msg.sender, _nftId, stackedNFTs[msg.sender].length -1);
 	}
 
 	/**
@@ -3022,17 +3088,9 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _amount Receipt amount to reconvert to MELD
 	 */
 	function _withdraw(uint256 _amount) private {
-		prng.rotate();
+		prng.seedRotate();
 
         require(_amount > 0, "Nothing to withdraw");
-		require(
-			stackingReceipt.balanceOf(msg.sender) >= _amount,
-			"Not enought receipt to widthdraw"
-		);
-		require(
-			stackingReceipt.allowance(msg.sender, address(this)) >= _amount,
-			"Stacking pool not allowed to withdraw enough of you receipt"
-		);
 
 		refreshReceiptValue();
 
@@ -3042,7 +3100,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		uint256 meldToWithdraw = _amount * poolInfo.receiptValue / 1 ether;
 
 		// reduce the reward pool
-		poolInfo.rewardPool -= meldToWithdraw;
+		poolInfo.rewardPool -= meldToWithdraw - _amount;
 		_checkIfExhausting();
 
 		uint256 lastAction = stackersLastDeposit[msg.sender];
@@ -3086,7 +3144,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _index Index of the stackedNFTs array whose NFT will be recovered if possible
 	 */
 	function withdrawWithNFT(uint256 _amount, uint256 _index) public nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
 		require(stackedNFTs[msg.sender].length > _index, "Index out of bound");
 
@@ -3138,53 +3196,83 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@notice This method *MUST* never be marked as nonReentrant as if no valid era was found it
 				calls itself back after the generation of 2 new era infos
 	 */
-	function refreshReceiptValue() public {
-		prng.rotate();
+	function refreshReceiptValuePaginated(uint256 max_cicles) public {
+		prng.seedRotate();
 
+		// 1648268987
 		uint256 _now = block.timestamp;
+		// 1646996112
 		uint256 lastUpdateTime = poolInfo.lastReceiptUpdateTime;
+		// pass
 		require(lastUpdateTime < _now, "Receipt value already update in this transaction");
 
 		poolInfo.lastReceiptUpdateTime = block.timestamp;
 
 		uint256 eraEndingTime;
-		bool validEraFound;
+		bool validEraFound = true;
+		// 10
+		uint256 length = eraInfos.length;
 
-		for(uint256 i; i < eraInfos.length; i++) {
+		// In case _now exceeds the last era info ending time validEraFound would be true this will avoid the creation
+		// of new era infos leading to pool locking and price not updating anymore
+		// 9
+		uint256 last_index = eraInfos.length - 1;
+		// 1678043047 + 4765280
+		uint256 last_era_ending_time = eraInfos[last_index].startingTime + eraInfos[last_index].eraDuration;
+		// false
+		if(_now > last_era_ending_time) {
+			validEraFound = false;
+		}
+
+		// No valid era exists this mean that the following era data were not generated yet, 
+		// estimate the number of required eras then generate them
+		// always enters as the default value will always be false, at least an era will always be generated
+		if(!validEraFound) {
+			// estimate needed era infos and always add 1
+			uint256 eras_to_generate = 1;
+			while(_now > last_era_ending_time) {
+				EraInfo memory ei = getNewEraInfo(last_index);
+				last_era_ending_time = ei.startingTime + ei.eraDuration;
+				last_index++;
+			}
+			eras_to_generate += last_index - eraInfos.length;
+			
+			// to check
+			_triggerErasInfoRefresh(uint8(eras_to_generate));
+		}
+
+		// set a max cap of cicles to do, if the cap exceeds the eras computed than use length as max cap
+		// 2
+		uint256 proposed_length = poolInfo.lastComputedEra + max_cicles;
+		// 2
+		length = proposed_length > length ? length : proposed_length;
+
+		// i = 0
+		for(uint256 i = poolInfo.lastComputedEra; i < length; i++) {
+			// - 0: 1646996113 + 2592000
 			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
 
 			// check if the lastUpdateTime is inside the currently checking era
+			// - 0: 1646996113 < 1646996112 ? false & ...
 			if(eraInfos[i].startingTime <= lastUpdateTime && lastUpdateTime <= eraEndingTime) {
-				// As there may be the case no valid era was still created and this branch will never enter
-				// we use a boolean value to indicate if it was ever entered or not. as we're into the branch
-				// we set is to true here
-				validEraFound = true;
-
 				// check if _now is in the same era of the lastUpdateTime, if it is then use _now to recompute the receipt value
 				if(eraInfos[i].startingTime <= _now && _now <= eraEndingTime) {
 					// NOTE: here some epochs may get lost as lastUpdateTime will almost never be equal to the exact epoch
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
-
-					uint256 diffFromEraEnd = eraEndingTime - _now;
-					uint256 diffFromEpochEndAlignment = diffFromEraEnd % _EPOCH_DURATION;
-					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - diffFromEpochEndAlignment;
-					uint256 realEpochStartTime = _now - diffFromEpochStartAlignment;
-					uint256 realPassedEpochs = realEpochStartTime / _EPOCH_DURATION;
-
-					uint256 realPassedEpochsAtLastUpdate = lastUpdateTime / _EPOCH_DURATION;
-					uint256 diff = realPassedEpochs - realPassedEpochsAtLastUpdate;
+					uint256 diff = (_now - lastUpdateTime) / _EPOCH_DURATION;
 
 					// recompute the receipt value missingFullEpochs times
 					while(diff > 0) {
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
 						diff--;
 					}
-					poolInfo.lastReceiptUpdateTime = realEpochStartTime;
+					poolInfo.lastReceiptUpdateTime = lastUpdateTime + diff * _EPOCH_DURATION;
+					poolInfo.lastComputedEra = i;
 
 					// as _now was into the given era, we can stop the current loop here
-					i = eraInfos.length;
+					break;
 				}
 				// if it is in a different era then proceed using the eraEndingTime to compute the number of epochs left to
 				// include in the current era and then proceed with the next value
@@ -3193,36 +3281,36 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
-					uint256 diffFromEraEnd = eraEndingTime;
-					uint256 diffFromEpochEndAlignment = diffFromEraEnd % _EPOCH_DURATION;
-					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - diffFromEpochEndAlignment;
-					uint256 realEpochStartTime = _now - diffFromEpochStartAlignment;
-					uint256 realPassedEpochs = realEpochStartTime / _EPOCH_DURATION;
-
-					uint256 realPassedEpochsAtLastUpdate = lastUpdateTime / _EPOCH_DURATION;
-					uint256 diff = realPassedEpochs - realPassedEpochsAtLastUpdate;
+					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - (eraEndingTime % _EPOCH_DURATION);
+					uint256 realEpochStartTime = eraEndingTime - diffFromEpochStartAlignment;
+					uint256 diff = (eraEndingTime - lastUpdateTime) / _EPOCH_DURATION;
 
 					// recompute the receipt value missingFullEpochs times
 					while(diff > 0) {
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
 						diff--;
 					}
+					poolInfo.lastReceiptUpdateTime = realEpochStartTime;
+					poolInfo.lastComputedEra = i;
+
+					// as accessing the next era info using index+1 can throw an index out of bound the
+					// next era starting time is computed based on the curren era
+					lastUpdateTime = eraInfos[i].startingTime + eraInfos[i].eraDuration + 1;
 				}
 			}
 		}
 
-		// No valid era exists this mean that the following era data were not generated yet, simply trigger the generation of the
-		// next 2 eras and recall this method
-		if(!validEraFound) {
-			// in order to avoid the triggering of the error check at the begin of this method here we reduce the last receipt time by 1
-			// this is an easy hack around the error check
-			poolInfo.lastReceiptUpdateTime--;
-
-			_triggerErasInfoRefresh(2);
-			refreshReceiptValue();
-		}
-
 		emit ReceiptValueUpdate(poolInfo.receiptValue);
+	}
+
+	/**
+		Update the receipt value if necessary
+
+		@notice This method *MUST* never be marked as nonReentrant as if no valid era was found it
+				calls itself back after the generation of 2 new era infos
+	 */
+	function refreshReceiptValue() public {
+		refreshReceiptValuePaginated(2);
 	}
 
 	/**
@@ -3291,16 +3379,18 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _amount MELD to insert into the reward pool
 	 */
 	function increaseRewardPool(uint256 _amount) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 
 		require(_amount > 0, "Unable to deposit null amount");
-		require(melodity.balanceOf(msg.sender) >= _amount, "Not enough balance to stake");
-		require(melodity.allowance(msg.sender, address(this)) >= _amount, "Allowance too low");
 
 		melodity.transferFrom(msg.sender, address(this), _amount);
 		poolInfo.rewardPool += _amount;
 
-		_checkIfExhausting();
+		if(poolInfo.rewardPool >= 1_000_000 ether) {
+			poolInfo.exhausting = false;
+			emit PoolRefilled(poolInfo.rewardPool);
+		}
+
 		emit RewardPoolIncreased(_amount);
 	}
 
@@ -3310,7 +3400,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _eraAmount Number of eras to refresh
 	 */
 	function refreshErasInfo(uint8 _eraAmount) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
 		_triggerErasInfoRefresh(_eraAmount);
 	}
@@ -3325,7 +3415,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _erasToRefresh Number of eras to refresh immediately starting from the next one
 	 */
 	function updateRewardScaleFactor(uint256 _factor, uint8 _erasToRefresh) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 
 		uint256 eraIndex = getCurrentEraIndex();
 		EraInfo storage eraInfo = eraInfos[eraIndex];
@@ -3345,7 +3435,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _erasToRefresh Number of eras to refresh immediately starting from the next one
 	 */
 	function updateEraScaleFactor(uint256 _factor, uint8 _erasToRefresh) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 
 		uint256 eraIndex = getCurrentEraIndex();
 		EraInfo storage eraInfo = eraInfos[eraIndex];
@@ -3365,10 +3455,10 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _percent Percentage of the fee
 	 */
 	function updateEarlyWithdrawFeePercent(uint256 _percent) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
-		require(_percent >= feeInfo.minFeePercentage, "Early withdraw fee too low");
-		require(_percent <= feeInfo.maxFeePercentage, "Early withdraw fee too high");
+		require(_percent >= _MIN_FEE_PERCENTAGE, "Early withdraw fee too low");
+		require(_percent <= _MAX_FEE_PERCENTAGE, "Early withdraw fee too high");
 
 		uint256 old = feeInfo.feePercentage;
 		feeInfo.feePercentage = _percent;
@@ -3383,7 +3473,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _dao Address of the fee receiver
 	 */
 	function updateFeeReceiverAddress(address _dao) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
 		require(_dao != address(0), "Provided address is invalid");
 
@@ -3401,7 +3491,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _isDay Whether the provided period is in hours or in days
 	 */
 	function updateWithdrawFeePeriod(uint256 _period, bool _isDay) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
 		if(_isDay) {
 			// days (max 7 days, min 1 day)
@@ -3434,7 +3524,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _percent Percentage of the fee to send to the dao
 	 */
 	function updateDaoFeePercentage(uint256 _percent) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
 		require(_percent >= feeInfo.feeReceiverMinPercent, "Dao's fee share too low");
 		require(_percent <= 100 ether - feeInfo.feeMaintainerMinPercent, "Dao's fee share too high");
@@ -3457,7 +3547,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _percent Percentage of the fee to send to the maintainers
 	 */
 	function updateMaintainerFeePercentage(uint256 _percent) public onlyOwner nonReentrant {
-		prng.rotate();
+		prng.seedRotate();
 		
 		require(_percent >= feeInfo.feeMaintainerMinPercent, "Maintainer's fee share too low");
 		require(_percent <= 100 ether - feeInfo.feeReceiverMinPercent, "Maintainer's fee share too high");
@@ -3473,7 +3563,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		Pause the stacking pool
 	 */
 	function pause() public whenNotPaused nonReentrant onlyOwner {
-		prng.rotate();
+		prng.seedRotate();
 		
 		_pause();
 	}
@@ -3482,7 +3572,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		Resume the stacking pool
 	 */
 	function resume() public whenPaused nonReentrant onlyOwner {
-		prng.rotate();
+		prng.seedRotate();
 		
 		_unpause();
 	}
@@ -3497,7 +3587,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 				any reward for newer eras.
 	 */
 	function dismissionWithdraw() public whenPaused nonReentrant onlyOwner {
-		prng.rotate();
+		prng.seedRotate();
 		
 		require(!poolInfo.dismissed, "Pool already dismissed");
 		require(poolInfo.exhausting, "Dismission enabled only once the stacking pool is exhausting");

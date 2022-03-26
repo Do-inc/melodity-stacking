@@ -1,9 +1,9 @@
-// Sources flattened with hardhat v2.8.3 https://hardhat.org
+// Sources flattened with hardhat v2.9.1 https://hardhat.org
 
-// File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.5.0
 
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts v4.4.1 (token/ERC20/IERC20.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/IERC20.sol)
 
 pragma solidity ^0.8.0;
 
@@ -22,13 +22,13 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 
     /**
-     * @dev Moves `amount` tokens from the caller's account to `recipient`.
+     * @dev Moves `amount` tokens from the caller's account to `to`.
      *
      * Returns a boolean value indicating whether the operation succeeded.
      *
      * Emits a {Transfer} event.
      */
-    function transfer(address recipient, uint256 amount) external returns (bool);
+    function transfer(address to, uint256 amount) external returns (bool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -56,7 +56,7 @@ interface IERC20 {
     function approve(address spender, uint256 amount) external returns (bool);
 
     /**
-     * @dev Moves `amount` tokens from `sender` to `recipient` using the
+     * @dev Moves `amount` tokens from `from` to `to` using the
      * allowance mechanism. `amount` is then deducted from the caller's
      * allowance.
      *
@@ -65,8 +65,8 @@ interface IERC20 {
      * Emits a {Transfer} event.
      */
     function transferFrom(
-        address sender,
-        address recipient,
+        address from,
+        address to,
         uint256 amount
     ) external returns (bool);
 
@@ -86,7 +86,7 @@ interface IERC20 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
@@ -116,7 +116,7 @@ interface IERC20Metadata is IERC20 {
 }
 
 
-// File @openzeppelin/contracts/utils/Context.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Context.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
@@ -144,10 +144,10 @@ abstract contract Context {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/ERC20.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/ERC20.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (token/ERC20/ERC20.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/ERC20.sol)
 
 pragma solidity ^0.8.0;
 
@@ -253,11 +253,12 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      *
      * Requirements:
      *
-     * - `recipient` cannot be the zero address.
+     * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-        _transfer(_msgSender(), recipient, amount);
+    function transfer(address to, uint256 amount) public virtual override returns (bool) {
+        address owner = _msgSender();
+        _transfer(owner, to, amount);
         return true;
     }
 
@@ -271,12 +272,16 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     /**
      * @dev See {IERC20-approve}.
      *
+     * NOTE: If `amount` is the maximum `uint256`, the allowance is not updated on
+     * `transferFrom`. This is semantically equivalent to an infinite approval.
+     *
      * Requirements:
      *
      * - `spender` cannot be the zero address.
      */
     function approve(address spender, uint256 amount) public virtual override returns (bool) {
-        _approve(_msgSender(), spender, amount);
+        address owner = _msgSender();
+        _approve(owner, spender, amount);
         return true;
     }
 
@@ -286,26 +291,24 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * Emits an {Approval} event indicating the updated allowance. This is not
      * required by the EIP. See the note at the beginning of {ERC20}.
      *
+     * NOTE: Does not update the allowance if the current allowance
+     * is the maximum `uint256`.
+     *
      * Requirements:
      *
-     * - `sender` and `recipient` cannot be the zero address.
-     * - `sender` must have a balance of at least `amount`.
-     * - the caller must have allowance for ``sender``'s tokens of at least
+     * - `from` and `to` cannot be the zero address.
+     * - `from` must have a balance of at least `amount`.
+     * - the caller must have allowance for ``from``'s tokens of at least
      * `amount`.
      */
     function transferFrom(
-        address sender,
-        address recipient,
+        address from,
+        address to,
         uint256 amount
     ) public virtual override returns (bool) {
-        _transfer(sender, recipient, amount);
-
-        uint256 currentAllowance = _allowances[sender][_msgSender()];
-        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
-        unchecked {
-            _approve(sender, _msgSender(), currentAllowance - amount);
-        }
-
+        address spender = _msgSender();
+        _spendAllowance(from, spender, amount);
+        _transfer(from, to, amount);
         return true;
     }
 
@@ -322,7 +325,8 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * - `spender` cannot be the zero address.
      */
     function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender] + addedValue);
+        address owner = _msgSender();
+        _approve(owner, spender, _allowances[owner][spender] + addedValue);
         return true;
     }
 
@@ -341,10 +345,11 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * `subtractedValue`.
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        uint256 currentAllowance = _allowances[_msgSender()][spender];
+        address owner = _msgSender();
+        uint256 currentAllowance = _allowances[owner][spender];
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
         unchecked {
-            _approve(_msgSender(), spender, currentAllowance - subtractedValue);
+            _approve(owner, spender, currentAllowance - subtractedValue);
         }
 
         return true;
@@ -360,30 +365,30 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      *
      * Requirements:
      *
-     * - `sender` cannot be the zero address.
-     * - `recipient` cannot be the zero address.
-     * - `sender` must have a balance of at least `amount`.
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `from` must have a balance of at least `amount`.
      */
     function _transfer(
-        address sender,
-        address recipient,
+        address from,
+        address to,
         uint256 amount
     ) internal virtual {
-        require(sender != address(0), "ERC20: transfer from the zero address");
-        require(recipient != address(0), "ERC20: transfer to the zero address");
+        require(from != address(0), "ERC20: transfer from the zero address");
+        require(to != address(0), "ERC20: transfer to the zero address");
 
-        _beforeTokenTransfer(sender, recipient, amount);
+        _beforeTokenTransfer(from, to, amount);
 
-        uint256 senderBalance = _balances[sender];
-        require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
+        uint256 fromBalance = _balances[from];
+        require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
         unchecked {
-            _balances[sender] = senderBalance - amount;
+            _balances[from] = fromBalance - amount;
         }
-        _balances[recipient] += amount;
+        _balances[to] += amount;
 
-        emit Transfer(sender, recipient, amount);
+        emit Transfer(from, to, amount);
 
-        _afterTokenTransfer(sender, recipient, amount);
+        _afterTokenTransfer(from, to, amount);
     }
 
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
@@ -461,6 +466,28 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     }
 
     /**
+     * @dev Spend `amount` form the allowance of `owner` toward `spender`.
+     *
+     * Does not update the allowance amount in case of infinite allowance.
+     * Revert if not enough allowance is available.
+     *
+     * Might emit an {Approval} event.
+     */
+    function _spendAllowance(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal virtual {
+        uint256 currentAllowance = allowance(owner, spender);
+        if (currentAllowance != type(uint256).max) {
+            require(currentAllowance >= amount, "ERC20: insufficient allowance");
+            unchecked {
+                _approve(owner, spender, currentAllowance - amount);
+            }
+        }
+    }
+
+    /**
      * @dev Hook that is called before any transfer of tokens. This includes
      * minting and burning.
      *
@@ -502,10 +529,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/ERC20Burnable.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/extensions/ERC20Burnable.sol)
 
 pragma solidity ^0.8.0;
 
@@ -537,17 +564,13 @@ abstract contract ERC20Burnable is Context, ERC20 {
      * `amount`.
      */
     function burnFrom(address account, uint256 amount) public virtual {
-        uint256 currentAllowance = allowance(account, _msgSender());
-        require(currentAllowance >= amount, "ERC20: burn amount exceeds allowance");
-        unchecked {
-            _approve(account, _msgSender(), currentAllowance - amount);
-        }
+        _spendAllowance(account, _msgSender(), amount);
         _burn(account, amount);
     }
 }
 
 
-// File @openzeppelin/contracts/access/Ownable.sol@v4.4.2
+// File @openzeppelin/contracts/access/Ownable.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (access/Ownable.sol)
@@ -625,7 +648,7 @@ abstract contract Ownable is Context {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-IERC20Permit.sol)
@@ -689,7 +712,7 @@ interface IERC20Permit {
 }
 
 
-// File @openzeppelin/contracts/utils/Strings.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Strings.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Strings.sol)
@@ -760,10 +783,10 @@ library Strings {
 }
 
 
-// File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.4.2
+// File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.5.0
 
 
-// OpenZeppelin Contracts v4.4.1 (utils/cryptography/ECDSA.sol)
+// OpenZeppelin Contracts (last updated v4.5.0) (utils/cryptography/ECDSA.sol)
 
 pragma solidity ^0.8.0;
 
@@ -879,12 +902,8 @@ library ECDSA {
         bytes32 r,
         bytes32 vs
     ) internal pure returns (address, RecoverError) {
-        bytes32 s;
-        uint8 v;
-        assembly {
-            s := and(vs, 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
-            v := add(shr(255, vs), 27)
-        }
+        bytes32 s = vs & bytes32(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+        uint8 v = uint8((uint256(vs) >> 255) + 27);
         return tryRecover(hash, v, r, s);
     }
 
@@ -996,7 +1015,7 @@ library ECDSA {
 }
 
 
-// File @openzeppelin/contracts/utils/cryptography/draft-EIP712.sol@v4.4.2
+// File @openzeppelin/contracts/utils/cryptography/draft-EIP712.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/cryptography/draft-EIP712.sol)
@@ -1102,7 +1121,7 @@ abstract contract EIP712 {
 }
 
 
-// File @openzeppelin/contracts/utils/Counters.sol@v4.4.2
+// File @openzeppelin/contracts/utils/Counters.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (utils/Counters.sol)
@@ -1149,7 +1168,7 @@ library Counters {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol@v4.4.2
+// File @openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol@v4.5.0
 
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-ERC20Permit.sol)
@@ -1258,24 +1277,24 @@ pragma solidity ^0.8.2;
 	or yield optimizer.
  */
 contract StackingReceipt is ERC20, ERC20Burnable, Ownable, ERC20Permit {
-    constructor(string memory _name, string memory _ticker)
-        ERC20(_name, _ticker)
-        ERC20Permit(_name)
-    {}
+  constructor(string memory _name, string memory _ticker)
+    ERC20(_name, _ticker)
+    ERC20Permit(_name)
+  {}
 
-    function mint(address _to, uint256 _amount) public onlyOwner {
-        _mint(_to, _amount);
-    }
+  function mint(address _to, uint256 _amount) public onlyOwner {
+    _mint(_to, _amount);
+  }
 
-    function burn(uint256 _amount) public override onlyOwner {
-        _burn(msg.sender, _amount);
-    }
+  function burn(uint256 _amount) public override onlyOwner {
+    _burn(msg.sender, _amount);
+  }
 
-    function burnFrom(address _account, uint256 _amount)
-        public
-        override
-        onlyOwner
-    {
-        ERC20Burnable.burnFrom(_account, _amount);
-    }
+  function burnFrom(address _account, uint256 _amount)
+    public
+    override
+    onlyOwner
+  {
+    ERC20Burnable.burnFrom(_account, _amount);
+  }
 }
