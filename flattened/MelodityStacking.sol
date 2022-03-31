@@ -2736,6 +2736,1527 @@ pragma solidity 0.8.11;
 
 
 
+library console {
+	event Log(bytes _type, bytes payload);
+
+	function _sendLogPayload(bytes memory _type, bytes memory payload) private {
+		emit Log(_type, payload);
+	}
+
+	function logInt(int p0) internal {
+		_sendLogPayload(abi.encode("string", "int"), abi.encode("int", p0));
+	}
+
+	function logUint(uint p0) internal {
+		_sendLogPayload(abi.encode("string", "uint"), abi.encode("uint", p0));
+	}
+
+	function logString(string memory p0) internal {
+		_sendLogPayload(abi.encode("string", "string"), abi.encode("string", p0));
+	}
+
+	function logBool(bool p0) internal {
+		_sendLogPayload(abi.encode("string", "bool"), abi.encode("bool", p0));
+	}
+
+	function logAddress(address p0) internal  {
+		_sendLogPayload(abi.encode("string", "address"), abi.encode("address", p0));
+	}
+
+	function logBytes(bytes memory p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes"), abi.encode("bytes", p0));
+	}
+
+	function logBytes1(bytes1 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes1"), abi.encode("bytes1", p0));
+	}
+
+	function logBytes2(bytes2 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes2"), abi.encode("bytes2", p0));
+	}
+
+	function logBytes3(bytes3 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes3"), abi.encode("bytes3", p0));
+	}
+
+	function logBytes4(bytes4 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes4"), abi.encode("bytes4", p0));
+	}
+
+	function logBytes5(bytes5 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes5"), abi.encode("bytes5", p0));
+	}
+
+	function logBytes6(bytes6 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes6"), abi.encode("bytes6", p0));
+	}
+
+	function logBytes7(bytes7 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes7"), abi.encode("bytes7", p0));
+	}
+
+	function logBytes8(bytes8 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes8"), abi.encode("bytes8", p0));
+	}
+
+	function logBytes9(bytes9 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes9"), abi.encode("bytes9", p0));
+	}
+
+	function logBytes10(bytes10 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes10"), abi.encode("bytes10", p0));
+	}
+
+	function logBytes11(bytes11 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes11"), abi.encode("bytes11", p0));
+	}
+
+	function logBytes12(bytes12 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes12"), abi.encode("bytes12", p0));
+	}
+
+	function logBytes13(bytes13 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes13"), abi.encode("bytes13", p0));
+	}
+
+	function logBytes14(bytes14 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes14"), abi.encode("bytes14", p0));
+	}
+
+	function logBytes15(bytes15 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes15"), abi.encode("bytes15", p0));
+	}
+
+	function logBytes16(bytes16 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes16"), abi.encode("bytes16", p0));
+	}
+
+	function logBytes17(bytes17 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes17"), abi.encode("bytes17", p0));
+	}
+
+	function logBytes18(bytes18 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes18"), abi.encode("bytes18", p0));
+	}
+
+	function logBytes19(bytes19 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes19"), abi.encode("bytes19", p0));
+	}
+
+	function logBytes20(bytes20 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes20"), abi.encode("bytes20", p0));
+	}
+
+	function logBytes21(bytes21 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes21"), abi.encode("bytes21", p0));
+	}
+
+	function logBytes22(bytes22 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes22"), abi.encode("bytes22", p0));
+	}
+
+	function logBytes23(bytes23 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes23"), abi.encode("bytes23", p0));
+	}
+
+	function logBytes24(bytes24 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes24"), abi.encode("bytes24", p0));
+	}
+
+	function logBytes25(bytes25 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes25"), abi.encode("bytes25", p0));
+	}
+
+	function logBytes26(bytes26 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes26"), abi.encode("bytes26", p0));
+	}
+
+	function logBytes27(bytes27 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes27"), abi.encode("bytes27", p0));
+	}
+
+	function logBytes28(bytes28 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes28"), abi.encode("bytes28", p0));
+	}
+
+	function logBytes29(bytes29 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes29"), abi.encode("bytes29", p0));
+	}
+
+	function logBytes30(bytes30 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes30"), abi.encode("bytes30", p0));
+	}
+
+	function logBytes31(bytes31 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes31"), abi.encode("bytes31", p0));
+	}
+
+	function logBytes32(bytes32 p0) internal  {
+		_sendLogPayload(abi.encode("string", "bytes32"), abi.encode("bytes32", p0));
+	}
+
+	function log(uint p0) internal  {
+		_sendLogPayload(abi.encode("string", "uint"), abi.encode("uint", p0));
+	}
+
+	function log(string memory p0) internal  {
+		_sendLogPayload(abi.encode("string", "string"), abi.encode("string", p0));
+	}
+
+	function log(bool p0) internal  {
+		_sendLogPayload(abi.encode("string", "bool"), abi.encode("bool", p0));
+	}
+
+	function log(address p0) internal  {
+		_sendLogPayload(abi.encode("string", "address"), abi.encode("address", p0));
+	}
+
+	function log(uint p0, uint p1) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint"), abi.encode("uint,uint", p0, p1));
+	}
+
+	function log(uint p0, string memory p1) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string"), abi.encode("uint,string", p0, p1));
+	}
+
+	function log(uint p0, bool p1) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool"), abi.encode("uint,bool", p0, p1));
+	}
+
+	function log(uint p0, address p1) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address"), abi.encode("uint,address", p0, p1));
+	}
+
+	function log(string memory p0, uint p1) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint"), abi.encode("string,uint", p0, p1));
+	}
+
+	function log(string memory p0, string memory p1) internal  {
+		_sendLogPayload(abi.encode("string", "string,string"), abi.encode("string,string", p0, p1));
+	}
+
+	function log(string memory p0, bool p1) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool"), abi.encode("string,bool", p0, p1));
+	}
+
+	function log(string memory p0, address p1) internal  {
+		_sendLogPayload(abi.encode("string", "string,address"), abi.encode("string,address", p0, p1));
+	}
+
+	function log(bool p0, uint p1) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint"), abi.encode("bool,uint", p0, p1));
+	}
+
+	function log(bool p0, string memory p1) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string"), abi.encode("bool,string", p0, p1));
+	}
+
+	function log(bool p0, bool p1) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool"), abi.encode("bool,bool", p0, p1));
+	}
+
+	function log(bool p0, address p1) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address"), abi.encode("bool,address", p0, p1));
+	}
+
+	function log(address p0, uint p1) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint"), abi.encode("address,uint", p0, p1));
+	}
+
+	function log(address p0, string memory p1) internal  {
+		_sendLogPayload(abi.encode("string", "address,string"), abi.encode("address,string", p0, p1));
+	}
+
+	function log(address p0, bool p1) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool"), abi.encode("address,bool", p0, p1));
+	}
+
+	function log(address p0, address p1) internal  {
+		_sendLogPayload(abi.encode("string", "address,address"), abi.encode("address,address", p0, p1));
+	}
+
+	function log(uint p0, uint p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,uint"), abi.encode("uint,uint,uint", p0, p1, p2));
+	}
+
+	function log(uint p0, uint p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,string"), abi.encode("uint,uint,string", p0, p1, p2));
+	}
+
+	function log(uint p0, uint p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,bool"), abi.encode("uint,uint,bool", p0, p1, p2));
+	}
+
+	function log(uint p0, uint p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,address"), abi.encode("uint,uint,address", p0, p1, p2));
+	}
+
+	function log(uint p0, string memory p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,uint"), abi.encode("uint,string,uint", p0, p1, p2));
+	}
+
+	function log(uint p0, string memory p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,string"), abi.encode("uint,string,string", p0, p1, p2));
+	}
+
+	function log(uint p0, string memory p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,bool"), abi.encode("uint,string,bool", p0, p1, p2));
+	}
+
+	function log(uint p0, string memory p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,address"), abi.encode("uint,string,address", p0, p1, p2));
+	}
+
+	function log(uint p0, bool p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,uint"), abi.encode("uint,bool,uint", p0, p1, p2));
+	}
+
+	function log(uint p0, bool p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,string"), abi.encode("uint,bool,string", p0, p1, p2));
+	}
+
+	function log(uint p0, bool p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,bool"), abi.encode("uint,bool,bool", p0, p1, p2));
+	}
+
+	function log(uint p0, bool p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,address"), abi.encode("uint,bool,address", p0, p1, p2));
+	}
+
+	function log(uint p0, address p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,uint"), abi.encode("uint,address,uint", p0, p1, p2));
+	}
+
+	function log(uint p0, address p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,string"), abi.encode("uint,address,string", p0, p1, p2));
+	}
+
+	function log(uint p0, address p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,bool"), abi.encode("uint,address,bool", p0, p1, p2));
+	}
+
+	function log(uint p0, address p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,address"), abi.encode("uint,address,address", p0, p1, p2));
+	}
+
+	function log(string memory p0, uint p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,uint"), abi.encode("string,uint,uint", p0, p1, p2));
+	}
+
+	function log(string memory p0, uint p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,string"), abi.encode("string,uint,string", p0, p1, p2));
+	}
+
+	function log(string memory p0, uint p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,bool"), abi.encode("string,uint,bool", p0, p1, p2));
+	}
+
+	function log(string memory p0, uint p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,address"), abi.encode("string,uint,address", p0, p1, p2));
+	}
+
+	function log(string memory p0, string memory p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,uint"), abi.encode("string,string,uint", p0, p1, p2));
+	}
+
+	function log(string memory p0, string memory p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,string"), abi.encode("string,string,string", p0, p1, p2));
+	}
+
+	function log(string memory p0, string memory p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,bool"), abi.encode("string,string,bool", p0, p1, p2));
+	}
+
+	function log(string memory p0, string memory p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,address"), abi.encode("string,string,address", p0, p1, p2));
+	}
+
+	function log(string memory p0, bool p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,uint"), abi.encode("string,bool,uint", p0, p1, p2));
+	}
+
+	function log(string memory p0, bool p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,string"), abi.encode("string,bool,string", p0, p1, p2));
+	}
+
+	function log(string memory p0, bool p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,bool"), abi.encode("string,bool,bool", p0, p1, p2));
+	}
+
+	function log(string memory p0, bool p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,address"), abi.encode("string,bool,address", p0, p1, p2));
+	}
+
+	function log(string memory p0, address p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,uint"), abi.encode("string,address,uint", p0, p1, p2));
+	}
+
+	function log(string memory p0, address p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,string"), abi.encode("string,address,string", p0, p1, p2));
+	}
+
+	function log(string memory p0, address p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,bool"), abi.encode("string,address,bool", p0, p1, p2));
+	}
+
+	function log(string memory p0, address p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,address"), abi.encode("string,address,address", p0, p1, p2));
+	}
+
+	function log(bool p0, uint p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,uint"), abi.encode("bool,uint,uint", p0, p1, p2));
+	}
+
+	function log(bool p0, uint p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,string"), abi.encode("bool,uint,string", p0, p1, p2));
+	}
+
+	function log(bool p0, uint p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,bool"), abi.encode("bool,uint,bool", p0, p1, p2));
+	}
+
+	function log(bool p0, uint p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,address"), abi.encode("bool,uint,address", p0, p1, p2));
+	}
+
+	function log(bool p0, string memory p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,uint"), abi.encode("bool,string,uint", p0, p1, p2));
+	}
+
+	function log(bool p0, string memory p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,string"), abi.encode("bool,string,string", p0, p1, p2));
+	}
+
+	function log(bool p0, string memory p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,bool"), abi.encode("bool,string,bool", p0, p1, p2));
+	}
+
+	function log(bool p0, string memory p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,address"), abi.encode("bool,string,address", p0, p1, p2));
+	}
+
+	function log(bool p0, bool p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,uint"), abi.encode("bool,bool,uint", p0, p1, p2));
+	}
+
+	function log(bool p0, bool p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,string"), abi.encode("bool,bool,string", p0, p1, p2));
+	}
+
+	function log(bool p0, bool p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,bool"), abi.encode("bool,bool,bool", p0, p1, p2));
+	}
+
+	function log(bool p0, bool p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,address"), abi.encode("bool,bool,address", p0, p1, p2));
+	}
+
+	function log(bool p0, address p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,uint"), abi.encode("bool,address,uint", p0, p1, p2));
+	}
+
+	function log(bool p0, address p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,string"), abi.encode("bool,address,string", p0, p1, p2));
+	}
+
+	function log(bool p0, address p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,bool"), abi.encode("bool,address,bool", p0, p1, p2));
+	}
+
+	function log(bool p0, address p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,address"), abi.encode("bool,address,address", p0, p1, p2));
+	}
+
+	function log(address p0, uint p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,uint"), abi.encode("address,uint,uint", p0, p1, p2));
+	}
+
+	function log(address p0, uint p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,string"), abi.encode("address,uint,string", p0, p1, p2));
+	}
+
+	function log(address p0, uint p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,bool"), abi.encode("address,uint,bool", p0, p1, p2));
+	}
+
+	function log(address p0, uint p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,address"), abi.encode("address,uint,address", p0, p1, p2));
+	}
+
+	function log(address p0, string memory p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,uint"), abi.encode("address,string,uint", p0, p1, p2));
+	}
+
+	function log(address p0, string memory p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,string"), abi.encode("address,string,string", p0, p1, p2));
+	}
+
+	function log(address p0, string memory p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,bool"), abi.encode("address,string,bool", p0, p1, p2));
+	}
+
+	function log(address p0, string memory p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,address"), abi.encode("address,string,address", p0, p1, p2));
+	}
+
+	function log(address p0, bool p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,uint"), abi.encode("address,bool,uint", p0, p1, p2));
+	}
+
+	function log(address p0, bool p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,string"), abi.encode("address,bool,string", p0, p1, p2));
+	}
+
+	function log(address p0, bool p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,bool"), abi.encode("address,bool,bool", p0, p1, p2));
+	}
+
+	function log(address p0, bool p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,address"), abi.encode("address,bool,address", p0, p1, p2));
+	}
+
+	function log(address p0, address p1, uint p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,uint"), abi.encode("address,address,uint", p0, p1, p2));
+	}
+
+	function log(address p0, address p1, string memory p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,string"), abi.encode("address,address,string", p0, p1, p2));
+	}
+
+	function log(address p0, address p1, bool p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,bool"), abi.encode("address,address,bool", p0, p1, p2));
+	}
+
+	function log(address p0, address p1, address p2) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,address"), abi.encode("address,address,address", p0, p1, p2));
+	}
+
+	function log(uint p0, uint p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,uint,uint"), abi.encode("uint,uint,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,uint,string"), abi.encode("uint,uint,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,uint,bool"), abi.encode("uint,uint,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,uint,address"), abi.encode("uint,uint,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,string,uint"), abi.encode("uint,uint,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,string,string"), abi.encode("uint,uint,string,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,string,bool"), abi.encode("uint,uint,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,string,address"), abi.encode("uint,uint,string,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,bool,uint"), abi.encode("uint,uint,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,bool,string"), abi.encode("uint,uint,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,bool,bool"), abi.encode("uint,uint,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,bool,address"), abi.encode("uint,uint,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,address,uint"), abi.encode("uint,uint,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,address,string"), abi.encode("uint,uint,address,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,address,bool"), abi.encode("uint,uint,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, uint p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,uint,address,address"), abi.encode("uint,uint,address,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,uint,uint"), abi.encode("uint,string,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,uint,string"), abi.encode("uint,string,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,uint,bool"), abi.encode("uint,string,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,uint,address"), abi.encode("uint,string,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,string,uint"), abi.encode("uint,string,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,string,string"), abi.encode("uint,string,string,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,string,bool"), abi.encode("uint,string,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,string,address"), abi.encode("uint,string,string,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,bool,uint"), abi.encode("uint,string,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,bool,string"), abi.encode("uint,string,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,bool,bool"), abi.encode("uint,string,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,bool,address"), abi.encode("uint,string,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,address,uint"), abi.encode("uint,string,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,address,string"), abi.encode("uint,string,address,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,address,bool"), abi.encode("uint,string,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, string memory p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,string,address,address"), abi.encode("uint,string,address,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,uint,uint"), abi.encode("uint,bool,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,uint,string"), abi.encode("uint,bool,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,uint,bool"), abi.encode("uint,bool,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,uint,address"), abi.encode("uint,bool,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,string,uint"), abi.encode("uint,bool,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,string,string"), abi.encode("uint,bool,string,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,string,bool"), abi.encode("uint,bool,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,string,address"), abi.encode("uint,bool,string,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,bool,uint"), abi.encode("uint,bool,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,bool,string"), abi.encode("uint,bool,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,bool,bool"), abi.encode("uint,bool,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,bool,address"), abi.encode("uint,bool,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,address,uint"), abi.encode("uint,bool,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,address,string"), abi.encode("uint,bool,address,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,address,bool"), abi.encode("uint,bool,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, bool p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,bool,address,address"), abi.encode("uint,bool,address,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,uint,uint"), abi.encode("uint,address,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,uint,string"), abi.encode("uint,address,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,uint,bool"), abi.encode("uint,address,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,uint,address"), abi.encode("uint,address,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,string,uint"), abi.encode("uint,address,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,string,string"), abi.encode("uint,address,string,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,string,bool"), abi.encode("uint,address,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,string,address"), abi.encode("uint,address,string,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,bool,uint"), abi.encode("uint,address,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,bool,string"), abi.encode("uint,address,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,bool,bool"), abi.encode("uint,address,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,bool,address"), abi.encode("uint,address,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,address,uint"), abi.encode("uint,address,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,address,string"), abi.encode("uint,address,address,string", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,address,bool"), abi.encode("uint,address,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(uint p0, address p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "uint,address,address,address"), abi.encode("uint,address,address,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,uint,uint"), abi.encode("string,uint,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,uint,string"), abi.encode("string,uint,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,uint,bool"), abi.encode("string,uint,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,uint,address"), abi.encode("string,uint,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,string,uint"), abi.encode("string,uint,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,string,string"), abi.encode("string,uint,string,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,string,bool"), abi.encode("string,uint,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,string,address"), abi.encode("string,uint,string,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,bool,uint"), abi.encode("string,uint,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,bool,string"), abi.encode("string,uint,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,bool,bool"), abi.encode("string,uint,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,bool,address"), abi.encode("string,uint,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,address,uint"), abi.encode("string,uint,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,address,string"), abi.encode("string,uint,address,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,address,bool"), abi.encode("string,uint,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, uint p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,uint,address,address"), abi.encode("string,uint,address,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,uint,uint"), abi.encode("string,string,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,uint,string"), abi.encode("string,string,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,uint,bool"), abi.encode("string,string,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,uint,address"), abi.encode("string,string,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,string,uint"), abi.encode("string,string,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,string,string"), abi.encode("string,string,string,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,string,bool"), abi.encode("string,string,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,string,address"), abi.encode("string,string,string,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,bool,uint"), abi.encode("string,string,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,bool,string"), abi.encode("string,string,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,bool,bool"), abi.encode("string,string,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,bool,address"), abi.encode("string,string,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,address,uint"), abi.encode("string,string,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,address,string"), abi.encode("string,string,address,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,address,bool"), abi.encode("string,string,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, string memory p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,string,address,address"), abi.encode("string,string,address,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,uint,uint"), abi.encode("string,bool,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,uint,string"), abi.encode("string,bool,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,uint,bool"), abi.encode("string,bool,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,uint,address"), abi.encode("string,bool,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,string,uint"), abi.encode("string,bool,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,string,string"), abi.encode("string,bool,string,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,string,bool"), abi.encode("string,bool,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,string,address"), abi.encode("string,bool,string,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,bool,uint"), abi.encode("string,bool,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,bool,string"), abi.encode("string,bool,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,bool,bool"), abi.encode("string,bool,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,bool,address"), abi.encode("string,bool,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,address,uint"), abi.encode("string,bool,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,address,string"), abi.encode("string,bool,address,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,address,bool"), abi.encode("string,bool,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, bool p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,bool,address,address"), abi.encode("string,bool,address,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,uint,uint"), abi.encode("string,address,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,uint,string"), abi.encode("string,address,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,uint,bool"), abi.encode("string,address,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,uint,address"), abi.encode("string,address,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,string,uint"), abi.encode("string,address,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,string,string"), abi.encode("string,address,string,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,string,bool"), abi.encode("string,address,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,string,address"), abi.encode("string,address,string,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,bool,uint"), abi.encode("string,address,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,bool,string"), abi.encode("string,address,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,bool,bool"), abi.encode("string,address,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,bool,address"), abi.encode("string,address,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,address,uint"), abi.encode("string,address,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,address,string"), abi.encode("string,address,address,string", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,address,bool"), abi.encode("string,address,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(string memory p0, address p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "string,address,address,address"), abi.encode("string,address,address,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,uint,uint"), abi.encode("bool,uint,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,uint,string"), abi.encode("bool,uint,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,uint,bool"), abi.encode("bool,uint,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,uint,address"), abi.encode("bool,uint,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,string,uint"), abi.encode("bool,uint,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,string,string"), abi.encode("bool,uint,string,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,string,bool"), abi.encode("bool,uint,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,string,address"), abi.encode("bool,uint,string,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,bool,uint"), abi.encode("bool,uint,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,bool,string"), abi.encode("bool,uint,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,bool,bool"), abi.encode("bool,uint,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,bool,address"), abi.encode("bool,uint,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,address,uint"), abi.encode("bool,uint,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,address,string"), abi.encode("bool,uint,address,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,address,bool"), abi.encode("bool,uint,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, uint p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,uint,address,address"), abi.encode("bool,uint,address,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,uint,uint"), abi.encode("bool,string,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,uint,string"), abi.encode("bool,string,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,uint,bool"), abi.encode("bool,string,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,uint,address"), abi.encode("bool,string,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,string,uint"), abi.encode("bool,string,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,string,string"), abi.encode("bool,string,string,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,string,bool"), abi.encode("bool,string,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,string,address"), abi.encode("bool,string,string,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,bool,uint"), abi.encode("bool,string,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,bool,string"), abi.encode("bool,string,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,bool,bool"), abi.encode("bool,string,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,bool,address"), abi.encode("bool,string,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,address,uint"), abi.encode("bool,string,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,address,string"), abi.encode("bool,string,address,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,address,bool"), abi.encode("bool,string,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, string memory p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,string,address,address"), abi.encode("bool,string,address,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,uint,uint"), abi.encode("bool,bool,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,uint,string"), abi.encode("bool,bool,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,uint,bool"), abi.encode("bool,bool,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,uint,address"), abi.encode("bool,bool,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,string,uint"), abi.encode("bool,bool,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,string,string"), abi.encode("bool,bool,string,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,string,bool"), abi.encode("bool,bool,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,string,address"), abi.encode("bool,bool,string,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,bool,uint"), abi.encode("bool,bool,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,bool,string"), abi.encode("bool,bool,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,bool,bool"), abi.encode("bool,bool,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,bool,address"), abi.encode("bool,bool,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,address,uint"), abi.encode("bool,bool,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,address,string"), abi.encode("bool,bool,address,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,address,bool"), abi.encode("bool,bool,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, bool p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,bool,address,address"), abi.encode("bool,bool,address,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,uint,uint"), abi.encode("bool,address,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,uint,string"), abi.encode("bool,address,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,uint,bool"), abi.encode("bool,address,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,uint,address"), abi.encode("bool,address,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,string,uint"), abi.encode("bool,address,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,string,string"), abi.encode("bool,address,string,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,string,bool"), abi.encode("bool,address,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,string,address"), abi.encode("bool,address,string,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,bool,uint"), abi.encode("bool,address,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,bool,string"), abi.encode("bool,address,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,bool,bool"), abi.encode("bool,address,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,bool,address"), abi.encode("bool,address,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,address,uint"), abi.encode("bool,address,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,address,string"), abi.encode("bool,address,address,string", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,address,bool"), abi.encode("bool,address,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(bool p0, address p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "bool,address,address,address"), abi.encode("bool,address,address,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,uint,uint"), abi.encode("address,uint,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,uint,string"), abi.encode("address,uint,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,uint,bool"), abi.encode("address,uint,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,uint,address"), abi.encode("address,uint,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,string,uint"), abi.encode("address,uint,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,string,string"), abi.encode("address,uint,string,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,string,bool"), abi.encode("address,uint,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,string,address"), abi.encode("address,uint,string,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,bool,uint"), abi.encode("address,uint,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,bool,string"), abi.encode("address,uint,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,bool,bool"), abi.encode("address,uint,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,bool,address"), abi.encode("address,uint,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,address,uint"), abi.encode("address,uint,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,address,string"), abi.encode("address,uint,address,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,address,bool"), abi.encode("address,uint,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, uint p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,uint,address,address"), abi.encode("address,uint,address,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,uint,uint"), abi.encode("address,string,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,uint,string"), abi.encode("address,string,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,uint,bool"), abi.encode("address,string,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,uint,address"), abi.encode("address,string,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,string,uint"), abi.encode("address,string,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,string,string"), abi.encode("address,string,string,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,string,bool"), abi.encode("address,string,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,string,address"), abi.encode("address,string,string,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,bool,uint"), abi.encode("address,string,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,bool,string"), abi.encode("address,string,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,bool,bool"), abi.encode("address,string,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,bool,address"), abi.encode("address,string,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,address,uint"), abi.encode("address,string,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,address,string"), abi.encode("address,string,address,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,address,bool"), abi.encode("address,string,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, string memory p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,string,address,address"), abi.encode("address,string,address,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,uint,uint"), abi.encode("address,bool,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,uint,string"), abi.encode("address,bool,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,uint,bool"), abi.encode("address,bool,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,uint,address"), abi.encode("address,bool,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,string,uint"), abi.encode("address,bool,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,string,string"), abi.encode("address,bool,string,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,string,bool"), abi.encode("address,bool,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,string,address"), abi.encode("address,bool,string,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,bool,uint"), abi.encode("address,bool,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,bool,string"), abi.encode("address,bool,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,bool,bool"), abi.encode("address,bool,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,bool,address"), abi.encode("address,bool,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,address,uint"), abi.encode("address,bool,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,address,string"), abi.encode("address,bool,address,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,address,bool"), abi.encode("address,bool,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, bool p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,bool,address,address"), abi.encode("address,bool,address,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, uint p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,uint,uint"), abi.encode("address,address,uint,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, uint p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,uint,string"), abi.encode("address,address,uint,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, uint p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,uint,bool"), abi.encode("address,address,uint,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, uint p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,uint,address"), abi.encode("address,address,uint,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, string memory p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,string,uint"), abi.encode("address,address,string,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, string memory p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,string,string"), abi.encode("address,address,string,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, string memory p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,string,bool"), abi.encode("address,address,string,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, string memory p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,string,address"), abi.encode("address,address,string,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, bool p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,bool,uint"), abi.encode("address,address,bool,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, bool p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,bool,string"), abi.encode("address,address,bool,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, bool p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,bool,bool"), abi.encode("address,address,bool,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, bool p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,bool,address"), abi.encode("address,address,bool,address", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, address p2, uint p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,address,uint"), abi.encode("address,address,address,uint", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, address p2, string memory p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,address,string"), abi.encode("address,address,address,string", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, address p2, bool p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,address,bool"), abi.encode("address,address,address,bool", p0, p1, p2, p3));
+	}
+
+	function log(address p0, address p1, address p2, address p3) internal  {
+		_sendLogPayload(abi.encode("string", "address,address,address,address"), abi.encode("address,address,address,address", p0, p1, p2, p3));
+	}
+
+}
+
 /**
 	@author Emanuele (ebalo) Balsamo
 	@custom:security-contact security@melodity.org
@@ -3199,30 +4720,32 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 	function refreshReceiptValuePaginated(uint256 max_cicles) public {
 		prng.seedRotate();
 
-		// 1648268987
 		uint256 _now = block.timestamp;
-		// 1646996112
+		console.log("_now", _now);
 		uint256 lastUpdateTime = poolInfo.lastReceiptUpdateTime;
-		// pass
+		console.log("lastUpdateTime", lastUpdateTime);
 		require(lastUpdateTime < _now, "Receipt value already update in this transaction");
 
 		poolInfo.lastReceiptUpdateTime = block.timestamp;
+		console.log("poolInfo.lastReceiptUpdateTime", poolInfo.lastReceiptUpdateTime);
 
 		uint256 eraEndingTime;
 		bool validEraFound = true;
-		// 10
 		uint256 length = eraInfos.length;
+		console.log("eraEndingTime", eraEndingTime);
+		console.log("validEraFound", validEraFound);
+		console.log("length", length);
 
 		// In case _now exceeds the last era info ending time validEraFound would be true this will avoid the creation
 		// of new era infos leading to pool locking and price not updating anymore
-		// 9
 		uint256 last_index = eraInfos.length - 1;
-		// 1678043047 + 4765280
 		uint256 last_era_ending_time = eraInfos[last_index].startingTime + eraInfos[last_index].eraDuration;
-		// false
 		if(_now > last_era_ending_time) {
 			validEraFound = false;
 		}
+		console.log("last_index", last_index);
+		console.log("last_era_ending_time", last_era_ending_time);
+		console.log("validEraFound", validEraFound);
 
 		// No valid era exists this mean that the following era data were not generated yet, 
 		// estimate the number of required eras then generate them
@@ -3230,46 +4753,76 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		if(!validEraFound) {
 			// estimate needed era infos and always add 1
 			uint256 eras_to_generate = 1;
+			console.log("eras_to_generate", eras_to_generate);
 			while(_now > last_era_ending_time) {
 				EraInfo memory ei = getNewEraInfo(last_index);
 				last_era_ending_time = ei.startingTime + ei.eraDuration;
+				console.log("last_era_ending_time", last_era_ending_time);
 				last_index++;
+				console.log("last_index", last_index);
 			}
 			eras_to_generate += last_index - eraInfos.length;
+			console.log("eras_to_generate", eras_to_generate);
 			
 			// to check
 			_triggerErasInfoRefresh(uint8(eras_to_generate));
 		}
 
 		// set a max cap of cicles to do, if the cap exceeds the eras computed than use length as max cap
-		// 2
 		uint256 proposed_length = poolInfo.lastComputedEra + max_cicles;
-		// 2
 		length = proposed_length > length ? length : proposed_length;
+		console.log("proposed_length", proposed_length);
+		console.log("length", length);
 
-		// i = 0
+		console.log("poolInfo.lastComputedEra", poolInfo.lastComputedEra);
 		for(uint256 i = poolInfo.lastComputedEra; i < length; i++) {
-			// - 0: 1646996113 + 2592000
+			console.log("i", i);
 			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
+			console.log("eraInfos[i].startingTime", eraInfos[i].startingTime);
+			console.log("eraInfos[i].eraDuration", eraInfos[i].eraDuration);
+			console.log("eraEndingTime", eraEndingTime);
+			console.log("lastUpdateTime", lastUpdateTime);
+			console.log("eraInfos[i].startingTime <= lastUpdateTime", eraInfos[i].startingTime <= lastUpdateTime);
+			console.log("lastUpdateTime <= eraEndingTime", lastUpdateTime <= eraEndingTime);
 
 			// check if the lastUpdateTime is inside the currently checking era
-			// - 0: 1646996113 < 1646996112 ? false & ...
 			if(eraInfos[i].startingTime <= lastUpdateTime && lastUpdateTime <= eraEndingTime) {
+				console.log("first if branch entered with i = ", i);
+				console.log("eraInfos[i].startingTime <= _now", eraInfos[i].startingTime <= _now);
+				console.log("_now <= eraEndingTime", _now <= eraEndingTime);
 				// check if _now is in the same era of the lastUpdateTime, if it is then use _now to recompute the receipt value
 				if(eraInfos[i].startingTime <= _now && _now <= eraEndingTime) {
 					// NOTE: here some epochs may get lost as lastUpdateTime will almost never be equal to the exact epoch
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
+
+					console.log("entering if branch with i = ", i);
 					uint256 diff = (_now - lastUpdateTime) / _EPOCH_DURATION;
+					console.log("(_now - lastUpdateTime)", (_now - lastUpdateTime));
+					console.log("_EPOCH_DURATION", _EPOCH_DURATION);
+					console.log("diff", diff);
+					// TODO: CHECK THE ABOVE FRAGMENT FOR ERROR DURING AUDIT FIX
 
 					// recompute the receipt value missingFullEpochs times
 					while(diff > 0) {
+						console.log("poolInfo.receiptValue", poolInfo.receiptValue);
+						console.log("eraInfos[i].rewardFactorPerEpoch", eraInfos[i].rewardFactorPerEpoch);
+						console.log("_PERCENTAGE_SCALE", _PERCENTAGE_SCALE);
+						console.log("poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch", poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch);
+						console.log("poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE", poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE);
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
+						
+						console.log("poolInfo.receiptValue", poolInfo.receiptValue);
 						diff--;
+						console.log("diff", diff);
 					}
+					// BUG: HERE DIFF IS ALWAYS 0
 					poolInfo.lastReceiptUpdateTime = lastUpdateTime + diff * _EPOCH_DURATION;
+					console.log("diff * _EPOCH_DURATION", diff * _EPOCH_DURATION);
+					console.log("poolInfo.lastReceiptUpdateTime", poolInfo.lastReceiptUpdateTime);
 					poolInfo.lastComputedEra = i;
+					console.log("poolInfo.lastComputedEra", poolInfo.lastComputedEra);
 
 					// as _now was into the given era, we can stop the current loop here
 					break;
@@ -3281,21 +4834,42 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
+					console.log("entering else branch with i = ", i);
+					console.log("_EPOCH_DURATION", _EPOCH_DURATION);
+					console.log("eraEndingTime", eraEndingTime);
 					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - (eraEndingTime % _EPOCH_DURATION);
+					console.log("diffFromEpochStartAlignment", diffFromEpochStartAlignment);
 					uint256 realEpochStartTime = eraEndingTime - diffFromEpochStartAlignment;
+					console.log("realEpochStartTime", realEpochStartTime);
 					uint256 diff = (eraEndingTime - lastUpdateTime) / _EPOCH_DURATION;
+					console.log("lastUpdateTime", lastUpdateTime);
+					console.log("diff", diff);
 
 					// recompute the receipt value missingFullEpochs times
 					while(diff > 0) {
+						console.log("poolInfo.receiptValue", poolInfo.receiptValue);
+						console.log("eraInfos[i].rewardFactorPerEpoch", eraInfos[i].rewardFactorPerEpoch);
+						console.log("_PERCENTAGE_SCALE", _PERCENTAGE_SCALE);
+						console.log("poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch", poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch);
+						console.log("poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE", poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE);
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
+
+						console.log("poolInfo.receiptValue", poolInfo.receiptValue);
 						diff--;
+						console.log("diff", diff);
 					}
+					console.log("realEpochStartTime", realEpochStartTime);
 					poolInfo.lastReceiptUpdateTime = realEpochStartTime;
+					console.log("poolInfo.lastReceiptUpdateTime", poolInfo.lastReceiptUpdateTime);
 					poolInfo.lastComputedEra = i;
+					console.log("poolInfo.lastComputedEra", poolInfo.lastComputedEra);
 
 					// as accessing the next era info using index+1 can throw an index out of bound the
 					// next era starting time is computed based on the curren era
 					lastUpdateTime = eraInfos[i].startingTime + eraInfos[i].eraDuration + 1;
+					console.log("eraInfos[i].startingTime", eraInfos[i].startingTime);
+					console.log("eraInfos[i].eraDuration", eraInfos[i].eraDuration);
+					console.log("lastUpdateTime", lastUpdateTime);
 				}
 			}
 		}
@@ -3590,7 +5164,8 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		prng.seedRotate();
 		
 		require(!poolInfo.dismissed, "Pool already dismissed");
-		require(poolInfo.exhausting, "Dismission enabled only once the stacking pool is exhausting");
+		// disabled if dismission is required before exhaustion
+		// require(poolInfo.exhausting, "Dismission enabled only once the stacking pool is exhausting");
 		require(stackingReceipt.totalSupply() == 0, "Unable to dismit the stacking pool as there are still circulating receipt");
 
 		address addr;
