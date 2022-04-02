@@ -162,7 +162,7 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 		bool _exhausting,
 		bool _dismissed,
 		uint8 _erasToGenerate
-	) {
+		) {
 		prng = PRNG(_prng);
 		stackingPanda = StackingPanda(_stackingPanda);
 		melodity = ERC20(_melodity);
@@ -488,31 +488,32 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 	function refreshReceiptValuePaginated(uint256 max_cicles) public {
 		prng.seedRotate();
 
-		// 1648268987
 		uint256 _now = block.timestamp;
-		// 1646996112
+		console.log("_now", _now);
 		uint256 lastUpdateTime = poolInfo.lastReceiptUpdateTime;
-		// pass
+		console.log("lastUpdateTime", lastUpdateTime);
 		require(lastUpdateTime < _now, "Receipt value already update in this transaction");
 
 		poolInfo.lastReceiptUpdateTime = block.timestamp;
+		console.log("poolInfo.lastReceiptUpdateTime", poolInfo.lastReceiptUpdateTime);
 
 		uint256 eraEndingTime;
-		// ALERT: FUCKING DEFAULT VALUE NOT INSERTED
 		bool validEraFound = true;
-		// 10
 		uint256 length = eraInfos.length;
+		console.log("eraEndingTime", eraEndingTime);
+		console.log("validEraFound", validEraFound);
+		console.log("length", length);
 
 		// In case _now exceeds the last era info ending time validEraFound would be true this will avoid the creation
 		// of new era infos leading to pool locking and price not updating anymore
-		// 9
 		uint256 last_index = eraInfos.length - 1;
-		// 1678043047 + 4765280
 		uint256 last_era_ending_time = eraInfos[last_index].startingTime + eraInfos[last_index].eraDuration;
-		// false
 		if(_now > last_era_ending_time) {
 			validEraFound = false;
 		}
+		console.log("last_index", last_index);
+		console.log("last_era_ending_time", last_era_ending_time);
+		console.log("validEraFound", validEraFound);
 
 		// No valid era exists this mean that the following era data were not generated yet, 
 		// estimate the number of required eras then generate them
@@ -520,50 +521,75 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 		if(!validEraFound) {
 			// estimate needed era infos and always add 1
 			uint256 eras_to_generate = 1;
+			console.log("eras_to_generate", eras_to_generate);
 			while(_now > last_era_ending_time) {
 				EraInfo memory ei = getNewEraInfo(last_index);
 				last_era_ending_time = ei.startingTime + ei.eraDuration;
+				console.log("last_era_ending_time", last_era_ending_time);
 				last_index++;
+				console.log("last_index", last_index);
 			}
-			console.log("eras_to_generate", eras_to_generate);
-			console.log("last_index", last_index);
-			console.log("eraInfos.length", eraInfos.length);
-			console.log("last_index - eraInfos.length", last_index - eraInfos.length);
 			eras_to_generate += last_index - eraInfos.length;
+			console.log("eras_to_generate", eras_to_generate);
 			
 			// to check
 			_triggerErasInfoRefresh(uint8(eras_to_generate));
 		}
 
 		// set a max cap of cicles to do, if the cap exceeds the eras computed than use length as max cap
-		// 2
 		uint256 proposed_length = poolInfo.lastComputedEra + max_cicles;
-		// 2
 		length = proposed_length > length ? length : proposed_length;
+		console.log("proposed_length", proposed_length);
+		console.log("length", length);
 
-		// i = 0
+		console.log("poolInfo.lastComputedEra", poolInfo.lastComputedEra);
 		for(uint256 i = poolInfo.lastComputedEra; i < length; i++) {
-			// - 0: 1646996113 + 2592000
+			console.log("i", i);
 			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
+			console.log("eraInfos[i].startingTime", eraInfos[i].startingTime);
+			console.log("eraInfos[i].eraDuration", eraInfos[i].eraDuration);
+			console.log("eraEndingTime", eraEndingTime);
+			console.log("lastUpdateTime", lastUpdateTime);
+			console.log("eraInfos[i].startingTime <= lastUpdateTime", eraInfos[i].startingTime <= lastUpdateTime);
+			console.log("lastUpdateTime <= eraEndingTime", lastUpdateTime <= eraEndingTime);
 
 			// check if the lastUpdateTime is inside the currently checking era
-			// - 0: 1646996113 < 1646996112 ? false & ...
 			if(eraInfos[i].startingTime <= lastUpdateTime && lastUpdateTime <= eraEndingTime) {
+				console.log("first if branch entered with i = ", i);
+				console.log("eraInfos[i].startingTime <= _now", eraInfos[i].startingTime <= _now);
+				console.log("_now <= eraEndingTime", _now <= eraEndingTime);
 				// check if _now is in the same era of the lastUpdateTime, if it is then use _now to recompute the receipt value
 				if(eraInfos[i].startingTime <= _now && _now <= eraEndingTime) {
 					// NOTE: here some epochs may get lost as lastUpdateTime will almost never be equal to the exact epoch
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
-					uint256 diff = (_now - lastUpdateTime) / _EPOCH_DURATION;
 
+					console.log("entering if branch with i = ", i);
+					uint256 diff = (_now - lastUpdateTime) / _EPOCH_DURATION;
+					console.log("(_now - lastUpdateTime)", (_now - lastUpdateTime));
+					console.log("_EPOCH_DURATION", _EPOCH_DURATION);
+					console.log("diff", diff);
+					// TODO: CHECK THE ABOVE FRAGMENT FOR ERROR DURING AUDIT FIX
+
+					poolInfo.lastReceiptUpdateTime = lastUpdateTime + diff * _EPOCH_DURATION;
 					// recompute the receipt value missingFullEpochs times
 					while(diff > 0) {
+						console.log("poolInfo.receiptValue", poolInfo.receiptValue);
+						console.log("eraInfos[i].rewardFactorPerEpoch", eraInfos[i].rewardFactorPerEpoch);
+						console.log("_PERCENTAGE_SCALE", _PERCENTAGE_SCALE);
+						console.log("poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch", poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch);
+						console.log("poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE", poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE);
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
+						
+						console.log("poolInfo.receiptValue", poolInfo.receiptValue);
 						diff--;
+						console.log("diff", diff);
 					}
-					poolInfo.lastReceiptUpdateTime = lastUpdateTime + diff * _EPOCH_DURATION;
+					console.log("diff * _EPOCH_DURATION", diff * _EPOCH_DURATION);
+					console.log("poolInfo.lastReceiptUpdateTime", poolInfo.lastReceiptUpdateTime);
 					poolInfo.lastComputedEra = i;
+					console.log("poolInfo.lastComputedEra", poolInfo.lastComputedEra);
 
 					// as _now was into the given era, we can stop the current loop here
 					break;
@@ -575,21 +601,42 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
+					console.log("entering else branch with i = ", i);
+					console.log("_EPOCH_DURATION", _EPOCH_DURATION);
+					console.log("eraEndingTime", eraEndingTime);
 					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - (eraEndingTime % _EPOCH_DURATION);
+					console.log("diffFromEpochStartAlignment", diffFromEpochStartAlignment);
 					uint256 realEpochStartTime = eraEndingTime - diffFromEpochStartAlignment;
+					console.log("realEpochStartTime", realEpochStartTime);
 					uint256 diff = (eraEndingTime - lastUpdateTime) / _EPOCH_DURATION;
+					console.log("lastUpdateTime", lastUpdateTime);
+					console.log("diff", diff);
 
 					// recompute the receipt value missingFullEpochs times
 					while(diff > 0) {
+						console.log("poolInfo.receiptValue", poolInfo.receiptValue);
+						console.log("eraInfos[i].rewardFactorPerEpoch", eraInfos[i].rewardFactorPerEpoch);
+						console.log("_PERCENTAGE_SCALE", _PERCENTAGE_SCALE);
+						console.log("poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch", poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch);
+						console.log("poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE", poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE);
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
+
+						console.log("poolInfo.receiptValue", poolInfo.receiptValue);
 						diff--;
+						console.log("diff", diff);
 					}
+					console.log("realEpochStartTime", realEpochStartTime);
 					poolInfo.lastReceiptUpdateTime = realEpochStartTime;
+					console.log("poolInfo.lastReceiptUpdateTime", poolInfo.lastReceiptUpdateTime);
 					poolInfo.lastComputedEra = i;
+					console.log("poolInfo.lastComputedEra", poolInfo.lastComputedEra);
 
 					// as accessing the next era info using index+1 can throw an index out of bound the
 					// next era starting time is computed based on the curren era
 					lastUpdateTime = eraInfos[i].startingTime + eraInfos[i].eraDuration + 1;
+					console.log("eraInfos[i].startingTime", eraInfos[i].startingTime);
+					console.log("eraInfos[i].eraDuration", eraInfos[i].eraDuration);
+					console.log("lastUpdateTime", lastUpdateTime);
 				}
 			}
 		}
@@ -884,8 +931,9 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 		prng.seedRotate();
 		
 		require(!poolInfo.dismissed, "Pool already dismissed");
-		require(poolInfo.exhausting, "Dismission enabled only once the stacking pool is exhausting");
-		require(stackingReceipt.totalSupply() == 0, "Unable to dismit the stacking pool as there are still circulating receipt");
+		// disabled if dismission is required before exhaustion
+		// require(poolInfo.exhausting, "Dismission enabled only once the stacking pool is exhausting");
+		// require(stackingReceipt.totalSupply() == 0, "Unable to dismit the stacking pool as there are still circulating receipt");
 
 		address addr;
 		uint256 index;

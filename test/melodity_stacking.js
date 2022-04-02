@@ -1057,112 +1057,6 @@ describe("Melodity stacking", function () {
 
 		expect(await stacking_panda.ownerOf(0)).to.equals(owner.address)
 	});
-	it("cannot dismiss pool untill there are circulating receipt", async function () {
-		melodity_stacking = await deployMelodityStacking(
-			prng.address,
-			stacking_panda.address,
-			melodity.address,
-			dao.address,
-			ethers.utils.parseEther("1000.0")
-		);
-		stacking_receipt = await loadMelodityReceipt(await melodity_stacking.stackingReceipt())
-
-		await melodity.mint(
-			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
-		);
-
-		tx = await melodity.approve(
-			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
-		);
-		await tx;
-
-		tx = await stacking_receipt.approve(
-			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
-		);
-		await tx;
-
-		tx = await stacking_panda.approve(melodity_stacking.address, 0);
-		await tx;
-
-		tx = await melodity_stacking.depositWithNFT(
-			ethers.utils.parseEther("100.0"),
-			0
-		);
-		await tx;
-
-		await timetravel(1000000); // 7+ days
-
-		let old = await melodity_stacking.paused()
-
-		tx = await melodity_stacking.pause();
-		await tx;
-
-		let after = await melodity_stacking.paused()
-
-		expect(after).to.equals(!old)
-		expect(after).to.equals(true)
-
-		tx = await melodity_stacking.withdraw(ethers.utils.parseEther("100.0"))
-		await tx
-
-		try {
-			tx = await melodity_stacking.dismissionWithdraw()
-			await tx
-		} catch (e) {
-			expect(e.message).to.equals(
-				"VM Exception while processing transaction: reverted with reason string " +
-					"'Unable to dismit the stacking pool as there are still circulating receipt'"
-			);
-		}
-	});
-	it("cannot dismiss stacking pool if not exhausting", async function () {
-		tx = await melodity.approve(
-			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
-		);
-		await tx;
-
-		tx = await stacking_receipt.approve(
-			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
-		);
-		await tx;
-
-		tx = await stacking_panda.approve(melodity_stacking.address, 0);
-		await tx;
-
-		tx = await melodity_stacking.depositWithNFT(
-			ethers.utils.parseEther("100.0"),
-			0
-		);
-		await tx;
-
-		await timetravel(1000000); // 7+ days
-
-		let old = await melodity_stacking.paused()
-
-		tx = await melodity_stacking.pause();
-		await tx;
-
-		let after = await melodity_stacking.paused()
-
-		expect(after).to.equals(!old)
-		expect(after).to.equals(true)
-
-
-		try {
-			tx = await melodity_stacking.dismissionWithdraw()
-			await tx
-		} catch (e) {
-			expect(e.message).to.equals(
-				"VM Exception while processing transaction: reverted with reason string " +
-					"'Dismission enabled only once the stacking pool is exhausting'"
-			);
-		}
-	});
 	it("refreshReceiptValue don't loses eras", async function () {
 		await timetravel(60*60*24)
 
@@ -1197,5 +1091,149 @@ describe("Melodity stacking", function () {
 		expect(new_receipt_value.toString()).to.be.bignumber.greaterThan(old_receipt_value.toString())
 		expect(new_receipt_value.toString()).to.be.bignumber.greaterThan("1007200000000000000")
 		expect(new_receipt_value.toString()).to.be.bignumber.lessThan("1018250000000000000")
+	});
+	it("refreshReceiptValue increases value per epoch", async function () {
+		let receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+		expect(receipt_value).to.equals("1000000000000000000")
+
+		let calls = 100
+		// in the first epoch seems to work wisely, no receipt value update with multiple calls
+		for(let i = 0; i < calls; i++) {
+			tx = await melodity_stacking.refreshReceiptValue()
+			await tx.wait()
+			receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+			expect(receipt_value).to.equals("1000000000000000000")
+		}
+
+		// move a day in the future
+		await timetravel(60*60*24)
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("TIME TRAVEL +24H")
+		console.log("-".repeat(50))
+
+		// first refresh should move the receipt value forward 
+		tx = await melodity_stacking.refreshReceiptValue()
+		await tx.wait()
+		receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+		expect(receipt_value).to.equals("1000240027602024097")
+
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("FIRST UPDATE AT +24H DONE")
+		console.log("-".repeat(50))
+
+		// repeated refresh should not move the value
+		for(let i = 0; i < calls; i++) {
+			tx = await melodity_stacking.refreshReceiptValue()
+			await tx.wait()
+			receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+			expect(receipt_value).to.equals("1000240027602024097")
+		}
+
+		// move a day in the future
+		await timetravel(60*60*24)
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("TIME TRAVEL +48H")
+		console.log("-".repeat(50))
+
+		// first refresh should move the receipt value forward 
+		tx = await melodity_stacking.refreshReceiptValue()
+		await tx.wait()
+		receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+		expect(receipt_value).to.equals("1000480112817297924")
+
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("FIRST UPDATE AT +48H DONE")
+		console.log("-".repeat(50))
+
+		// repeated refresh should not move the value
+		for(let i = 0; i < calls; i++) {
+			tx = await melodity_stacking.refreshReceiptValue()
+			await tx.wait()
+			receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+			expect(receipt_value).to.equals("1000480112817297924")
+		}
+
+		// as deposits also trigger the refresh checking deposits do not trigger it
+		await melodity.mint(
+			melodity_stacking.address,
+			ethers.utils.parseEther(`${calls}.0`)
+		);
+		tx = await melodity.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther(`${calls +1}.0`)
+		);
+		await tx;
+		for(let i = 0; i < calls; i++) {
+			tx = await melodity_stacking.deposit(ethers.utils.parseEther("1.0"))
+			await tx.wait()
+			receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+			expect(receipt_value).to.equals("1000480112817297924")
+		}
+
+		await timetravel(60*60*24*32)
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("TIME TRAVEL +34d")
+		console.log("-".repeat(50))
+
+		// first refresh should move the receipt value forward 
+		tx = await melodity_stacking.refreshReceiptValue()
+		await tx.wait()
+		receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+		expect(receipt_value).to.equals("1007980033134399774")
+		let last_computed_era = (await melodity_stacking.poolInfo())["lastComputedEra"]
+		expect(last_computed_era).to.equals("1")
+
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("-".repeat(50))
+		console.log("FIRST UPDATE AT +34d DONE")
+		console.log("-".repeat(50))
+
+		// repeated refresh should not move the value
+		for(let i = 0; i < calls; i++) {
+			tx = await melodity_stacking.refreshReceiptValue()
+			await tx.wait()
+			receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+			expect(receipt_value).to.equals("1007980033134399774")
+		}
+
+		// as deposits also trigger the refresh checking deposits do not trigger it
+		await melodity.mint(
+			melodity_stacking.address,
+			ethers.utils.parseEther(`${calls}.0`)
+		);
+		tx = await melodity.approve(
+			melodity_stacking.address,
+			ethers.utils.parseEther(`${calls +1}.0`)
+		);
+		await tx;
+		for(let i = 0; i < calls; i++) {
+			tx = await melodity_stacking.deposit(ethers.utils.parseEther("1.0"))
+			await tx.wait()
+			receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
+			expect(receipt_value).to.equals("1007980033134399774")
+		}
 	});
 });
