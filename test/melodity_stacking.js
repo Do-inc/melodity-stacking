@@ -198,13 +198,18 @@ describe("Melodity stacking", function () {
 		}
 	});
 	it("everyone can deposit in the stacking pool", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("100.0")
+			ethers.utils.parseEther("100.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
-		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"));
+		// 3 internal calls to function with fees
+		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"), {
+			value: ethers.utils.parseEther("0.00025").toString()
+		});
 		await tx;
 
 		expect(await stacking_receipt.balanceOf(owner.address)).to.equals(
@@ -214,7 +219,9 @@ describe("Melodity stacking", function () {
 	it("deposit requires prior approval", async function () {
 		try {
 			tx = await melodity_stacking.deposit(
-				ethers.utils.parseEther("100.0")
+				ethers.utils.parseEther("100.0"), {
+					value: ethers.utils.parseEther("0.00025").toString()
+				}
 			);
 			await tx;
 		} catch (e) {
@@ -225,15 +232,19 @@ describe("Melodity stacking", function () {
 		}
 	});
 	it("cannot deposit null amount", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("100.0")
+			ethers.utils.parseEther("100.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
 		try {
 			tx = await melodity_stacking.deposit(
-				ethers.utils.parseEther("0.0")
+				ethers.utils.parseEther("0.0"), {
+					value: ethers.utils.parseEther("0.00025").toString()
+				}
 			);
 			await tx;
 		} catch (e) {
@@ -244,15 +255,19 @@ describe("Melodity stacking", function () {
 		}
 	});
 	it("cannot deposit more than what's owned", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("10000.0")
+			ethers.utils.parseEther("10000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
 		try {
 			tx = await melodity_stacking.deposit(
-				ethers.utils.parseEther("10000.0")
+				ethers.utils.parseEther("10000.0"), {
+					value: ethers.utils.parseEther("0.00025").toString()
+				}
 			);
 			await tx;
 		} catch (e) {
@@ -263,21 +278,27 @@ describe("Melodity stacking", function () {
 		}
 	});
 	it("each epoch the receipt value increases", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
 		tx = await melodity
 			.connect(acc_1)
-			.approve(
+			.approveWithFee(
 				melodity_stacking.address,
-				ethers.utils.parseEther("1000.0")
+				ethers.utils.parseEther("1000.0"), {
+					value: ethers.utils.parseEther("0.00025").toString()
+				}
 			);
 		await tx;
 
-		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"));
+		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"), {
+			value: ethers.utils.parseEther("0.00025").toString()
+		});
 		await tx;
 
 		let first_rate = BigInt(
@@ -288,7 +309,9 @@ describe("Melodity stacking", function () {
 
 		tx = await melodity_stacking
 			.connect(acc_1)
-			.deposit(ethers.utils.parseEther("100.0"));
+			.deposit(ethers.utils.parseEther("100.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			});
 		await tx;
 
 		let second_rate = BigInt(
@@ -308,9 +331,11 @@ describe("Melodity stacking", function () {
 		expect(second_rate.toString()).to.equals("1000010000000000000");
 	});
 	it("everyone can deposit with NFT", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
@@ -319,7 +344,9 @@ describe("Melodity stacking", function () {
 
 		tx = await melodity_stacking.depositWithNFT(
 			ethers.utils.parseEther("100.0"),
-			0
+			0, {
+				value: ethers.utils.parseEther("0.0005").toString()
+			}
 		);
 		await tx;
 
@@ -348,16 +375,20 @@ describe("Melodity stacking", function () {
 		tx = await stacking_panda.transferFrom(owner.address, acc_1.address, 1);
 		await tx.wait();
 
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
 		try {
 			tx = await melodity_stacking.depositWithNFT(
 				ethers.utils.parseEther("100.0"),
-				1
+				1, {
+					value: ethers.utils.parseEther("0.0005").toString()
+				}
 			);
 			await tx;
 		} catch (e) {
@@ -368,16 +399,20 @@ describe("Melodity stacking", function () {
 		}
 	});
 	it("cannot deposit without prior allowing the NFT", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
 		try {
 			tx = await melodity_stacking.depositWithNFT(
 				ethers.utils.parseEther("100.0"),
-				0
+				0, {
+					value: ethers.utils.parseEther("0.0005").toString()
+				}
 			);
 			await tx;
 		} catch (e) {
@@ -388,19 +423,25 @@ describe("Melodity stacking", function () {
 		}
 	});
 	it("everyone can withdraw", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
-		tx = await stacking_receipt.approve(
+		tx = await stacking_receipt.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
-		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"));
+		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"), {
+			value: ethers.utils.parseEther("0.00025").toString()
+		});
 		await tx;
 
 		await timetravel(1000000); // 7+ days
@@ -416,25 +457,30 @@ describe("Melodity stacking", function () {
 		let bought = await stacking_receipt.balanceOf(owner.address);
 		expect(bought).to.equals(ethers.utils.parseEther("100.0"));
 
-		tx = await melodity_stacking.withdraw(bought);
+		tx = await melodity_stacking.withdraw(bought, {
+			value: ethers.utils.parseEther("0.00025").toString()
+		});
 		await tx;
 
 		let remaining_receipt = await stacking_receipt.balanceOf(owner.address);
 		expect(remaining_receipt).to.equals(0);
 
 		let melodity_balance = await melodity.balanceOf(owner.address);
-		expect(melodity_balance.toString()).to.be.bignumber.greaterThan("1000277382610645145000");
-		expect(melodity_balance.toString()).to.be.bignumber.lessThan("100555682610645145000");
+		expect(melodity_balance.toString()).to.equals("1000277382610645145000");
 	});
 	it("cannot withdraw null amount", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
 		try {
-			tx = await melodity_stacking.withdraw(0);
+			tx = await melodity_stacking.withdraw(0, {
+				value: ethers.utils.parseEther("0.00025").toString()
+			});
 			await tx;
 		} catch (e) {
 			expect(e.message).to.equals(
@@ -444,14 +490,18 @@ describe("Melodity stacking", function () {
 		}
 	});
 	it("cannot withdraw more receipt than the owned", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
 		try {
-			tx = await melodity_stacking.withdraw(100);
+			tx = await melodity_stacking.withdraw(100, {
+				value: ethers.utils.parseEther("0.00025").toString()
+			});
 			await tx;
 		} catch (e) {
 			expect(e.message).to.equals(
@@ -461,19 +511,25 @@ describe("Melodity stacking", function () {
 		}
 	});
 	it("cannot withdraw without prior approval", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
-		tx = await stacking_receipt.approve(
+		tx = await stacking_receipt.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
-		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"));
+		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"), {
+			value: ethers.utils.parseEther("0.00025").toString()
+		});
 		await tx;
 
 		await timetravel(1000000); // 7+ days
@@ -482,7 +538,9 @@ describe("Melodity stacking", function () {
 		await tx;
 
 		try {
-			tx = await melodity_stacking.withdraw(100);
+			tx = await melodity_stacking.withdraw(100, {
+				value: ethers.utils.parseEther("0.00025").toString()
+			});
 			await tx;
 		} catch (e) {
 			expect(e.message).to.equals(
@@ -492,19 +550,25 @@ describe("Melodity stacking", function () {
 		}
 	});
 	it("redeeming before 7 days trigger fee payment", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
-		tx = await stacking_receipt.approve(
+		tx = await stacking_receipt.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
-		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"));
+		tx = await melodity_stacking.deposit(ethers.utils.parseEther("100.0"), {
+			value: ethers.utils.parseEther("0.00025").toString()
+		});
 		await tx;
 
 		await timetravel(5 * 60 * 60 + 1); // 5h
@@ -520,31 +584,37 @@ describe("Melodity stacking", function () {
 		let bought = await stacking_receipt.balanceOf(owner.address);
 		expect(bought).to.equals(ethers.utils.parseEther("100.0"));
 
-		tx = await melodity_stacking.withdraw(bought);
+		tx = await melodity_stacking.withdraw(bought, {
+			value: ethers.utils.parseEther("0.00025").toString()
+		});
 		await tx;
 
 		let remaining_receipt = await stacking_receipt.balanceOf(owner.address);
 		expect(remaining_receipt).to.equals(0);
 
 		let melodity_balance = await melodity.balanceOf(owner.address);
-		expect(melodity_balance).to.equals("990009000405010800000"); // 990.004500090000900000
+		expect(melodity_balance).to.equals("990004500090000900000"); // 990.004500090000900000
 
 		melodity_balance = await melodity.balanceOf(_DO_INC_MULTISIG_WALLET);
-		expect(melodity_balance).to.equals("9500950042751140000"); // 9.500950042751140000
+		expect(melodity_balance).to.equals("9500475009500095000"); // 9.500475009500095000
 
 		melodity_balance = await melodity.balanceOf(dao.address);
-		expect(melodity_balance).to.equals("500050002250060000"); // 0.500050002250060000
+		expect(melodity_balance).to.equals("500025000500005000"); // 0.500025000500005000
 	});
 	it("can withdraw with NFT", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
-		tx = await stacking_receipt.approve(
+		tx = await stacking_receipt.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
@@ -553,7 +623,9 @@ describe("Melodity stacking", function () {
 
 		tx = await melodity_stacking.depositWithNFT(
 			ethers.utils.parseEther("100.0"),
-			0
+			0, {
+				value: ethers.utils.parseEther("0.0005").toString()
+			}
 		);
 		await tx;
 
@@ -574,7 +646,9 @@ describe("Melodity stacking", function () {
 
 		tx = await melodity_stacking.withdrawWithNFT(
 			ethers.utils.parseEther("107.5"),
-			0
+			0, {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
@@ -582,15 +656,19 @@ describe("Melodity stacking", function () {
 		expect(await stacking_panda.ownerOf(0)).to.equals(owner.address);
 	});
 	it("withdrawing less than the receipt amount received does not release the NFT", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
-		tx = await stacking_receipt.approve(
+		tx = await stacking_receipt.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
@@ -599,7 +677,9 @@ describe("Melodity stacking", function () {
 
 		tx = await melodity_stacking.depositWithNFT(
 			ethers.utils.parseEther("100.0"),
-			0
+			0, {
+				value: ethers.utils.parseEther("0.0005").toString()
+			}
 		);
 		await tx;
 
@@ -620,7 +700,9 @@ describe("Melodity stacking", function () {
 
 		tx = await melodity_stacking.withdrawWithNFT(
 			ethers.utils.parseEther("100.0"),
-			0
+			0, {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
@@ -640,15 +722,19 @@ describe("Melodity stacking", function () {
 		);
 	});
 	it("cannot withdraw a random index", async function () {
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
-		tx = await stacking_receipt.approve(
+		tx = await stacking_receipt.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
@@ -657,14 +743,18 @@ describe("Melodity stacking", function () {
 
 		tx = await melodity_stacking.depositWithNFT(
 			ethers.utils.parseEther("100.0"),
-			0
+			0, {
+				value: ethers.utils.parseEther("0.0005").toString()
+			}
 		);
 		await tx;
 
 		try {
 			tx = await melodity_stacking.withdrawWithNFT(
 				ethers.utils.parseEther("100.0"),
-				10
+				10, {
+					value: ethers.utils.parseEther("0.00025").toString()
+				}
 			);
 			await tx;
 		} catch (e) {
@@ -684,15 +774,19 @@ describe("Melodity stacking", function () {
 		);
 		stacking_receipt = await loadMelodityReceipt(await melodity_stacking.stackingReceipt())
 
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
-		tx = await stacking_receipt.approve(
+		tx = await stacking_receipt.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
@@ -701,13 +795,17 @@ describe("Melodity stacking", function () {
 
 		tx = await melodity_stacking.depositWithNFT(
 			ethers.utils.parseEther("100.0"),
-			0
+			0, {
+				value: ethers.utils.parseEther("0.0005").toString()
+			}
 		);
 		await tx;
 
 		tx = await melodity_stacking.withdrawWithNFT(
 			ethers.utils.parseEther("100.0"),
-			0
+			0, {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
@@ -716,9 +814,11 @@ describe("Melodity stacking", function () {
 	it("can increase reward pool", async function () {
 		let old = BigInt((await melodity_stacking.poolInfo())["rewardPool"].toString()).toString()
 
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 
@@ -1014,46 +1114,60 @@ describe("Melodity stacking", function () {
 			ethers.utils.parseEther("20000000.0")
 		);
 
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
-		await tx;
+		await tx.wait();
 
-		tx = await stacking_receipt.approve(
+		tx = await stacking_receipt.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther("1000.0")
+			ethers.utils.parseEther("1000.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
-		await tx;
+		await tx.wait();
 
 		tx = await stacking_panda.approve(melodity_stacking.address, 0);
-		await tx;
+		await tx.wait();
 
 		tx = await melodity_stacking.depositWithNFT(
 			ethers.utils.parseEther("100.0"),
-			0
+			0, {
+				value: ethers.utils.parseEther("0.0005").toString()
+			}
 		);
-		await tx;
+		await tx.wait();
 
 		await timetravel(1000000); // 7+ days
 
 		let old = await melodity_stacking.paused()
 
 		tx = await melodity_stacking.pause();
-		await tx;
+		await tx.wait();
 
 		let after = await melodity_stacking.paused()
 
 		expect(after).to.equals(!old)
 		expect(after).to.equals(true)
 
-		tx = await melodity_stacking.withdraw(ethers.utils.parseEther("107.5"))
-		await tx
+		tx = await melodity_stacking.resume();
+		await tx.wait();
+
+		tx = await melodity_stacking.withdraw(ethers.utils.parseEther("107.5"), {
+			value: ethers.utils.parseEther("0.00025").toString()
+		})
+		await tx.wait()
 
 		expect(await stacking_panda.ownerOf(0)).to.equals(melodity_stacking.address)
 
+		tx = await melodity_stacking.pause();
+		await tx.wait();
+
 		tx = await melodity_stacking.dismissionWithdraw()
-		await tx
+		await tx.wait()
 
 		expect(await stacking_panda.ownerOf(0)).to.equals(owner.address)
 	});
@@ -1107,13 +1221,13 @@ describe("Melodity stacking", function () {
 
 		// move a day in the future
 		await timetravel(60*60*24)
-		console.log("-".repeat(50))
+		/* console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("TIME TRAVEL +24H")
-		console.log("-".repeat(50))
+		console.log("-".repeat(50)) */
 
 		// first refresh should move the receipt value forward 
 		tx = await melodity_stacking.refreshReceiptValue()
@@ -1121,13 +1235,13 @@ describe("Melodity stacking", function () {
 		receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
 		expect(receipt_value).to.equals("1000240027602024097")
 
-		console.log("-".repeat(50))
+		/* console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("FIRST UPDATE AT +24H DONE")
-		console.log("-".repeat(50))
+		console.log("-".repeat(50)) */
 
 		// repeated refresh should not move the value
 		for(let i = 0; i < calls; i++) {
@@ -1139,13 +1253,13 @@ describe("Melodity stacking", function () {
 
 		// move a day in the future
 		await timetravel(60*60*24)
-		console.log("-".repeat(50))
+		/* console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("TIME TRAVEL +48H")
-		console.log("-".repeat(50))
+		console.log("-".repeat(50)) */
 
 		// first refresh should move the receipt value forward 
 		tx = await melodity_stacking.refreshReceiptValue()
@@ -1153,13 +1267,13 @@ describe("Melodity stacking", function () {
 		receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
 		expect(receipt_value).to.equals("1000480112817297924")
 
-		console.log("-".repeat(50))
+		/* console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("FIRST UPDATE AT +48H DONE")
-		console.log("-".repeat(50))
+		console.log("-".repeat(50)) */
 
 		// repeated refresh should not move the value
 		for(let i = 0; i < calls; i++) {
@@ -1174,26 +1288,30 @@ describe("Melodity stacking", function () {
 			melodity_stacking.address,
 			ethers.utils.parseEther(`${calls}.0`)
 		);
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther(`${calls +1}.0`)
+			ethers.utils.parseEther(`${calls +1}.0`), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 		for(let i = 0; i < calls; i++) {
-			tx = await melodity_stacking.deposit(ethers.utils.parseEther("1.0"))
+			tx = await melodity_stacking.deposit(ethers.utils.parseEther("1.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			})
 			await tx.wait()
 			receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
 			expect(receipt_value).to.equals("1000480112817297924")
 		}
 
 		await timetravel(60*60*24*32)
-		console.log("-".repeat(50))
+		/* console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("TIME TRAVEL +34d")
-		console.log("-".repeat(50))
+		console.log("-".repeat(50)) */
 
 		// first refresh should move the receipt value forward 
 		tx = await melodity_stacking.refreshReceiptValue()
@@ -1203,13 +1321,13 @@ describe("Melodity stacking", function () {
 		let last_computed_era = (await melodity_stacking.poolInfo())["lastComputedEra"]
 		expect(last_computed_era).to.equals("1")
 
-		console.log("-".repeat(50))
+		/* console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("-".repeat(50))
 		console.log("FIRST UPDATE AT +34d DONE")
-		console.log("-".repeat(50))
+		console.log("-".repeat(50)) */
 
 		// repeated refresh should not move the value
 		for(let i = 0; i < calls; i++) {
@@ -1224,16 +1342,110 @@ describe("Melodity stacking", function () {
 			melodity_stacking.address,
 			ethers.utils.parseEther(`${calls}.0`)
 		);
-		tx = await melodity.approve(
+		tx = await melodity.approveWithFee(
 			melodity_stacking.address,
-			ethers.utils.parseEther(`${calls +1}.0`)
+			ethers.utils.parseEther(`${calls +1}.0`), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			}
 		);
 		await tx;
 		for(let i = 0; i < calls; i++) {
-			tx = await melodity_stacking.deposit(ethers.utils.parseEther("1.0"))
+			tx = await melodity_stacking.deposit(ethers.utils.parseEther("1.0"), {
+				value: ethers.utils.parseEther("0.00025").toString()
+			})
 			await tx.wait()
 			receipt_value = (await melodity_stacking.poolInfo())["receiptValue"]
 			expect(receipt_value).to.equals("1007980033134399774")
 		}
+	});
+	it("emergency withdraw allows withdraw of meld", async function () {
+		melodity_stacking = await deployMelodityStacking(
+			prng.address,
+			stacking_panda.address,
+			melodity.address,
+			dao.address,
+			ethers.utils.parseEther("10000000.0")
+		);
+
+		tx = await melodity.mint(melodity_stacking.address, ethers.utils.parseEther("1000.0"))
+		await tx.wait()
+
+		let balance = await melodity.balanceOf("0x01Af10f1343C05855955418bb99302A6CF71aCB8")
+
+		tx = await melodity_stacking.emergencyWithdraw(melodity.address, 0)
+		await tx.wait()
+
+		let new_balance = await melodity.balanceOf("0x01Af10f1343C05855955418bb99302A6CF71aCB8")
+
+		expect(new_balance).to.equals(balance.add(ethers.utils.parseEther("1000.0")))
+	});
+	it("emergency withdraw allows withdraw of 1 meld", async function () {
+		melodity_stacking = await deployMelodityStacking(
+			prng.address,
+			stacking_panda.address,
+			melodity.address,
+			dao.address,
+			ethers.utils.parseEther("10000000.0")
+		);
+
+		tx = await melodity.mint(melodity_stacking.address, ethers.utils.parseEther("1000.0"))
+		await tx.wait()
+
+		let balance = await melodity.balanceOf("0x01Af10f1343C05855955418bb99302A6CF71aCB8")
+
+		tx = await melodity_stacking.emergencyWithdraw(melodity.address, 1)
+		await tx.wait()
+
+		let new_balance = await melodity.balanceOf("0x01Af10f1343C05855955418bb99302A6CF71aCB8")
+
+		expect(new_balance).to.equals(balance.add(1))
+	});
+	it("emergency withdraw allows withdraw of native currency", async function () {
+		melodity_stacking = await deployMelodityStacking(
+			prng.address,
+			stacking_panda.address,
+			melodity.address,
+			dao.address,
+			ethers.utils.parseEther("10000000.0")
+		);
+
+		tx = await owner.sendTransaction({
+			to: melodity_stacking.address, 
+			value: ethers.utils.parseEther("10.0")
+		})
+		await tx.wait()
+
+		let balance = await ethers.provider.getBalance("0x01Af10f1343C05855955418bb99302A6CF71aCB8")
+
+		tx = await melodity_stacking.emergencyWithdraw(`0x${"0".repeat(40)}`, 0)
+		await tx.wait()
+
+		let new_balance = await ethers.provider.getBalance("0x01Af10f1343C05855955418bb99302A6CF71aCB8")
+
+		expect(new_balance).to.equals(balance.add(ethers.utils.parseEther("10.0")))
+	});
+	it("emergency withdraw allows withdraw of 1 native currency", async function () {
+		melodity_stacking = await deployMelodityStacking(
+			prng.address,
+			stacking_panda.address,
+			melodity.address,
+			dao.address,
+			ethers.utils.parseEther("10000000.0")
+		);
+
+		tx = await owner.sendTransaction({
+			to: melodity_stacking.address, 
+			value: ethers.utils.parseEther("10.0")
+		})
+		await tx.wait()
+
+		let balance = await ethers.provider.getBalance("0x01Af10f1343C05855955418bb99302A6CF71aCB8")
+
+		tx = await melodity_stacking.emergencyWithdraw(`0x${"0".repeat(40)}`, 1)
+		await tx.wait()
+
+		let new_balance = await ethers.provider.getBalance("0x01Af10f1343C05855955418bb99302A6CF71aCB8")
+
+		expect(new_balance).to.equals(balance.add(1))
 	});
 });

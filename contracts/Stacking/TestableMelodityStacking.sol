@@ -11,12 +11,14 @@ import "../StackingPanda.sol";
 import "../PRNG.sol";
 import "./StackingReceipt.sol";
 import "hardhat/console.sol";
+import "../Utility/WithFee.sol";
+import "../Utility/EmergencyWithdraw.sol";
 
 /**
 	@author Emanuele (ebalo) Balsamo
 	@custom:security-contact security@melodity.org
  */
-contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
+contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, WithFee, EmergencyWithdraw {
 	address constant public _DO_INC_MULTISIG_WALLET = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
 	uint256 constant public _PERCENTAGE_SCALE = 10 ** 20;
 	uint256 constant public _EPOCH_DURATION = 1 hours;
@@ -142,6 +144,8 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 	event MaintainerFeeSharedUpdate(uint256 oldShare, uint256 newShare);
 	event PoolDismissed();
 
+	receive() payable external {}
+
 	/**
 		Initialize the values of the stacking contract
 
@@ -167,6 +171,9 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 		stackingPanda = StackingPanda(_stackingPanda);
 		melodity = ERC20(_melodity);
 		stackingReceipt = new StackingReceipt("Melodity stacking receipt", "sMELD");
+
+		setFeeBase(0.00025 ether);
+		setFeeReceiver(_DO_INC_MULTISIG_WALLET);
 		
 		poolInfo = PoolInfo({
 			rewardPool: _rewardPool,
@@ -194,6 +201,18 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 
 		_triggerErasInfoRefresh(_erasToGenerate);
     }
+
+	function setFeeBase(uint256 _amount) public override onlyOwner nonReentrant returns(bool) {
+		return super.setFeeBase(_amount);
+	}
+
+	function setFeeReceiver(address _receiver) public override onlyOwner nonReentrant returns(bool) {
+		return super.setFeeReceiver(_receiver);
+	}
+
+	function emergencyWithdraw(address token, uint256 amount) public override onlyOwner nonReentrant returns(bool) {
+		return super.emergencyWithdraw(token, amount);
+	}
 
 	function getEraInfosLength() public view returns(uint256) {
 		return eraInfos.length;
@@ -235,32 +254,19 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 		@param _erasToGenerate Number of eras to (re-)generate
 	 */
 	function _triggerErasInfoRefresh(uint8 _erasToGenerate) private {
-		// 9
 		uint256 existingEraInfoCount = eraInfos.length;
 		uint256 i;
 		uint256 k;
 
-		// - 0: 0 < 1 ? true
-		// - 1: 1 < 1 ? false
 		while(i < _erasToGenerate) {
 			// check if exists some era infos, if they exists check if the k-th era is already started
 			// if it is already started it cannot be edited and we won't consider it actually increasing 
 			// k
-			// - 0: 9 > 0 ? true & 1646996113 < 1648269466 ? true => pass
-			// - 0: 9 > 1 ? true & 1649588114 < 1648269466 ? false
 			if(existingEraInfoCount > k && eraInfos[k].startingTime <= block.timestamp) {
 				k++;
 			}
 			// if the era is not yet started we can modify its values
-			// - 0: 9 > 1 ? true & 1649588114 > 1648269466 ? true => pass
 			else if(existingEraInfoCount > k && eraInfos[k].startingTime > block.timestamp) {
-				// - 0: k = 1 & {
-					// 	startingTime: 1649588114,
-					// 	eraDuration: 2047680,
-					// 	rewardScaleFactor: 79000000000000000000,
-					// 	eraScaleFactor: 107000000000000000000,
-					// 	rewardFactorPerEpoch: 790000000000000
-				// }
 				eraInfos[k] = getNewEraInfo(k);
 
 				// as an era was just updated increase the i counter
@@ -288,7 +294,7 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 
 		@param _amount Amount of MELD that will be stacked
 	 */
-	function deposit(uint256 _amount) public nonReentrant whenNotPaused returns(uint256) {
+	function deposit(uint256 _amount) public nonReentrant whenNotPaused withFee payable returns(uint256) {
 		return _deposit(_amount);
 	}
 
@@ -335,7 +341,7 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 		@param _amount Amount of MELD that will be stacked
 		@param _nftId NFT identifier that will be stacked with the funds
 	 */
-	function depositWithNFT(uint256 _amount, uint256 _nftId) public nonReentrant whenNotPaused {
+	function depositWithNFT(uint256 _amount, uint256 _nftId) public nonReentrant whenNotPaused withFee payable {
 		prng.seedRotate();
 
 		// withdraw the nft from the sender
@@ -365,7 +371,7 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 
 		@param _amount Receipt amount to reconvert to MELD
 	 */
-	function withdraw(uint256 _amount) public nonReentrant {
+	function withdraw(uint256 _amount) public nonReentrant whenNotPaused withFee payable {
 		return _withdraw(_amount);
     }
 
@@ -432,7 +438,7 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 		@param _amount Receipt amount to reconvert to MELD
 		@param _index Index of the stackedNFTs array whose NFT will be recovered if possible
 	 */
-	function withdrawWithNFT(uint256 _amount, uint256 _index) public nonReentrant {
+	function withdrawWithNFT(uint256 _amount, uint256 _index) public nonReentrant whenNotPaused withFee payable {
 		prng.seedRotate();
 		
 		require(stackedNFTs[msg.sender].length > _index, "Index out of bound");
@@ -489,20 +495,13 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 		prng.seedRotate();
 
 		uint256 _now = block.timestamp;
-		console.log("_now", _now);
 		uint256 lastUpdateTime = poolInfo.lastReceiptUpdateTime;
-		console.log("lastUpdateTime", lastUpdateTime);
 		require(lastUpdateTime < _now, "Receipt value already update in this transaction");
-
 		poolInfo.lastReceiptUpdateTime = block.timestamp;
-		console.log("poolInfo.lastReceiptUpdateTime", poolInfo.lastReceiptUpdateTime);
 
 		uint256 eraEndingTime;
 		bool validEraFound = true;
 		uint256 length = eraInfos.length;
-		console.log("eraEndingTime", eraEndingTime);
-		console.log("validEraFound", validEraFound);
-		console.log("length", length);
 
 		// In case _now exceeds the last era info ending time validEraFound would be true this will avoid the creation
 		// of new era infos leading to pool locking and price not updating anymore
@@ -511,9 +510,6 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 		if(_now > last_era_ending_time) {
 			validEraFound = false;
 		}
-		console.log("last_index", last_index);
-		console.log("last_era_ending_time", last_era_ending_time);
-		console.log("validEraFound", validEraFound);
 
 		// No valid era exists this mean that the following era data were not generated yet, 
 		// estimate the number of required eras then generate them
@@ -521,17 +517,12 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 		if(!validEraFound) {
 			// estimate needed era infos and always add 1
 			uint256 eras_to_generate = 1;
-			console.log("eras_to_generate", eras_to_generate);
 			while(_now > last_era_ending_time) {
 				EraInfo memory ei = getNewEraInfo(last_index);
 				last_era_ending_time = ei.startingTime + ei.eraDuration;
-				console.log("last_era_ending_time", last_era_ending_time);
 				last_index++;
-				console.log("last_index", last_index);
 			}
 			eras_to_generate += last_index - eraInfos.length;
-			console.log("eras_to_generate", eras_to_generate);
-			
 			// to check
 			_triggerErasInfoRefresh(uint8(eras_to_generate));
 		}
@@ -539,58 +530,26 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 		// set a max cap of cicles to do, if the cap exceeds the eras computed than use length as max cap
 		uint256 proposed_length = poolInfo.lastComputedEra + max_cicles;
 		length = proposed_length > length ? length : proposed_length;
-		console.log("proposed_length", proposed_length);
-		console.log("length", length);
-
-		console.log("poolInfo.lastComputedEra", poolInfo.lastComputedEra);
+		
 		for(uint256 i = poolInfo.lastComputedEra; i < length; i++) {
-			console.log("i", i);
 			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
-			console.log("eraInfos[i].startingTime", eraInfos[i].startingTime);
-			console.log("eraInfos[i].eraDuration", eraInfos[i].eraDuration);
-			console.log("eraEndingTime", eraEndingTime);
-			console.log("lastUpdateTime", lastUpdateTime);
-			console.log("eraInfos[i].startingTime <= lastUpdateTime", eraInfos[i].startingTime <= lastUpdateTime);
-			console.log("lastUpdateTime <= eraEndingTime", lastUpdateTime <= eraEndingTime);
-
 			// check if the lastUpdateTime is inside the currently checking era
 			if(eraInfos[i].startingTime <= lastUpdateTime && lastUpdateTime <= eraEndingTime) {
-				console.log("first if branch entered with i = ", i);
-				console.log("eraInfos[i].startingTime <= _now", eraInfos[i].startingTime <= _now);
-				console.log("_now <= eraEndingTime", _now <= eraEndingTime);
 				// check if _now is in the same era of the lastUpdateTime, if it is then use _now to recompute the receipt value
 				if(eraInfos[i].startingTime <= _now && _now <= eraEndingTime) {
 					// NOTE: here some epochs may get lost as lastUpdateTime will almost never be equal to the exact epoch
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
-
-					console.log("entering if branch with i = ", i);
 					uint256 diff = (_now - lastUpdateTime) / _EPOCH_DURATION;
-					console.log("(_now - lastUpdateTime)", (_now - lastUpdateTime));
-					console.log("_EPOCH_DURATION", _EPOCH_DURATION);
-					console.log("diff", diff);
-					// TODO: CHECK THE ABOVE FRAGMENT FOR ERROR DURING AUDIT FIX
-
-					poolInfo.lastReceiptUpdateTime = lastUpdateTime + diff * _EPOCH_DURATION;
+					
 					// recompute the receipt value missingFullEpochs times
+					poolInfo.lastReceiptUpdateTime = lastUpdateTime + diff * _EPOCH_DURATION;
 					while(diff > 0) {
-						console.log("poolInfo.receiptValue", poolInfo.receiptValue);
-						console.log("eraInfos[i].rewardFactorPerEpoch", eraInfos[i].rewardFactorPerEpoch);
-						console.log("_PERCENTAGE_SCALE", _PERCENTAGE_SCALE);
-						console.log("poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch", poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch);
-						console.log("poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE", poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE);
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
-						
-						console.log("poolInfo.receiptValue", poolInfo.receiptValue);
 						diff--;
-						console.log("diff", diff);
 					}
-					console.log("diff * _EPOCH_DURATION", diff * _EPOCH_DURATION);
-					console.log("poolInfo.lastReceiptUpdateTime", poolInfo.lastReceiptUpdateTime);
 					poolInfo.lastComputedEra = i;
-					console.log("poolInfo.lastComputedEra", poolInfo.lastComputedEra);
-
 					// as _now was into the given era, we can stop the current loop here
 					break;
 				}
@@ -601,46 +560,27 @@ contract TestableMelodityStacking is ERC721Holder, Ownable, Pausable, Reentrancy
 					// 		update time, in order to avoid this error we compute the difference from the lastUpdateTime
 					//		and the difference from the start of this era, as the two value will differ most of the times
 					//		we compute the real number of epoch from the last fully completed one
-					console.log("entering else branch with i = ", i);
-					console.log("_EPOCH_DURATION", _EPOCH_DURATION);
-					console.log("eraEndingTime", eraEndingTime);
 					uint256 diffFromEpochStartAlignment = _EPOCH_DURATION - (eraEndingTime % _EPOCH_DURATION);
-					console.log("diffFromEpochStartAlignment", diffFromEpochStartAlignment);
 					uint256 realEpochStartTime = eraEndingTime - diffFromEpochStartAlignment;
-					console.log("realEpochStartTime", realEpochStartTime);
 					uint256 diff = (eraEndingTime - lastUpdateTime) / _EPOCH_DURATION;
-					console.log("lastUpdateTime", lastUpdateTime);
-					console.log("diff", diff);
 
 					// recompute the receipt value missingFullEpochs times
 					while(diff > 0) {
-						console.log("poolInfo.receiptValue", poolInfo.receiptValue);
-						console.log("eraInfos[i].rewardFactorPerEpoch", eraInfos[i].rewardFactorPerEpoch);
-						console.log("_PERCENTAGE_SCALE", _PERCENTAGE_SCALE);
-						console.log("poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch", poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch);
-						console.log("poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE", poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE);
 						poolInfo.receiptValue += poolInfo.receiptValue * eraInfos[i].rewardFactorPerEpoch / _PERCENTAGE_SCALE;
-
-						console.log("poolInfo.receiptValue", poolInfo.receiptValue);
 						diff--;
-						console.log("diff", diff);
 					}
-					console.log("realEpochStartTime", realEpochStartTime);
 					poolInfo.lastReceiptUpdateTime = realEpochStartTime;
-					console.log("poolInfo.lastReceiptUpdateTime", poolInfo.lastReceiptUpdateTime);
 					poolInfo.lastComputedEra = i;
-					console.log("poolInfo.lastComputedEra", poolInfo.lastComputedEra);
 
 					// as accessing the next era info using index+1 can throw an index out of bound the
 					// next era starting time is computed based on the curren era
 					lastUpdateTime = eraInfos[i].startingTime + eraInfos[i].eraDuration + 1;
-					console.log("eraInfos[i].startingTime", eraInfos[i].startingTime);
-					console.log("eraInfos[i].eraDuration", eraInfos[i].eraDuration);
-					console.log("lastUpdateTime", lastUpdateTime);
+					
+					
+					
 				}
 			}
 		}
-
 		emit ReceiptValueUpdate(poolInfo.receiptValue);
 	}
 

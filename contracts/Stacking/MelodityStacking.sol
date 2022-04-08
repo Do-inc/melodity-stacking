@@ -10,12 +10,14 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "../StackingPanda.sol";
 import "../PRNG.sol";
 import "./StackingReceipt.sol";
+import "../Utility/WithFee.sol";
+import "../Utility/EmergencyWithdraw.sol";
 
 /**
 	@author Emanuele (ebalo) Balsamo
 	@custom:security-contact security@melodity.org
  */
-contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
+contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, WithFee, EmergencyWithdraw {
 	address constant public _DO_INC_MULTISIG_WALLET = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
 	uint256 constant public _PERCENTAGE_SCALE = 10 ** 20;
 	uint256 constant public _EPOCH_DURATION = 1 hours;
@@ -153,6 +155,8 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		stackingPanda = StackingPanda(_stackingPanda);
 		melodity = ERC20(_melodity);
 		stackingReceipt = new StackingReceipt("Melodity stacking receipt", "sMELD");
+		setFeeBase(0.0005 ether);
+		setFeeReceiver(_DO_INC_MULTISIG_WALLET);
 		
 		poolInfo = PoolInfo({
 			rewardPool: 20_000_000 ether,
@@ -180,6 +184,20 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 
 		_triggerErasInfoRefresh(_erasToGenerate);
     }
+
+	receive() payable external {}
+
+	function setFeeBase(uint256 _amount) public override onlyOwner nonReentrant returns(bool) {
+		return super.setFeeBase(_amount);
+	}
+
+	function setFeeReceiver(address _receiver) public override onlyOwner nonReentrant returns(bool) {
+		return super.setFeeReceiver(_receiver);
+	}
+
+	function emergencyWithdraw(address token, uint256 amount) public override onlyOwner nonReentrant returns(bool) {
+		return super.emergencyWithdraw(token, amount);
+	}
 
 	function getEraInfosLength() public view returns(uint256) {
 		return eraInfos.length;
@@ -261,7 +279,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 
 		@param _amount Amount of MELD that will be stacked
 	 */
-	function deposit(uint256 _amount) public nonReentrant whenNotPaused returns(uint256) {
+	function deposit(uint256 _amount) public nonReentrant whenNotPaused withFee payable returns(uint256) {
 		return _deposit(_amount);
 	}
 
@@ -308,7 +326,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _amount Amount of MELD that will be stacked
 		@param _nftId NFT identifier that will be stacked with the funds
 	 */
-	function depositWithNFT(uint256 _amount, uint256 _nftId) public nonReentrant whenNotPaused {
+	function depositWithNFT(uint256 _amount, uint256 _nftId) public nonReentrant whenNotPaused withFee payable {
 		prng.seedRotate();
 
 		// withdraw the nft from the sender
@@ -338,7 +356,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 
 		@param _amount Receipt amount to reconvert to MELD
 	 */
-	function withdraw(uint256 _amount) public nonReentrant whenNotPaused {
+	function withdraw(uint256 _amount) public nonReentrant whenNotPaused withFee payable {
 		return _withdraw(_amount);
     }
 
@@ -405,7 +423,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _amount Receipt amount to reconvert to MELD
 		@param _index Index of the stackedNFTs array whose NFT will be recovered if possible
 	 */
-	function withdrawWithNFT(uint256 _amount, uint256 _index) public nonReentrant whenNotPaused {
+	function withdrawWithNFT(uint256 _amount, uint256 _index) public nonReentrant whenNotPaused withFee payable {
 		prng.seedRotate();
 		
 		require(stackedNFTs[msg.sender].length > _index, "Index out of bound");

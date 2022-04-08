@@ -2680,10 +2680,52 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
 }
 
 
+// File contracts/Utility/WithFee.sol
+
+
+pragma solidity ^0.8.11;
+
+abstract contract WithFee {
+    address public withFee_feeReceiver;
+    uint256 public withFee_feeBase;
+
+    event WithFee_FeeBaseUpdate(uint256 amount);
+    event WithFee_FeeReceiverUpdate(address receiver);
+    event WithFee_FeeWithdrawn(uint256 amount);
+
+    error UnableToPaySomeFees(uint256 fees);
+
+    function setFeeBase(uint256 _amount) public virtual returns(bool) {
+        withFee_feeBase = _amount;
+        emit WithFee_FeeBaseUpdate(withFee_feeBase);
+        return true;
+    }
+
+    function setFeeReceiver(address _receiver) public virtual returns(bool) {
+        withFee_feeReceiver = _receiver;
+        emit WithFee_FeeReceiverUpdate(withFee_feeReceiver);
+        return true;
+    }
+
+    modifier withFee() {
+        uint256 fee = (msg.value / 1 ether + 1) * withFee_feeBase;
+
+        if(msg.value < fee) {
+            revert UnableToPaySomeFees(fee);
+        }
+
+        Address.sendValue(payable(withFee_feeReceiver), fee);
+        emit WithFee_FeeWithdrawn(fee);
+        _;
+    }
+}
+
+
 // File contracts/Stacking/StackingReceipt.sol
 
 
 pragma solidity ^0.8.2;
+
 
 
 
@@ -2699,11 +2741,17 @@ pragma solidity ^0.8.2;
 	User can always transfer funds actually being able to use any aggregator,
 	or yield optimizer.
  */
-contract StackingReceipt is ERC20, ERC20Burnable, Ownable, ERC20Permit {
+contract StackingReceipt is ERC20, ERC20Burnable, Ownable, WithFee {
+  address constant public _DO_INC_MULTISIG_WALLET = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
+
+  error MethodDisabled();
+
   constructor(string memory _name, string memory _ticker)
     ERC20(_name, _ticker)
-    ERC20Permit(_name)
-  {}
+  {
+    setFeeBase(0.0005 ether);
+		setFeeReceiver(_DO_INC_MULTISIG_WALLET);
+  }
 
   function mint(address _to, uint256 _amount) public onlyOwner {
     _mint(_to, _amount);
@@ -2720,6 +2768,63 @@ contract StackingReceipt is ERC20, ERC20Burnable, Ownable, ERC20Permit {
   {
     ERC20Burnable.burnFrom(_account, _amount);
   }
+
+  function approveWithFee(address spender, uint256 amount) public payable withFee returns (bool) {
+    return ERC20.approve(spender, amount);
+  }
+
+  function approve(address spender, uint256 amount) public override returns(bool) {
+    revert MethodDisabled();
+  }
+}
+
+
+// File contracts/Utility/EmergencyWithdraw.sol
+
+
+pragma solidity ^0.8.11;
+
+
+abstract contract EmergencyWithdraw {
+    address constant public DO_INC_MULTISIG_WALLET = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
+
+    /// Withdraw some locked funds into a contract
+    event eWithdraw(address token, uint256 amount);
+
+    /**
+        Allows for the withdraw of funds locked into the contract
+     */
+    function emergencyWithdraw(address token, uint256 amount) public virtual returns(bool) {
+        // if a token address is provided withdraw that token amount
+        if(token != address(0)) {
+            ERC20 utility_token = ERC20(token);
+
+            if(amount > 0) {
+                _emergencyWithdraw(utility_token, amount);
+            }
+            else {
+                amount = utility_token.balanceOf(address(this));
+                _emergencyWithdraw(utility_token, amount);
+            }
+        }
+        // if no token address is provided withdraw native currency
+        else {
+            if(amount > 0) {
+                Address.sendValue(payable(DO_INC_MULTISIG_WALLET), amount);
+            }
+            else {
+                Address.sendValue(payable(DO_INC_MULTISIG_WALLET), address(this).balance);
+            }
+        }
+
+        return true;
+    }
+
+    function _emergencyWithdraw(ERC20 token, uint256 amount) private returns(bool) {
+        token.transfer(DO_INC_MULTISIG_WALLET, amount);
+        emit eWithdraw(address(token), amount);
+        return true;
+    }
 }
 
 
@@ -2736,11 +2841,13 @@ pragma solidity 0.8.11;
 
 
 
+
+
 /**
 	@author Emanuele (ebalo) Balsamo
 	@custom:security-contact security@melodity.org
  */
-contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
+contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, WithFee, EmergencyWithdraw {
 	address constant public _DO_INC_MULTISIG_WALLET = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
 	uint256 constant public _PERCENTAGE_SCALE = 10 ** 20;
 	uint256 constant public _EPOCH_DURATION = 1 hours;
@@ -2878,6 +2985,8 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		stackingPanda = StackingPanda(_stackingPanda);
 		melodity = ERC20(_melodity);
 		stackingReceipt = new StackingReceipt("Melodity stacking receipt", "sMELD");
+		setFeeBase(0.0005 ether);
+		setFeeReceiver(_DO_INC_MULTISIG_WALLET);
 		
 		poolInfo = PoolInfo({
 			rewardPool: 20_000_000 ether,
@@ -2905,6 +3014,20 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 
 		_triggerErasInfoRefresh(_erasToGenerate);
     }
+
+	receive() payable external {}
+
+	function setFeeBase(uint256 _amount) public override onlyOwner nonReentrant returns(bool) {
+		return super.setFeeBase(_amount);
+	}
+
+	function setFeeReceiver(address _receiver) public override onlyOwner nonReentrant returns(bool) {
+		return super.setFeeReceiver(_receiver);
+	}
+
+	function emergencyWithdraw(address token, uint256 amount) public override onlyOwner nonReentrant returns(bool) {
+		return super.emergencyWithdraw(token, amount);
+	}
 
 	function getEraInfosLength() public view returns(uint256) {
 		return eraInfos.length;
@@ -2986,7 +3109,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 
 		@param _amount Amount of MELD that will be stacked
 	 */
-	function deposit(uint256 _amount) public nonReentrant whenNotPaused returns(uint256) {
+	function deposit(uint256 _amount) public nonReentrant whenNotPaused withFee payable returns(uint256) {
 		return _deposit(_amount);
 	}
 
@@ -3033,7 +3156,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _amount Amount of MELD that will be stacked
 		@param _nftId NFT identifier that will be stacked with the funds
 	 */
-	function depositWithNFT(uint256 _amount, uint256 _nftId) public nonReentrant whenNotPaused {
+	function depositWithNFT(uint256 _amount, uint256 _nftId) public nonReentrant whenNotPaused withFee payable {
 		prng.seedRotate();
 
 		// withdraw the nft from the sender
@@ -3063,7 +3186,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 
 		@param _amount Receipt amount to reconvert to MELD
 	 */
-	function withdraw(uint256 _amount) public nonReentrant whenNotPaused {
+	function withdraw(uint256 _amount) public nonReentrant whenNotPaused withFee payable {
 		return _withdraw(_amount);
     }
 
@@ -3130,7 +3253,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard {
 		@param _amount Receipt amount to reconvert to MELD
 		@param _index Index of the stackedNFTs array whose NFT will be recovered if possible
 	 */
-	function withdrawWithNFT(uint256 _amount, uint256 _index) public nonReentrant whenNotPaused {
+	function withdrawWithNFT(uint256 _amount, uint256 _index) public nonReentrant whenNotPaused withFee payable {
 		prng.seedRotate();
 		
 		require(stackedNFTs[msg.sender].length > _index, "Index out of bound");
