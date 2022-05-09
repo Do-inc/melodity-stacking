@@ -119,6 +119,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 	mapping(address => uint256) public stackersHigherDeposit;
 	mapping(address => StackedNFT[]) public stackedNFTs;
 	mapping(uint256 => address) public depositorNFT;
+	bool public canSetReceiptValue = true;
 
     ERC20 public melodity;
 	StackingReceipt public stackingReceipt;
@@ -924,6 +925,12 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		eraInfos[_eraIndex] = ei;
 
 		_triggerErasInfoRefresh(_erasToRefresh);
+	}
+
+	function setReceiptValue(uint256 _value) public nonReentrant onlyOwner {
+		require(canSetReceiptValue, "setReceiptValue disabled");
+		poolInfo.receiptValue = _value;
+		canSetReceiptValue = false;
 	}
 
 	function bulkSetStakersLastDeposits(
