@@ -2980,11 +2980,24 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 			it deploies other contracts
 		@param _melodity Melodity ERC20 contract address
 	 */
-    constructor(address _prng, address _stackingPanda, address _melodity, address _dao, uint8 _erasToGenerate) {
+    constructor(
+		address _prng, 
+		address _stackingPanda, 
+		address _melodity, 
+		address _dao, 
+		uint8 _erasToGenerate,
+		address _stakingReceipt
+	) {
 		prng = PRNG(_prng);
 		stackingPanda = StackingPanda(_stackingPanda);
 		melodity = ERC20(_melodity);
-		stackingReceipt = new StackingReceipt("Melodity stacking receipt", "sMELD");
+
+		if(_stakingReceipt == address(0)) {
+			stackingReceipt = new StackingReceipt("Melodity stacking receipt", "sMELD");
+		}
+		else {
+			stackingReceipt = StackingReceipt(_stakingReceipt);
+		}
 		setFeeBase(0.0005 ether);
 		setFeeReceiver(_DO_INC_MULTISIG_WALLET);
 		
@@ -3450,7 +3463,9 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		// loop through previous eras
 		for(uint256 i; i < currentEra; i++) {
 			eraEndingTime = eraInfos[i].startingTime + eraInfos[i].eraDuration;
-			passedEpoch += (eraInfos[i].startingTime - eraEndingTime) / _EPOCH_DURATION;
+			// bug: misordered values ends throwing an underflow error
+			// fixed: eraEndingTime - ...startingTime
+			passedEpoch += (eraEndingTime - eraInfos[i].startingTime) / _EPOCH_DURATION;
 		}
 
 		uint256 diffSinceLastUpdate = _now - lastUpdateTime;
@@ -3728,5 +3743,13 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		poolInfo.dismissed = true;
 
 		emit PoolDismissed();
+	}
+
+	function setEraStartingTime(uint256 _eraIndex, uint256 _startingTime, uint8 _erasToRefresh) public nonReentrant onlyOwner {
+		EraInfo ei = eraInfos[_eraIndex];
+		ei.startingTime = _startingTime;
+		eraIneraInfos[_eraIndex] = ei;
+
+		refreshErasInfo(_erasToRefresh);
 	}
 }
