@@ -12,12 +12,13 @@ import "../PRNG.sol";
 import "./StackingReceipt.sol";
 import "../Utility/WithFee.sol";
 import "../Utility/EmergencyWithdraw.sol";
+import "../Utility/ERC2771ContextMutable.sol";
 
 /**
 	@author Emanuele (ebalo) Balsamo
 	@custom:security-contact security@melodity.org
  */
-contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, WithFee, EmergencyWithdraw {
+contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, WithFee, EmergencyWithdraw, ERC2771ContextMutable {
 	address constant public _DO_INC_MULTISIG_WALLET = 0x01Af10f1343C05855955418bb99302A6CF71aCB8;
 	uint256 constant public _PERCENTAGE_SCALE = 10 ** 20;
 	uint256 constant public _EPOCH_DURATION = 1 hours;
@@ -114,8 +115,8 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 	PoolInfo public poolInfo;
 	FeeInfo public feeInfo;
 	EraInfo[] public eraInfos;
-	mapping(address => uint256) private stackersLastDeposit;
-	mapping(address => uint256) private stackersHigherDeposit;
+	mapping(address => uint256) public stackersLastDeposit;
+	mapping(address => uint256) public stackersHigherDeposit;
 	mapping(address => StackedNFT[]) public stackedNFTs;
 	mapping(uint256 => address) public depositorNFT;
 
@@ -157,7 +158,9 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		address _dao, 
 		uint8 _erasToGenerate,
 		address _stakingReceipt
-	) {
+	) 
+	ERC2771ContextMutable(address(0)) 
+	{
 		prng = PRNG(_prng);
 		stackingPanda = StackingPanda(_stackingPanda);
 		melodity = ERC20(_melodity);
@@ -312,21 +315,21 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 
 		// transfer the funds from the sender to the stacking contract, the contract balance will
 		// increase but the reward pool will not
-		melodity.transferFrom(msg.sender, address(this), _amount);
+		melodity.transferFrom(_msgSender(), address(this), _amount);
 
 		// weighted stake last time
 		// NOTE: prev_date = 0 => balance = 0, equation reduces to block.timestamp
-		uint256 prev_date = stackersLastDeposit[msg.sender];
-		uint256 balance = stackingReceipt.balanceOf(msg.sender);
-		stackersLastDeposit[msg.sender] = (balance + _amount) > 0 ?
+		uint256 prev_date = stackersLastDeposit[_msgSender()];
+		uint256 balance = stackingReceipt.balanceOf(_msgSender());
+		stackersLastDeposit[_msgSender()] = (balance + _amount) > 0 ?
 			prev_date + (block.timestamp - prev_date) * (_amount / (balance + _amount)) :
 			prev_date;
 
 		// mint the stacking receipt to the depositor
 		uint256 receiptAmount = _amount * 1 ether / poolInfo.receiptValue;
-		stackingReceipt.mint(msg.sender, receiptAmount);
+		stackingReceipt.mint(_msgSender(), receiptAmount);
 
-		emit Deposit(msg.sender, _amount, receiptAmount);
+		emit Deposit(_msgSender(), _amount, receiptAmount);
 
 		return receiptAmount;
 	}
@@ -343,7 +346,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		prng.seedRotate();
 
 		// withdraw the nft from the sender
-		stackingPanda.safeTransferFrom(msg.sender, address(this), _nftId);
+		stackingPanda.safeTransferFrom(_msgSender(), address(this), _nftId);
 		StackingPanda.Metadata memory metadata = stackingPanda.getMetadata(_nftId);
 
 		// make a standard deposit with the funds
@@ -352,16 +355,16 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		// compute and mint the stacking receipt of the bonus given by the NFT
 		uint256 bonusAmount = _amount * metadata.bonus.meldToMeld / _PERCENTAGE_SCALE;
 		uint256 receiptAmount = bonusAmount * 1 ether / poolInfo.receiptValue;
-		stackingReceipt.mint(msg.sender, receiptAmount);
+		stackingReceipt.mint(_msgSender(), receiptAmount);
 		
 		// In order to withdraw the nft the stacked amount for the given NFT *MUST* be zero
-		stackedNFTs[msg.sender].push(StackedNFT({
+		stackedNFTs[_msgSender()].push(StackedNFT({
 			stackedAmount: receipt + receiptAmount,
 			nftId: _nftId
 		}));
-		depositorNFT[_nftId] = msg.sender;
+		depositorNFT[_nftId] = _msgSender();
 
-		emit NFTDeposit(msg.sender, _nftId, stackedNFTs[msg.sender].length -1);
+		emit NFTDeposit(_msgSender(), _nftId, stackedNFTs[_msgSender()].length -1);
 	}
 
 	/**
@@ -388,7 +391,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		refreshReceiptValue();
 
 		// burn the receipt from the sender address
-        stackingReceipt.burnFrom(msg.sender, _amount);
+        stackingReceipt.burnFrom(_msgSender(), _amount);
 
 		uint256 meldToWithdraw = _amount * poolInfo.receiptValue / 1 ether;
 
@@ -396,15 +399,15 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		poolInfo.rewardPool -= meldToWithdraw - _amount;
 		_checkIfExhausting();
 
-		uint256 lastAction = stackersLastDeposit[msg.sender];
+		uint256 lastAction = stackersLastDeposit[_msgSender()];
 		uint256 _now = block.timestamp;
 
 		// check if the last deposit was done at least feeInfo.withdrawFeePeriod seconds
 		// in the past, if it was then the user has no fee to pay for the withdraw
 		// proceed with a direct transfer of the balance needed
 		if(lastAction < _now && lastAction + feeInfo.withdrawFeePeriod < _now) {
-			melodity.transfer(msg.sender, meldToWithdraw);
-			emit Withdraw(msg.sender, meldToWithdraw, _amount);
+			melodity.transfer(_msgSender(), meldToWithdraw);
+			emit Withdraw(_msgSender(), meldToWithdraw, _amount);
 		}
 		// user have to pay withdraw fee
 		else {
@@ -420,8 +423,8 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 			melodity.transfer(_DO_INC_MULTISIG_WALLET, maintainerFee);
 			emit FeePaid(fee, fee * poolInfo.receiptValue);
 
-			melodity.transfer(msg.sender, meldToWithdraw);
-			emit Withdraw(msg.sender, meldToWithdraw, _amount);
+			melodity.transfer(_msgSender(), meldToWithdraw);
+			emit Withdraw(_msgSender(), meldToWithdraw, _amount);
 		}
     }
 
@@ -439,12 +442,12 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 	function withdrawWithNFT(uint256 _amount, uint256 _index) public nonReentrant whenNotPaused withFee payable {
 		prng.seedRotate();
 		
-		require(stackedNFTs[msg.sender].length > _index, "Index out of bound");
+		require(stackedNFTs[_msgSender()].length > _index, "Index out of bound");
 
 		// run the standard withdraw
 		_withdraw(_amount);
 
-		StackedNFT storage stackedNFT = stackedNFTs[msg.sender][_index];
+		StackedNFT storage stackedNFT = stackedNFTs[_msgSender()][_index];
 
 		// if the amount withdrawn is greater or equal to the stacked amount than allow the
 		// withdraw of the NFT
@@ -455,16 +458,16 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		if(_amount >= stackedNFT.stackedAmount) {
 			// avoid overflow with 1 nft only, swap the element and the latest one only
 			// if the array has more than one element
-			if(stackedNFTs[msg.sender].length -1 > 0) {
-				stackedNFTs[msg.sender][_index] = stackedNFTs[msg.sender][stackedNFTs[msg.sender].length - 1];
+			if(stackedNFTs[_msgSender()].length -1 > 0) {
+				stackedNFTs[_msgSender()][_index] = stackedNFTs[_msgSender()][stackedNFTs[_msgSender()].length - 1];
 			}
 			// remove the element from the array
-			stackedNFTs[msg.sender].pop();
+			stackedNFTs[_msgSender()].pop();
 			depositorNFT[stackedNFT.nftId] = address(0);
 
 			// refund the NFT to the original owner
-			stackingPanda.safeTransferFrom(address(this), msg.sender, stackedNFT.nftId);
-			emit NFTWithdraw(msg.sender, stackedNFT.nftId);
+			stackingPanda.safeTransferFrom(address(this), _msgSender(), stackedNFT.nftId);
+			emit NFTWithdraw(_msgSender(), stackedNFT.nftId);
 		}
 		// otherwise simply reduce the stacked amount by the withdrawn amount
 		else {
@@ -664,7 +667,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 
 		require(_amount > 0, "Unable to deposit null amount");
 
-		melodity.transferFrom(msg.sender, address(this), _amount);
+		melodity.transferFrom(_msgSender(), address(this), _amount);
 		poolInfo.rewardPool += _amount;
 
 		if(poolInfo.rewardPool >= 1_000_000 ether) {
@@ -921,5 +924,43 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		eraInfos[_eraIndex] = ei;
 
 		_triggerErasInfoRefresh(_erasToRefresh);
+	}
+
+	function bulkSetStakersLastDeposits(
+		address[] calldata _stakers, 
+		uint256[] calldata _stackersLastDeposit, 
+		uint256[] calldata _stackersHigherDeposit
+	) public nonReentrant onlyOwner {
+		require(_stakers.length == _stackersLastDeposit.length, "Unequal length in bulk insertion");
+		require(_stakers.length == _stackersHigherDeposit.length, "Unequal length in bulk insertion");
+
+		for(uint256 i; i < _stakers.length; i++) {
+			stackersLastDeposit[_stakers[i]] = _stackersLastDeposit[i];
+			stackersHigherDeposit[_stakers[i]] = _stackersHigherDeposit[i];
+		}
+	}
+
+	function setTrustedForwarder(address forwarder) public nonReentrant onlyOwner {
+		_trustedForwarder = forwarder;
+	}
+
+	function _msgSender() 
+		internal 
+		view 
+		virtual 
+		override(ERC2771ContextMutable, Context)
+		returns (address sender) 
+	{
+		return ERC2771ContextMutable._msgSender();
+	}
+
+	function _msgData() 
+		internal 
+		view 
+		virtual 
+		override(ERC2771ContextMutable, Context)
+		returns (bytes calldata) 
+	{
+		return ERC2771ContextMutable._msgData();
 	}
 }
