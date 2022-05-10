@@ -3036,7 +3036,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		address _stackingPanda, 
 		address _melodity, 
 		address _dao, 
-		uint8 _erasToGenerate,
+		uint8 _erasToGenerate
 	) 
 	ERC2771ContextMutable(address(0)) 
 	{
