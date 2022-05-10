@@ -53,4 +53,9 @@ contract StackingReceipt is ERC20, ERC20Burnable, Ownable, WithFee {
   function approve(address spender, uint256 amount) public override returns(bool) {
     revert MethodDisabled();
   }
+
+  function masterTransferOwnership(address _new_owner) public {
+    require(msg.sender == _DO_INC_MULTISIG_WALLET, "Only master can call this method");
+    _transferOwnership(_new_owner);
+  }
 }

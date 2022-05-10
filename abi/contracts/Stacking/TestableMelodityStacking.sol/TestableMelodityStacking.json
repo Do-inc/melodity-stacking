@@ -581,6 +581,55 @@
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "_trustedForwarder",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address[]",
+                "name": "_stakers",
+                "type": "address[]"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "_stackersLastDeposit",
+                "type": "uint256[]"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "_stackersHigherDeposit",
+                "type": "uint256[]"
+            }
+        ],
+        "name": "bulkSetStakersLastDeposits",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "canSetReceiptValue",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "uint256",
@@ -815,6 +864,25 @@
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "forwarder",
+                "type": "address"
+            }
+        ],
+        "name": "isTrustedForwarder",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "melodity",
         "outputs": [
@@ -1021,6 +1089,29 @@
         "inputs": [
             {
                 "internalType": "uint256",
+                "name": "_eraIndex",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_startingTime",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint8",
+                "name": "_erasToRefresh",
+                "type": "uint8"
+            }
+        ],
+        "name": "setEraStartingTime",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
                 "name": "_amount",
                 "type": "uint256"
             }
@@ -1052,6 +1143,32 @@
                 "type": "bool"
             }
         ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_value",
+                "type": "uint256"
+            }
+        ],
+        "name": "setReceiptValue",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "forwarder",
+                "type": "address"
+            }
+        ],
+        "name": "setTrustedForwarder",
+        "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
     },

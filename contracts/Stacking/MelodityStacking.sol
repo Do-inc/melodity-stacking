@@ -158,7 +158,6 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		address _melodity, 
 		address _dao, 
 		uint8 _erasToGenerate,
-		address _stakingReceipt
 	) 
 	ERC2771ContextMutable(address(0)) 
 	{
@@ -166,12 +165,7 @@ contract MelodityStacking is ERC721Holder, Ownable, Pausable, ReentrancyGuard, W
 		stackingPanda = StackingPanda(_stackingPanda);
 		melodity = ERC20(_melodity);
 
-		if(_stakingReceipt == address(0)) {
-			stackingReceipt = new StackingReceipt("Melodity stacking receipt", "sMELD");
-		}
-		else {
-			stackingReceipt = StackingReceipt(_stakingReceipt);
-		}
+		stackingReceipt = new StackingReceipt("Melodity stacking receipt", "sMELD");
 		setFeeBase(0.0005 ether);
 		setFeeReceiver(_DO_INC_MULTISIG_WALLET);
 		
